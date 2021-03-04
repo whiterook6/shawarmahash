@@ -1,29 +1,29 @@
 import digest from "sha.js";
 
 interface Block {
-  previousHash: string | "0";
-  nonce: string;
-  hash: string;
+  previousHash: number;
+  nonce: number;
+  hash: number;
 }
 
 type Chain = Block[];
 
 const chain: Chain = [];
 
-const hash = (currentHash: string, nonce: string): string => {
-  return digest("sha1").update(`${currentHash}${nonce}`).digest("hex");
+const hash = (currentHash: number, nonce: number): string => {
+  return digest("sha1").update(`${currentHash.toString(16)}${nonce.toString(16)}`).digest("hex");
 }
 
-const build = (current: Block, nonce: string): Block => {
+const build = (current: Block, nonce: number): Block => {
   return {
     previousHash: current.hash,
     nonce,
-    hash: hash(current.hash, nonce)
+    hash: parseInt(hash(current.hash, nonce), 16)
   };
 }
 
 const verifyBlock = (block: Block): boolean => {
-  return hash(block.previousHash, block.nonce) === block.hash;
+  return hash(block.previousHash, block.nonce) === block.hash.toString(16) && block.hash.toString(16).startsWith("0");
 }
 
 const verifyChain = (chain: Chain) => {
@@ -47,24 +47,25 @@ const verifyChain = (chain: Chain) => {
   }
 }
 
-const churn = () => {
-  let previousHash;
+const churn = (): Block => {
+  let previousHash: number;
   if (chain.length === 0){
-    previousHash = "0";
+    previousHash = 0;
   } else {
     previousHash = chain[chain.length - 1].hash;
   }
 
-  let nonce = Math.floor(Math.random() * 10000);
-  let hashcode = hash(previousHash, nonce.toString(10));
-  while (!hashcode.startsWith("0000")){
+  let nonce: number = Math.floor(Math.random() * 10000);
+  let hashcode: string = hash(previousHash, nonce);
+  while (!hashcode.startsWith("0")){
     nonce++;
-    hashcode = hash(previousHash, nonce.toString(10));
+    hashcode = hash(previousHash, nonce);
+    console.log(hashcode);
   }
 
   return {
-    hash: hashcode,
-    nonce: nonce.toString(10),
+    hash: parseInt(hashcode, 16),
+    nonce,
     previousHash
   };
 }
@@ -80,7 +81,7 @@ const run = () => {
 
   console.log("smudging random block");
   const index = Math.floor(Math.random() * chain.length);
-  chain[index].nonce = `0${chain[index].nonce}`;
+  chain[index].nonce = parseInt(`0${chain[index].nonce}`, 16);
   verifyChain(chain);
 };
 
