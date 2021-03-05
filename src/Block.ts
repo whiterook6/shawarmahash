@@ -22,15 +22,15 @@ export interface Block {
    * sha1( previousHash + player + team|`` + nonce + timestamp.toString(10) )
    **/
   hashCode: string;
-}
+};
 
 export const getBlockHash = (block: Block): string => {
   return hashSHA1(`${block.previousHash}${block.player}${block.team}${block.nonce}${block.timestamp}`);
-}
+};
 
 export const getBlockDifficultyHash = (previousHash: string, nonce: string): string => {
   return hashSHA1(`${previousHash}${nonce}`);
-}
+};
 
 export const verifyBlock = (block: Block, previousBlockHash: string, timestamp: number, targetDifficulty: string) => {
   if (block.previousHash !== previousBlockHash){
@@ -50,6 +50,21 @@ export const verifyBlock = (block: Block, previousBlockHash: string, timestamp: 
 
   const blockHash = getBlockHash(block);
   if (blockHash !== block.hashCode){
-    throw new Error("Hashcode doesn't match hashed contents.");
+    console.log(block);
+    throw new Error(`Hashcode doesn't match hashed contents. Expected ${block.hashCode}, got ${blockHash}.`);
   }
-}
+};
+
+export const mint = (previousHash: string, nonce: string, player: string, team: string = "") => {
+  const timestamp = Math.floor(Date.now() / 1000);
+  const hashCode = hashSHA1(`${previousHash}${player}${team}${nonce}${timestamp}`);
+
+  return {
+    previousHash,
+    nonce,
+    player,
+    team,
+    timestamp,
+    hashCode
+  } as Block;
+};

@@ -1,46 +1,53 @@
-import {Block, getBlockDifficultyHash} from "./src/Block";
-import {Chain, verifyChain} from "./src/Chain";
-import { hashSHA1 } from "./src/Hash";
+import { Block, getBlockDifficultyHash, mint } from "./src/Block";
+import { appendBlock, Chain, verifyChain } from "./src/Chain";
+import { getPlayers, getPlayerScores, getTeams, getTeamScores } from "./src/Scoreboard";
 
 const targetDifficulty = "0000";
-
+let hashes = 0;
 const mine = (previousHash: string, player: string, team: string = ""): Block => {
-  let nonce: number = 0;
+  let nonce: number = Math.floor(Math.random() * 100000000);
   let blockDifficultyHash: string;
   do {
     nonce++;
     blockDifficultyHash = getBlockDifficultyHash(previousHash, nonce.toString(16));
+    hashes++;
   } while (!blockDifficultyHash.startsWith(targetDifficulty));
-
   const nonceString: string = nonce.toString(16);
-  const timestamp = Math.floor(Date.now() / 1000);
-
   console.log(`Block found: sha1(${previousHash}, ${nonceString}) = ${blockDifficultyHash}`);
-  return {
+  return mint(
     previousHash,
-    nonce: nonceString,
+    nonceString,
     player,
-    team,
-    timestamp,
-    hashCode: hashSHA1(`${previousHash}${player}${team}${nonceString}${timestamp}`)
-  } as Block;
+    team
+  );
 };
 
 const run = () => {
+  const startTime = Date.now();
   const player = "TIM";
   const team = "TUT";
   const chain: Chain = [
     mine("0", player, team)
   ];
 
-  while (chain.length < 50){
+  while (chain.length < 100){
     const mostRecentBlock = chain[chain.length - 1];
     const block = mine(mostRecentBlock.hashCode, player, team);
-    chain.push(block);
+    appendBlock(chain, block);
   }
-
+  const endTime = Date.now();
+  const dtSeconds = (endTime - startTime)/1000;
   verifyChain(chain, targetDifficulty);
+  
   console.log(chain);
+  console.log(`Hash Rate: ${hashes} hashes in ${dtSeconds} seconds: ${(hashes/dtSeconds).toFixed(2)}H/s`);
+
+  console.log(`Players: ${getPlayers(chain).join(", ")}`);
+  console.log("Player scores: ");
+  console.log(getPlayerScores(chain));
+  console.log(`Teams: ${getTeams(chain).join(", ")}`);
+  console.log("Team Scores:");
+  console.log(getTeamScores(chain));
 }
 
 run();

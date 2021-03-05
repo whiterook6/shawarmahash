@@ -6,6 +6,11 @@
   "dependencies": {
     "sha.js": "^2.4.11"
   },
+  "scripts": {
+    "clean": "rm -rf ./lib",
+    "build": "tsc --outDir lib --esModuleInterop script.ts",
+    "run": "node ./lib/script.js"
+  },
   "devDependencies": {
     "@types/sha.js": "^2.4.0",
     "typescript": "^4.2.2"
