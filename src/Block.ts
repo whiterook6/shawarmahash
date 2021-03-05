@@ -1,0 +1,55 @@
+import {hashSHA1} from "./Hash";
+
+export interface Block {
+  /** 40 hexadecimal characters, or "0" if it's the first block in the chain. */
+  previousHash: string;
+
+  /** at least 1 hex character. */
+  nonce: string;
+
+  /** either an empty string (``), or three ascii characters */
+  team: string;
+
+  /** three ascii characters */
+  player: string;
+
+  /** number of seconds since epoch. */
+  timestamp: number;
+
+  /**
+   * 40 hexadecimal characters. Must start with some number of zeros.
+   * To calculate, run:
+   * sha1( previousHash + player + team|`` + nonce + timestamp.toString(10) )
+   **/
+  hashCode: string;
+}
+
+export const getBlockHash = (block: Block): string => {
+  return hashSHA1(`${block.previousHash}${block.player}${block.team}${block.nonce}${block.timestamp}`);
+}
+
+export const getBlockDifficultyHash = (previousHash: string, nonce: string): string => {
+  return hashSHA1(`${previousHash}${nonce}`);
+}
+
+export const verifyBlock = (block: Block, previousBlockHash: string, timestamp: number, targetDifficulty: string) => {
+  if (block.previousHash !== previousBlockHash){
+    throw new Error("Invalid previous block hash");
+  } else if (block.team && block.team.length !== 3){
+    throw new Error("Invalid team name.");
+  } else if (block.player.length !== 3){
+    throw new Error("Invalid player name.");
+  } else if (Math.abs(timestamp - block.timestamp) > 3600){
+    throw new Error("Timestamp is too far in the future or past.");
+  }
+
+  const blockDifficultyHash = getBlockDifficultyHash(block.previousHash, block.nonce);
+  if (!blockDifficultyHash.startsWith(targetDifficulty)){
+    throw new Error(`Block doesn't meet target difficulty: sha1(${block.previousHash}${block.nonce}) = ${blockDifficultyHash}`);
+  }
+
+  const blockHash = getBlockHash(block);
+  if (blockHash !== block.hashCode){
+    throw new Error("Hashcode doesn't match hashed contents.");
+  }
+}
