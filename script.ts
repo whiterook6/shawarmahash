@@ -1,6 +1,5 @@
 import { Block, getBlockDifficultyHash, mint } from "./src/Block";
 import { appendBlock, Chain, verifyChain } from "./src/Chain";
-import { getPlayers, getPlayerScores, getTeams, getTeamScores } from "./src/Scoreboard";
 
 const targetDifficulty = "0000";
 let hashes = 0;
@@ -23,7 +22,6 @@ const mine = (previousHash: string, player: string, team: string = ""): Block =>
 };
 
 const run = () => {
-  const startTime = Date.now();
   const player = "TIM";
   const team = "TUT";
   const chain: Chain = [
@@ -35,19 +33,9 @@ const run = () => {
     const block = mine(mostRecentBlock.hashCode, player, team);
     appendBlock(chain, block);
   }
-  const endTime = Date.now();
-  const dtSeconds = (endTime - startTime)/1000;
   verifyChain(chain, targetDifficulty);
   
   console.log(chain);
-  console.log(`Hash Rate: ${hashes} hashes in ${dtSeconds} seconds: ${(hashes/dtSeconds).toFixed(2)}H/s`);
-
-  console.log(`Players: ${getPlayers(chain).join(", ")}`);
-  console.log("Player scores: ");
-  console.log(getPlayerScores(chain));
-  console.log(`Teams: ${getTeams(chain).join(", ")}`);
-  console.log("Team Scores:");
-  console.log(getTeamScores(chain));
 }
 
 run();

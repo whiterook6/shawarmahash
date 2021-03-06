@@ -7,7 +7,7 @@ export interface Block {
   /** at least 1 hex character. */
   nonce: string;
 
-  /** either an empty string (``), or three ascii characters */
+  /** either an empty string (""), or three ascii characters */
   team: string;
 
   /** three ascii characters */
@@ -17,9 +17,7 @@ export interface Block {
   timestamp: number;
 
   /**
-   * 40 hexadecimal characters. Must start with some number of zeros.
-   * To calculate, run:
-   * sha1( previousHash + player + team|`` + nonce + timestamp.toString(10) )
+   * 40 hexadecimal characters. run getBlockHash() or mint().
    **/
   hashCode: string;
 };
