@@ -1,6 +1,4 @@
 import Express, {Request, Response} from "express";
-import { Block } from "../Block";
-import { verifyIncomingBlock } from "../Chain";
 import { Game } from "../game/Game";
 /*
  * GET /api/players
@@ -16,10 +14,9 @@ export class APIServer {
   private readonly server;
   private readonly game: Game;
 
-  constructor(game: Game){
-    const server = Express();
+  constructor(server: Express.Express, game: Game){
+    this.server = server;
     this.game = game;
-    server.use(Express.json());
     
     server.get("/api/players", async (_: Request, response: Response) => {
       try {
@@ -36,7 +33,7 @@ export class APIServer {
         if (typeof(player) !== "string" || player.length !== 3){
           return response.status(400).send(`Invalid team name.`);
         }
-        return response.status(200).send(this.game.getPlayerScore(player));
+        return response.status(200).send(this.game.getPlayerScore(player).toString(10));
       } catch (error){
         console.error(error);
         return response.status(503).send();
@@ -59,7 +56,7 @@ export class APIServer {
           return response.status(400).send(`Invalid team name.`);
         }
 
-        return response.status(200).send(this.game.getTeamScore(team));
+        return response.status(200).send(this.game.getTeamScore(team).toString(10));
       } catch (error){
         console.error(error);
         return response.status(503).send();
@@ -110,6 +107,8 @@ export class APIServer {
         return response.status(503).send();
       }
     });
+
+    server.get("/api", (_, response: Response) => response.status(404).send());
 
     this.server = server;
   }

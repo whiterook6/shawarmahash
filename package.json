@@ -10,13 +10,14 @@
   },
   "scripts": {
     "clean": "rm -rf ./lib",
-    "build": "tsc --outDir lib --esModuleInterop script.ts",
-    "run": "node ./lib/script.js"
+    "build": "tsc -p ./tsconfig.json",
+    "dev": "ts-node -p ./tsconfig.json ./script.ts"
   },
   "devDependencies": {
     "@types/express": "^4.17.11",
     "@types/sha.js": "^2.4.0",
     "@types/ws": "^7.4.0",
+    "ts-node": "^9.1.1",
     "typescript": "^4.2.2"
   }
 }

@@ -1,14 +1,6 @@
 import {Block} from "../Block";
 
 // Incoming
-
-export type IncBlockFound = {
-  event: "block-found",
-  data: {
-    block: Block;
-  }
-};
-
 export type IncChangeName = {
   event: "change-name",
   data: {
@@ -16,7 +8,7 @@ export type IncChangeName = {
   }
 };
 
-export type incChangeTeam = {
+export type IncChangeTeam = {
   event: "change-team",
   data: {
     newTeam: string;
@@ -30,8 +22,11 @@ export type IncChat = {
   }
 };
 
-// Outgoing
+export type IncLeaveTeam = {
+  event: "leave-team";
+};
 
+// Outgoing
 export type OutChat = {
   event: "chat",
   data: {

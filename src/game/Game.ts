@@ -8,7 +8,7 @@ export class Game {
 
   constructor(){
     this.chain = [];
-    this.targetDifficulty = "00000";
+    this.targetDifficulty = "0000";
   }
 
   public getPlayers = (): string[]  => {
@@ -46,6 +46,7 @@ export class Game {
   public addBlock = (block: object) => {
     const verifiedBlock = verifyIncomingBlock(this.chain, block, this.targetDifficulty);
     this.chain = appendBlock(this.chain, verifiedBlock);
+    return verifiedBlock;
   }
 
   public getHeight = () => this.chain.length;

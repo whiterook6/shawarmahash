@@ -16,7 +16,7 @@ export const getPlayerScores = (chain: Chain): Map<string, number> => {
   const scores = new Map<string, number>();
   chain.forEach(block => {
     if (scores.has(block.player)){
-      scores.set(block.player, scores.get(block.player) + 1);
+      scores.set(block.player, scores.get(block.player)! + 1);
     } else {
       scores.set(block.player, 1);
     }
@@ -29,7 +29,7 @@ export const getTeamScores = (chain: Chain): Map<string, number> => {
   const scores = new Map<string, number>();
   chain.filter(block => block.team !== "").forEach(block => {
     if (scores.has(block.team)){
-      scores.set(block.team, scores.get(block.team) + 1);
+      scores.set(block.team, scores.get(block.team)! + 1);
     } else {
       scores.set(block.team, 1);
     }

@@ -33,10 +33,10 @@ export const appendBlock = (chain: Chain, block: Block): Chain => {
   return chain;
 }
 
-const requiredStringFields = ["hashCode", "nonce", "player", "previousHash"]
+const requiredStringFields = ["hashCode", "nonce", "player", "previousHash"];
 
 export const verifyIncomingBlock = (chain: Chain, proposedBlock: any, targetDifficulty: string) => {
-  for (const field in requiredStringFields){
+  for (const field of requiredStringFields){
     if (!proposedBlock.hasOwnProperty(field) || !proposedBlock[field]){
       throw new Error(`Invalid block: missing ${field}.`);
     } else if (typeof(proposedBlock[field]) !== "string"){
@@ -50,7 +50,7 @@ export const verifyIncomingBlock = (chain: Chain, proposedBlock: any, targetDiff
 
   if (!proposedBlock.hasOwnProperty("timestamp")){
     throw new Error("Invalid block: no timestamp.");
-  } else if (typeof(proposedBlock.timestamp !== "number")){
+  } else if (typeof(proposedBlock.timestamp) !== "number"){
     throw new Error("Invalid block: malformed timestamp.")
   }
 
