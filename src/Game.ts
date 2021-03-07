@@ -1,6 +1,6 @@
-import { Block } from "../Block";
-import { appendBlock, Chain, verifyIncomingBlock } from "../Chain";
-import { getPlayers, getPlayerScore, getTeams, getTeamScore } from "../Scoreboard";
+import { Block } from "./Block";
+import { appendBlock, Chain, verifyIncomingBlock } from "./Chain";
+import { getPlayers, getPlayerScore, getTeams, getTeamScore } from "./Scoreboard";
 
 export class Game {
   private chain: Chain;
@@ -9,6 +9,16 @@ export class Game {
   constructor(){
     this.chain = [];
     this.targetDifficulty = "0000";
+  }
+
+  public getTargetDifficulty = () => this.targetDifficulty;
+
+  public getPreviousHash = () => {
+    if (this.chain.length === 0){
+      return "0";
+    } else {
+      return this.getHighestBlock().previousHash;
+    }
   }
 
   public getPlayers = (): string[]  => {

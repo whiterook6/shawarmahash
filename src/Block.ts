@@ -32,7 +32,7 @@ export const getBlockDifficultyHash = (previousHash: string, nonce: string): str
 
 export const verifyBlock = (block: Block, previousBlockHash: string, timestamp: number, targetDifficulty: string) => {
   if (block.previousHash !== previousBlockHash){
-    throw new Error("Invalid previous block hash");
+    throw new Error(`Invalid previous block hash. Expected ${previousBlockHash}, got ${block.previousHash}`);
   } else if (block.team && block.team.length !== 3){
     throw new Error("Invalid team name.");
   } else if (block.player.length !== 3){

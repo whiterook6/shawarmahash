@@ -10,8 +10,7 @@
   },
   "scripts": {
     "clean": "rm -rf ./lib",
-    "build": "tsc -p ./tsconfig.json",
-    "dev": "ts-node -p ./tsconfig.json ./script.ts"
+    "build": "tsc -p ./tsconfig.json"
   },
   "devDependencies": {
     "@types/express": "^4.17.11",
