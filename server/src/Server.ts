@@ -170,6 +170,10 @@ const run = () => {
     }
   });
 
+  app.get('/', function(_, response: Response) {
+    response.sendFile(path.join(__dirname + "../static/index.html"));
+  });
+
   app.use("/api", (_, response: Response) => response.status(404).send());
 
   app.use("/assets", Express.static(path.join(__dirname, "../static"), {
