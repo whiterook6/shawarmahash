@@ -8,7 +8,8 @@
   "private": true,
   "scripts": {
     "clean": "rm -rf ./dist",
-    "build": "webpack --config webpack.config.js"
+    "build": "webpack --config webpack.config.js",
+    "watch": "webpack --config webpack.config.js --watch"
   },
   "devDependencies": {
     "@types/sha.js": "^2.4.0",
@@ -19,6 +20,7 @@
     "webpack-cli": "^4.5.0"
   },
   "dependencies": {
+    "buffer": "^6.0.3",
     "sha.js": "^2.4.11"
   }
 }
