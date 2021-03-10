@@ -84,9 +84,9 @@ const run = () => {
   
   app.get("/api/players/:player", async (request: Request, response: Response) => {
     try {
-      const player = request.body.playerID as string;
+      const player = request.params.playerID as string;
       if (typeof(player) !== "string" || player.length !== 3){
-        return response.status(400).send(`Invalid team name.`);
+        return response.status(400).send(`Invalid player name.`);
       }
       return response.status(200).send(game.getPlayerScore(player).toString(10));
     } catch (error){
@@ -171,12 +171,12 @@ const run = () => {
   });
 
   app.get('/', function(_, response: Response) {
-    response.sendFile(path.join(__dirname + "../static/index.html"));
+    response.sendFile(path.join(__dirname + "/../../static/index.html"));
   });
 
   app.use("/api", (_, response: Response) => response.status(404).send());
 
-  app.use("/assets", Express.static(path.join(__dirname, "../static"), {
+  app.use("/assets", Express.static(path.join(__dirname, "/../../static"), {
     dotfiles: "ignore",
     maxAge: "1d",
   }));
@@ -190,34 +190,6 @@ const run = () => {
       websockets.emit('connection', socket, request);
     });
   });
-
-  let hashes = 0;
-  const mine = (previousHash: string, player: string, team: string = ""): Block => {
-    let nonce: number = Math.floor(Math.random() * 100000000);
-    let blockDifficultyHash: string;
-    const targetDifficulty = game.getTargetDifficulty();
-    do {
-      nonce++;
-      blockDifficultyHash = getBlockDifficultyHash(previousHash, nonce.toString(16));
-      hashes++;
-    } while (!blockDifficultyHash.startsWith(targetDifficulty));
-
-    const nonceString: string = nonce.toString(16);
-    console.log(`Block found: sha1(${previousHash}, ${nonceString}) = ${blockDifficultyHash}`);
-    return mint(
-      previousHash,
-      nonceString,
-      player,
-      team
-    );
-  };
-
-  let previousHash = game.getPreviousHash();
-  for (let index = 0; index < 10; index++) {
-    const newBlock = mine(previousHash, "TIM", "TUT");
-    console.log(JSON.stringify(newBlock));
-    previousHash = newBlock.hashCode;    
-  }
 };
 
 run();

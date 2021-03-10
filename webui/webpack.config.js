@@ -19,7 +19,7 @@ module.exports = {
   resolve: {
     extensions: [ ".ts", ".js" ],
     fallback: {
-      "buffer": require.resolve("buffer/")
+      "buffer": require.resolve("buffer/") // webpack 5 doesn't include polyfills
     }
   },
   

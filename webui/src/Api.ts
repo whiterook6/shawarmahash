@@ -1,5 +1,5 @@
 export const getBlocks = async () => {
-  const response = await fetch("http://localhost:8080/api/block");
+  const response = await fetch("http://localhost:8080/api/blocks/recent");
   if (!response.ok){
     const body = await response.text();
     throw new Error(body);
@@ -28,6 +28,9 @@ export const getPlayers = async () => {
 export const submitBlock = async (block) => {
   const response = await fetch("http://localhost:8080/api/blocks", {
     body: JSON.stringify(block),
+    headers: {
+      "Content-Type": "application/json"
+    },
     method: "POST"
   });
   if (!response.ok){
