@@ -8,7 +8,7 @@ export class Game {
 
   constructor(){
     this.chain = [];
-    this.targetDifficulty = "0000";
+    this.targetDifficulty = "00000";
   }
 
   public getTargetDifficulty = () => this.targetDifficulty;

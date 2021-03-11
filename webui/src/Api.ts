@@ -1,4 +1,6 @@
-export const getBlocks = async () => {
+import { Block } from "./Block";
+
+export const getBlocks = async (): Promise<Block[]> => {
   const response = await fetch("http://localhost:8080/api/blocks/recent");
   if (!response.ok){
     const body = await response.text();
@@ -25,7 +27,7 @@ export const getPlayers = async () => {
   return response.json();
 }
 
-export const submitBlock = async (block) => {
+export const submitBlock = async (block: Block) => {
   const response = await fetch("http://localhost:8080/api/blocks", {
     body: JSON.stringify(block),
     headers: {

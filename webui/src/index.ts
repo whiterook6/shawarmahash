@@ -4,6 +4,15 @@ import {sha1} from "sha.js";
 let previousHash: string;
 let nonce: number;
 let shouldMine = true;
+
+const toggleMining = () => {
+  if (shouldMine === true){
+    shouldMine = false;
+  } else {
+    startMining();
+  }
+}
+
 const startMining = async (block?) => {
   if (block){
     previousHash = block.hashCode;
@@ -24,6 +33,10 @@ const startMining = async (block?) => {
 }
 
 const mine = () => {
+  if (!shouldMine){
+    return;
+  }
+
   const newBlock = {
     previousHash,
     nonce: "",
@@ -37,7 +50,7 @@ const mine = () => {
   do {
     const nonceString = (nonce++).toString(16);
     const difficultyHash = new sha1().update(`${previousHash}${nonceString}`).digest("hex") as string;
-    if (difficultyHash.startsWith("0000")){
+    if (difficultyHash.startsWith("00000")){
       newBlock.nonce = nonceString;
       newBlock.hashCode = new sha1().update(`${newBlock.previousHash}${newBlock.player}${newBlock.team}${nonceString}${newBlock.timestamp}`).digest("hex")
       console.log("Block found");
@@ -61,7 +74,9 @@ socket.onopen = () => {
     if (message.event){
       switch (message.event){
         case "block-found":
+          console.log("someone else mined a block")
           const block = message.data.block;
+          console.log(block);
           if (!shouldMine){
             startMining(block);
           }
