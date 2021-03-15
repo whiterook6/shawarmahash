@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 module.exports = {
   
   // bundling mode
-  mode: "development",
+  mode: "production",
   
   // entry files
   entry: "./src/index.ts",
@@ -13,6 +13,7 @@ module.exports = {
   output: {
     path: path.resolve( __dirname, "../static" ),
     filename: "index.js",
+    publicPath: "/assets/",
   },
   
   // file resolutions
@@ -27,9 +28,16 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.tsx?/,
+        test: /\.tsx?$/,
         use: "ts-loader",
         exclude: /node_modules/,
+      },
+      {
+        test: /\.worker\.ts$/,
+        loader: "worker-loader",
+        options: {
+          esModule: false,
+        },
       }
     ]
   },
