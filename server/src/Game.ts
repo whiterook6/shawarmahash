@@ -1,5 +1,5 @@
 import { Block } from "./Block";
-import { appendBlock, Chain, verifyIncomingBlock } from "./Chain";
+import { appendBlock, calculateDifficulty, Chain, verifyIncomingBlock } from "./Chain";
 import { getPlayers, getPlayerScore, getTeams, getTeamScore } from "./Scoreboard";
 
 export class Game {
@@ -11,7 +11,7 @@ export class Game {
     this.targetDifficulty = "00000";
   }
 
-  public getTargetDifficulty = () => this.targetDifficulty;
+  public getTargetDifficulty = () => calculateDifficulty(this.chain);
 
   public getPreviousHash = () => {
     if (this.chain.length === 0){

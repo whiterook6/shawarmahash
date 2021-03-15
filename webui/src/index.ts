@@ -5,7 +5,7 @@ let previousHash: string;
 let nonce: number;
 let shouldMine = true;
 
-const toggleMining = () => {
+export const toggleMining = () => {
   if (shouldMine === true){
     shouldMine = false;
   } else {

@@ -4,7 +4,7 @@ import { Socket } from "net";
 import { default as WebSocket, default as Websocket } from "ws";
 import { Game } from "./Game";
 import { IncChangeName, IncChangeTeam, IncChat, OutBlockFound, OutChat } from "./MessageTypes";
-import { Block, getBlockDifficultyHash, mint } from "./Block";
+import { calculateDifficulty } from "./Chain";
 
 type GameSocket = Websocket & Partial<{
   id: number;
@@ -156,12 +156,23 @@ const run = () => {
         return response.status(400).send(error.message);
       }
 
+      const height = game.getHeight();
       broadcast({
         event: "block-found",
         data: {
-          block
+          block,
+          height
         }
       } as OutBlockFound);
+      
+      if (height % 100 === 0){
+        broadcast({
+          event: "target",
+          data: {
+            target: game.getTargetDifficulty()
+          }
+        })
+      }
       
       return response.status(200).send(block);
     } catch (error){
