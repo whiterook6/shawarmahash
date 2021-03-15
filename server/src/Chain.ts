@@ -1,4 +1,5 @@
 import { Block, verifyBlock } from "./Block";
+import { hashSHA1 } from "./Hash";
 
 export type Chain = Block[];
 
@@ -73,4 +74,46 @@ export const verifyIncomingBlock = (chain: Chain, proposedBlock: any, targetDiff
   
   verifyBlock(block, previousBlockHash, previousBlockTimestamp, targetDifficulty);
   return block;
+}
+
+export const getAverageDifficulty = (chain: Chain): number => {
+  if (chain.length === 0){
+    return 1;
+  }
+
+  return chain.reduce((previous: number, current: Block) => {
+    const difficultyHash = hashSHA1(`${current.previousHash}${current.nonce}`);
+    let leadingZeroes = 0;
+    for (; leadingZeroes < difficultyHash.length; leadingZeroes++) {
+      if (difficultyHash[leadingZeroes] !== "0"){
+        break;
+      }
+    }
+    return previous + leadingZeroes;
+  }, 0) / chain.length;
+};
+
+export const getAverageInterval = (chain: Chain): number => {
+  const elapsedSeconds = chain[chain.length - 1].timestamp - chain[0].timestamp;
+  return elapsedSeconds / chain.length;
+}
+
+const desiredIntervalInSeconds = 30;
+export const calculateDifficulty = (previousBlocks: Chain): string => {
+  if (previousBlocks.length < 100){
+    return "00000";
+  }
+  
+  let oneHundredBlocks;
+  if (previousBlocks.length === 100){
+    oneHundredBlocks = previousBlocks;
+  } else {
+    oneHundredBlocks = previousBlocks.slice(-100);
+  }
+
+  const averageDifficulty = getAverageDifficulty(oneHundredBlocks);
+  const averageIntervealInSeconds = Math.max(1, getAverageInterval(oneHundredBlocks));  
+  const ratio = desiredIntervalInSeconds / averageIntervealInSeconds;
+  const newDifficulty = averageDifficulty * ratio;
+  return "".padStart(newDifficulty, "0");
 }
