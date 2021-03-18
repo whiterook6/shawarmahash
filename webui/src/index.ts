@@ -1,26 +1,55 @@
-import Miner from "worker-loader!./Worker";
+import { getBlocks } from "./Api";
 import { Block } from "./Block";
+import { Game } from "./Game";
+import { connectWebSocket } from "./Socket";
 
-let webWorker: Miner | undefined = new Miner();
-const startBlock = (previousHash: string) => {
-  return {
-    hashCode: "",
-    nonce: "",
-    player: "TIM",
-    team: "TUT",
-    previousHash,
-    timestamp: Math.floor(Date.now() / 1000)
-  } as Block;
+const href = window.location.href;
+const teamRegex = /\#[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]/;
+let team = "";
+const teamMatches = href.match(teamRegex);
+if (teamMatches.length > 0){
+  team = teamMatches[0].slice(1);
+}
+const playerRegex = /\@[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]/;
+let player = "UNK";
+const playerMatches = href.match(playerRegex);
+if (playerMatches.length > 0) {
+  player = playerMatches[0].slice(1);
 }
 
-let previousBlock: Block = startBlock("0");
+const run = async () => {
+  console.log("Getting recent blocks...")
+  const recentBlocks = await getBlocks();
+  let previousHash: string;
 
-webWorker.onmessage = (event: MessageEvent) => {
-  const block: Block = event.data;
-  console.log(JSON.stringify(block));
+  if (recentBlocks.length === 0){
+    console.log("...no recent block.")
+    previousHash = "0";
+  } else {
+    console.log(`...found ${recentBlocks.length} blocks.`);
+    previousHash = recentBlocks[recentBlocks.length - 1].hashCode;
+  }
 
-  previousBlock = startBlock(block.hashCode);
-  webWorker.postMessage(previousBlock);
-}
+  console.log("Starting Game...");
+  const game = new Game(player, team);
+  game.mine(previousHash);
 
-webWorker.postMessage(previousBlock);
+  const socket = await connectWebSocket(`ws://${location.host}`);
+  socket.onmessage = (event: MessageEvent) => {
+    console.log(`New message from websocket: ${event.data}`);
+    const data = JSON.parse(event.data);
+    switch (data.event){
+      case "block-found":
+        const block = data.data.block as Block;
+        if (block.team){
+          console.log(`New block from #${block.team}@${block.player}: ${block.hashCode}`);
+        } else {
+          console.log(`New block from @${block.player}: ${block.hashCode}`);
+        }
+        game.mine(block.hashCode);
+    }
+  }
+  return "Running..."
+};
+
+run().then(console.log).catch(console.error);
