@@ -165,14 +165,14 @@ const run = () => {
         }
       } as OutBlockFound);
       
-      if (height % 100 === 0){
-        broadcast({
-          event: "target",
-          data: {
-            target: game.getTargetDifficulty()
-          }
-        })
-      }
+      // if (height % 100 === 0){
+      //   broadcast({
+      //     event: "target",
+      //     data: {
+      //       target: game.getTargetDifficulty()
+      //     }
+      //   })
+      // }
       
       return response.status(200).send(block);
     } catch (error){
