@@ -7,4 +7,4 @@ export const connectWebSocket = (url: string): Promise<WebSocket> => {
       resolve(socket);
     };
   });
-}
+};

@@ -9,8 +9,8 @@ export class Game {
   public team: string;
   public player: string;
 
-  constructor(player: string, team: string = ""){
-    if (team){
+  constructor(player: string, team: string = "") {
+    if (team) {
       console.log(`Playing as #${team}@${player}.`);
     } else {
       console.log(`Playing as @${player}.`);
@@ -30,7 +30,7 @@ export class Game {
     console.log(`Begin mining with previous hash: ${previousHash}`);
 
     // kill an existing miner if needed
-    if (this.miner){
+    if (this.miner) {
       console.log("Killing existing miner.");
       this.miner.terminate();
     }
@@ -41,24 +41,26 @@ export class Game {
     this.miner.onmessage = this.onMessage;
 
     const unfinishedBlock = this.beginBlock(previousHash);
-    console.log(`Sending unfinished block to miner: ${JSON.stringify(unfinishedBlock)}`);
+    console.log(
+      `Sending unfinished block to miner: ${JSON.stringify(unfinishedBlock)}`
+    );
     this.miner.postMessage({
       type: "begin-mining",
-      block: unfinishedBlock
+      block: unfinishedBlock,
     });
-  }
+  };
 
   private onMessage = (event: MessageEvent) => {
     console.log("New message from webworker.");
     switch (event.data.type) {
       case "block-found":
         const foundBlock = event.data.block as Block;
-        console.log("Miner found block")
+        console.log("Miner found block");
         console.log(JSON.stringify(foundBlock));
         submitBlock(foundBlock);
         this.mine(foundBlock.hashCode);
     }
-  }
+  };
 
   private beginBlock = (previousHash: string): Block => {
     console.log(`Starting block with previous hash: ${previousHash}`);
@@ -68,7 +70,7 @@ export class Game {
       player: this.player,
       team: this.team,
       previousHash,
-      timestamp: Math.floor(Date.now() / 1000)
+      timestamp: Math.floor(Date.now() / 1000),
     };
-  }
+  };
 }

@@ -1,25 +1,25 @@
-import {Block} from "./Block";
+import { Block } from "./Block";
 
 // Incoming
 export type IncChangeName = {
-  event: "change-name",
+  event: "change-name";
   data: {
     newName: string;
-  }
+  };
 };
 
 export type IncChangeTeam = {
-  event: "change-team",
+  event: "change-team";
   data: {
     newTeam: string;
-  }
+  };
 };
 
 export type IncChat = {
-  event: "chat",
+  event: "chat";
   data: {
     message: string;
-  }
+  };
 };
 
 export type IncLeaveTeam = {
@@ -28,32 +28,32 @@ export type IncLeaveTeam = {
 
 // Outgoing
 export type OutChat = {
-  event: "chat",
+  event: "chat";
   data: {
     from: string;
     message: string;
-  }
+  };
 };
 
 export type OutBlockFound = {
-  event: "block-found",
+  event: "block-found";
   data: {
     block: Block;
-  }
+  };
 };
 
 export type OutPlayerScore = {
-  event: "player-score",
+  event: "player-score";
   data: {
     player: string;
     score: number;
-  }
+  };
 };
 
 export type outTeamScore = {
-  event: "team-score",
+  event: "team-score";
   data: {
     team: string;
     score: number;
-  }
+  };
 };

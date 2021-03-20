@@ -1,0 +1,13 @@
+{
+  "name": "shawarmahash",
+  "repository": "git@github.com:whiterook6/shawarmahash.git",
+  "author": "whiterook6 <whiterook6@gmail.com>",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "pretty": "prettier --write webui/src/**/*.ts server/src/**/*.ts"
+  },
+  "devDependencies": {
+    "prettier": "^2.2.1"
+  }
+}

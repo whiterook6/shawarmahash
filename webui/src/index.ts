@@ -7,7 +7,7 @@ const href = window.location.href;
 const teamRegex = /\#[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]/;
 let team = "";
 const teamMatches = href.match(teamRegex);
-if (teamMatches.length > 0){
+if (teamMatches.length > 0) {
   team = teamMatches[0].slice(1);
 }
 const playerRegex = /\@[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]/;
@@ -18,12 +18,12 @@ if (playerMatches.length > 0) {
 }
 
 const run = async () => {
-  console.log("Getting recent blocks...")
+  console.log("Getting recent blocks...");
   const recentBlocks = await getBlocks();
   let previousHash: string;
 
-  if (recentBlocks.length === 0){
-    console.log("...no recent block.")
+  if (recentBlocks.length === 0) {
+    console.log("...no recent block.");
     previousHash = "0";
   } else {
     console.log(`...found ${recentBlocks.length} blocks.`);
@@ -38,18 +38,20 @@ const run = async () => {
   socket.onmessage = (event: MessageEvent) => {
     console.log(`New message from websocket: ${event.data}`);
     const data = JSON.parse(event.data);
-    switch (data.event){
+    switch (data.event) {
       case "block-found":
         const block = data.data.block as Block;
-        if (block.team){
-          console.log(`New block from #${block.team}@${block.player}: ${block.hashCode}`);
+        if (block.team) {
+          console.log(
+            `New block from #${block.team}@${block.player}: ${block.hashCode}`
+          );
         } else {
           console.log(`New block from @${block.player}: ${block.hashCode}`);
         }
         game.mine(block.hashCode);
     }
-  }
-  return "Running..."
+  };
+  return "Running...";
 };
 
 run().then(console.log).catch(console.error);

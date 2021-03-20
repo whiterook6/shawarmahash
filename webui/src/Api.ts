@@ -2,41 +2,41 @@ import { Block } from "./Block";
 
 export const getBlocks = async (): Promise<Block[]> => {
   const response = await fetch("http://localhost:8080/api/blocks/recent");
-  if (!response.ok){
+  if (!response.ok) {
     const body = await response.text();
     throw new Error(body);
   }
   return response.json();
-}
+};
 
 export const getTeams = async () => {
   const response = await fetch("http://localhost:8080/api/teams");
-  if (!response.ok){
+  if (!response.ok) {
     const body = await response.text();
     throw new Error(body);
   }
   return response.json();
-}
+};
 
 export const getPlayers = async () => {
   const response = await fetch("http://localhost:8080/api/players");
-  if (!response.ok){
+  if (!response.ok) {
     const body = await response.text();
     throw new Error(body);
   }
   return response.json();
-}
+};
 
 export const submitBlock = async (block: Block) => {
   const response = await fetch("http://localhost:8080/api/blocks", {
     body: JSON.stringify(block),
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
     },
-    method: "POST"
+    method: "POST",
   });
-  if (!response.ok){
+  if (!response.ok) {
     const body = await response.text();
     throw new Error(body);
   }
-}
+};
