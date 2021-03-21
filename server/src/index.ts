@@ -147,10 +147,12 @@ const run = () => {
       try {
         const height = parseInt(request.params.height, 10);
         const chainHeight = game.getHeight();
-        if (height > chainHeight) {
-          return response.status(200).send(game.getBlockAt(height));
-        } else {
+        if (height < 0) {
           return response.status(404).send();
+        } else if (height >= chainHeight) {
+          return response.status(404).send();
+        } else {
+          return response.status(200).send(game.getBlockAt(height));
         }
       } catch (error) {
         console.error(error);

@@ -21,8 +21,6 @@ export class Game {
     this.targetDifficulty = "00000";
   }
 
-  public getTargetDifficulty = () => calculateDifficulty(this.chain);
-
   public getPreviousHash = () => {
     if (this.chain.length === 0) {
       return "0";
@@ -102,10 +100,6 @@ export class Game {
   };
 
   public getRecentBlocks = () => {
-    return this.chain.slice(-10).map((block) => {
-      return {
-        ...block,
-      } as Block;
-    });
+    return this.chain.slice(-10);
   };
 }

@@ -105,8 +105,12 @@ export const getAverageDifficulty = (chain: Chain): number => {
       const difficultyHash = hashSHA1(
         `${current.previousHash}${current.nonce}`
       );
-      let leadingZeroes = 0;
-      for (; leadingZeroes < difficultyHash.length; leadingZeroes++) {
+      let leadingZeroes;
+      for (
+        leadingZeroes = 0;
+        leadingZeroes < difficultyHash.length;
+        leadingZeroes++
+      ) {
         if (difficultyHash[leadingZeroes] !== "0") {
           break;
         }
@@ -117,8 +121,13 @@ export const getAverageDifficulty = (chain: Chain): number => {
 };
 
 export const getAverageInterval = (chain: Chain): number => {
-  const elapsedSeconds = chain[chain.length - 1].timestamp - chain[0].timestamp;
-  return elapsedSeconds / chain.length;
+  const length = chain.length;
+  if (length < 2) {
+    return 0;
+  }
+
+  const elapsedSeconds = chain[length - 1].timestamp - chain[0].timestamp;
+  return elapsedSeconds / length;
 };
 
 const desiredIntervalInSeconds = 30;
@@ -135,11 +144,11 @@ export const calculateDifficulty = (previousBlocks: Chain): string => {
   }
 
   const averageDifficulty = getAverageDifficulty(oneHundredBlocks);
-  const averageIntervealInSeconds = Math.max(
+  const averageIntervalInSeconds = Math.max(
     1,
     getAverageInterval(oneHundredBlocks)
   );
-  const ratio = desiredIntervalInSeconds / averageIntervealInSeconds;
-  const newDifficulty = averageDifficulty * ratio;
+  const ratio = desiredIntervalInSeconds / averageIntervalInSeconds;
+  const newDifficulty = (averageDifficulty * ratio) / 16;
   return "".padStart(newDifficulty, "0");
 };
