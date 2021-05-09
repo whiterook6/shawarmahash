@@ -3,19 +3,27 @@ import { Block } from "./Block";
 import { Game } from "./Game";
 import { connectWebSocket } from "./Socket";
 
-const href = window.location.href;
-const teamRegex = /\#[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]/;
-let team = "";
-const teamMatches = href.match(teamRegex);
-if (teamMatches.length > 0) {
-  team = teamMatches[0].slice(1);
-}
-const playerRegex = /\@[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]/;
-let player = "UNK";
-const playerMatches = href.match(playerRegex);
-if (playerMatches.length > 0) {
-  player = playerMatches[0].slice(1);
-}
+const getTeam = (input: string): string => {
+  const teamRegex = /\#[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]/;
+  const teamMatches = input.match(teamRegex);
+  if (teamMatches.length > 0) {
+    return teamMatches[0].slice(1);
+  } else {
+    return "";
+  }
+};
+const team = getTeam(window.location.href);
+
+const getPlayer = (input: string): string => {
+  const playerRegex = /\@[A-Za-z0-9][A-Za-z0-9][A-Za-z0-9]/;
+  const playerMatches = input.match(playerRegex);
+  if (playerMatches.length > 0) {
+    return playerMatches[0].slice(1);
+  } else {
+    return "UNK";
+  }
+};
+const player = getPlayer(window.location.href);
 
 const run = async () => {
   console.log("Getting recent blocks...");

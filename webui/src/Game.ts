@@ -20,9 +20,21 @@ export class Game {
     this.team = team;
   }
 
-  public mine = (previousHash: string) => {
+  public changeID = (newPlayer: string, newTeam: string = "") => {
+    this.player = newPlayer;
+    this.team = newTeam;
+
+    this.mine(this.previousHash, true);
+    if (newTeam) {
+      console.log(`Playing as #${newTeam}@${newPlayer}.`);
+    } else {
+      console.log(`Playing as @${newPlayer}.`);
+    }
+  };
+
+  public mine = (previousHash: string, reload: boolean = false) => {
     // already mining this block?
-    if (previousHash === this.previousHash) {
+    if (previousHash === this.previousHash && !reload) {
       console.log(`Already mining with previous hash: ${previousHash}`);
       return;
     }

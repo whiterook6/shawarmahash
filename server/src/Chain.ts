@@ -148,7 +148,11 @@ export const calculateDifficulty = (previousBlocks: Chain): string => {
     1,
     getAverageInterval(oneHundredBlocks)
   );
-  const ratio = desiredIntervalInSeconds / averageIntervalInSeconds;
-  const newDifficulty = (averageDifficulty * ratio) / 16;
+  const totalOps = Math.pow(16, averageDifficulty);
+  console.log(`Estimated total ops: ${totalOps.toFixed(2)}`);
+  const opsPerSecond = totalOps / averageIntervalInSeconds;
+  console.log(`Ops per second: ${opsPerSecond.toFixed(5)}`);
+  const newDifficulty = Math.log(opsPerSecond * desiredIntervalInSeconds) / Math.log(16);
+  console.log(`newDifficulty: ${newDifficulty.toFixed(4)}`);
   return "".padStart(newDifficulty, "0");
 };

@@ -219,8 +219,8 @@ const run = () => {
   });
 
   httpServer.on("upgrade", (request: Request, socket: Socket, head: Buffer) => {
-    websockets.handleUpgrade(request, socket, head, (socket: WebSocket) => {
-      websockets.emit("connection", socket, request);
+    websockets.handleUpgrade(request, socket, head, (websocket: WebSocket) => {
+      websockets.emit("connection", websocket, request);
     });
   });
 };
