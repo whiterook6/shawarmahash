@@ -9,12 +9,16 @@ export const mine = (
   team: string = ""
 ): Block => {
   let nonce = Math.floor(Math.random() * 1000000);
+  const startingNonce = nonce;
+  console.time("mining");
   while (
     !getBlockDifficultyHash(previousHash, nonce.toString(16)).startsWith(target)
   ) {
     nonce++;
   }
 
+  console.timeEnd("mining");
+  console.log(`From ${startingNonce} to ${nonce}: ${nonce - startingNonce} hashes.`);
   return mint(previousHash, nonce.toString(16), player, team);
 };
 

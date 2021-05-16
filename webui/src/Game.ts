@@ -59,6 +59,7 @@ export class Game {
     this.miner.postMessage({
       type: "begin-mining",
       block: unfinishedBlock,
+      target: "00000",
     });
   };
 

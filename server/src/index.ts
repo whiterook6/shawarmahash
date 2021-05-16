@@ -1,6 +1,6 @@
-import path from "path";
 import Express, { Request, Response } from "express";
 import { Socket } from "net";
+import path from "path";
 import { default as WebSocket, default as Websocket } from "ws";
 import { Game } from "./Game";
 import {
@@ -8,9 +8,8 @@ import {
   IncChangeTeam,
   IncChat,
   OutBlockFound,
-  OutChat,
+  OutChat
 } from "./MessageTypes";
-import { calculateDifficulty } from "./Chain";
 
 type GameSocket = Websocket &
   Partial<{

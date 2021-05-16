@@ -6,6 +6,7 @@ onmessage = (message) => {
   switch (message.data.type) {
     case "begin-mining":
       const block: Block = message.data.block;
+      const target: string = message.data.target;
       const previousHash = block.previousHash;
 
       let nonce = Math.floor(Math.random() * 1000000);
@@ -19,7 +20,7 @@ onmessage = (message) => {
           .update(`${previousHash}${nonceString}`)
           .digest("hex");
 
-        if (difficultyHash.startsWith("00000")) {
+        if (difficultyHash.startsWith(target)) {
           block.nonce = nonceString;
           block.hashCode = new sha1()
             .update(
