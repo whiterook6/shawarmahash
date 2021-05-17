@@ -2,6 +2,7 @@ import Express, { Request, Response } from "express";
 import { Socket } from "net";
 import path from "path";
 import { default as WebSocket, default as Websocket } from "ws";
+import { Chain } from "./Chain";
 import { Game } from "./Game";
 import {
   IncChangeName,
@@ -10,6 +11,7 @@ import {
   OutBlockFound,
   OutChat,
 } from "./MessageTypes";
+import { loadChain, makeDataDir, saveChain } from "./Serialize";
 
 type GameSocket = Websocket &
   Partial<{
@@ -21,8 +23,18 @@ type GameSocket = Websocket &
 let nextID: 0;
 const getNextID = () => nextID++;
 
-const run = () => {
-  const game = new Game();
+const run = async () => {
+  await makeDataDir();
+
+  let chain;
+  try {
+    chain = await loadChain();
+  } catch (error) {
+    console.error(error);
+    chain = [] as Chain;
+  }
+
+  const game = new Game(chain);
   const app = Express();
   const indexFile = path.join(__dirname + "/../../static/index.html");
   app.use(Express.json());
@@ -162,32 +174,40 @@ const run = () => {
   );
 
   app.post("/api/blocks", async (request: Request, response: Response) => {
+    let block;
     try {
       const possibleBlock = request.body;
       if (!possibleBlock || typeof possibleBlock !== "object") {
         return response.status(400).send("Invalid block: empty.");
       }
 
-      let block;
       try {
         block = game.addBlock(possibleBlock as object);
       } catch (error) {
         return response.status(400).send(error.message);
       }
 
-      const height = game.getHeight();
-      broadcast({
-        event: "block-found",
-        data: {
-          block,
-          height,
-        },
-      } as OutBlockFound);
-
-      return response.status(200).send(block);
+      response.status(200).send(block);
     } catch (error) {
       console.error(error);
       return response.status(503).send();
+    }
+
+    try {
+      const height = game.getHeight();
+      await Promise.all([
+        broadcast({
+          event: "block-found",
+          data: {
+            block,
+            height,
+          },
+        } as OutBlockFound),
+        saveChain(game.getChain()),
+      ]);
+      console.log("Chain saved.");
+    } catch (error) {
+      console.error(error);
     }
   });
 
