@@ -24,6 +24,7 @@ const getNextID = () => nextID++;
 const run = () => {
   const game = new Game();
   const app = Express();
+  const indexFile = path.join(__dirname + "/../../static/index.html");
   app.use(Express.json());
 
   const websockets = new WebSocket.Server({
@@ -183,15 +184,6 @@ const run = () => {
         },
       } as OutBlockFound);
 
-      // if (height % 100 === 0){
-      //   broadcast({
-      //     event: "target",
-      //     data: {
-      //       target: game.getTargetDifficulty()
-      //     }
-      //   })
-      // }
-
       return response.status(200).send(block);
     } catch (error) {
       console.error(error);
@@ -199,12 +191,15 @@ const run = () => {
     }
   });
 
-  app.get("/", function (_, response: Response) {
-    response.sendFile(path.join(__dirname + "/../../static/index.html"));
-  });
+  // fallback for other API routes
+  app.all("/api", (_, response: Response) => response.status(404).send());
 
-  app.use("/api", (_, response: Response) => response.status(404).send());
+  // allows urls like /, /@TIM, /#TEA, /#TIM@TEA, or /@TEA#TIM
+  // serves the index page. webui script will recognize team and player IDs in URL.
+  const playerTeamRegex = /^\/(\@[a-zA-Z0-9]{3}|\#[a-zA-Z0-9]{3}|\@[a-zA-Z0-9]{3}\#[a-zA-Z0-9]{3}|\#[a-zA-Z0-9]{3}\@[a-zA-Z0-9]{3})?$/;
+  app.get(playerTeamRegex, (_, response: Response) => response.sendFile(indexFile));
 
+  // serve assets
   app.use(
     "/assets",
     Express.static(path.join(__dirname, "/../../static"), {
@@ -212,6 +207,9 @@ const run = () => {
       maxAge: "1d",
     })
   );
+
+  // fallback for all other URLs
+  app.all("/*", (_, response: Response) => response.status(404).send());
 
   const httpServer = app.listen(8080, () => {
     console.log("Server running.");
