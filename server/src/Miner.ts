@@ -18,7 +18,9 @@ export const mine = (
   }
 
   console.timeEnd("mining");
-  console.log(`From ${startingNonce} to ${nonce}: ${nonce - startingNonce} hashes.`);
+  console.log(
+    `From ${startingNonce} to ${nonce}: ${nonce - startingNonce} hashes.`
+  );
   return mint(previousHash, nonce.toString(16), player, team);
 };
 

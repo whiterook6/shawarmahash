@@ -152,7 +152,8 @@ export const calculateDifficulty = (previousBlocks: Chain): string => {
   console.log(`Estimated total ops: ${totalOps.toFixed(2)}`);
   const opsPerSecond = totalOps / averageIntervalInSeconds;
   console.log(`Ops per second: ${opsPerSecond.toFixed(5)}`);
-  const newDifficulty = Math.log(opsPerSecond * desiredIntervalInSeconds) / Math.log(16);
+  const newDifficulty =
+    Math.log(opsPerSecond * desiredIntervalInSeconds) / Math.log(16);
   console.log(`newDifficulty: ${newDifficulty.toFixed(4)}`);
   return "".padStart(newDifficulty, "0");
 };

@@ -8,7 +8,7 @@ import {
   IncChangeTeam,
   IncChat,
   OutBlockFound,
-  OutChat
+  OutChat,
 } from "./MessageTypes";
 
 type GameSocket = Websocket &
@@ -197,7 +197,9 @@ const run = () => {
   // allows urls like /, /@TIM, /#TEA, /#TIM@TEA, or /@TEA#TIM
   // serves the index page. webui script will recognize team and player IDs in URL.
   const playerTeamRegex = /^\/(\@[a-zA-Z0-9]{3}|\#[a-zA-Z0-9]{3}|\@[a-zA-Z0-9]{3}\#[a-zA-Z0-9]{3}|\#[a-zA-Z0-9]{3}\@[a-zA-Z0-9]{3})?$/;
-  app.get(playerTeamRegex, (_, response: Response) => response.sendFile(indexFile));
+  app.get(playerTeamRegex, (_, response: Response) =>
+    response.sendFile(indexFile)
+  );
 
   // serve assets
   app.use(
