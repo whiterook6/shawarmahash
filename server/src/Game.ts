@@ -18,7 +18,7 @@ export class Game {
 
   constructor(chain: Chain = []) {
     this.chain = chain;
-    this.targetDifficulty = "00000";
+    this.targetDifficulty = calculateDifficulty(chain);
   }
 
   public getPreviousHash = () => {

@@ -131,7 +131,7 @@ export const getAverageInterval = (chain: Chain): number => {
 };
 
 const desiredIntervalInSeconds = 30;
-export const calculateDifficulty = (previousBlocks: Chain): string => {
+export const calculateDifficulty = (previousBlocks: Chain = []): string => {
   if (previousBlocks.length < 100) {
     return "00000";
   }
