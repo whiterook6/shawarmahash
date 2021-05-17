@@ -16,8 +16,8 @@ export class Game {
   private chain: Chain;
   private targetDifficulty: string;
 
-  constructor() {
-    this.chain = [];
+  constructor(chain: Chain = []) {
+    this.chain = chain;
     this.targetDifficulty = "00000";
   }
 
@@ -102,4 +102,6 @@ export class Game {
   public getRecentBlocks = () => {
     return this.chain.slice(-10);
   };
+
+  public getChain = () => this.chain;
 }
