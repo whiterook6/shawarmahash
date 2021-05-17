@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 module.exports = {
   
   // bundling mode
-  mode: "production",
+  mode: "development",
   
   // entry files
   entry: "./src/index.ts",

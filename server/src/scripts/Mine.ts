@@ -13,7 +13,12 @@ const chain = mineChain(
   "TIM",
   "",
   (newBlock: Block, index: number) => {
-    console.log(`${index}: ${getBlockDifficultyHash(newBlock.previousHash, newBlock.nonce)}`);
+    console.log(
+      `${index}: ${getBlockDifficultyHash(
+        newBlock.previousHash,
+        newBlock.nonce
+      )}`
+    );
   }
 );
 console.timeEnd("chain");
