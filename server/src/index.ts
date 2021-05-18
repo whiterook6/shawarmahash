@@ -1,4 +1,5 @@
 import Express, { Request, Response } from "express";
+import helmet from "helmet";
 import { Socket } from "net";
 import path from "path";
 import { default as WebSocket, default as Websocket } from "ws";
@@ -38,6 +39,10 @@ const run = async () => {
   const app = Express();
   const indexFile = path.join(__dirname + "/../../static/index.html");
   app.use(Express.json());
+
+  // security
+  app.disable("x-powered-by");
+  app.use(helmet());
 
   const websockets = new WebSocket.Server({
     noServer: true,
