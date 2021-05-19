@@ -1,4 +1,5 @@
 import { hashSHA1 } from "./Hash";
+export const blockNameRegex = /[a-zA-Z0-9][a-zA-Z0-9][a-zA-Z0-9]/;
 
 export interface Block {
   /** 40 hexadecimal characters, or "0" if it's the first block in the chain. */
@@ -35,22 +36,26 @@ export const getBlockDifficultyHash = (
   return hashSHA1(`${previousHash}${nonce}`);
 };
 
+/**
+ * @param averageTimestamp An average of the past ten timestamps, so that the rolling average is always increasing to the future.
+ * Can also be any timestamp the server chooses, in case there's no good average to pull from--for example, the first ten blocks.
+ */
 export const verifyBlock = (
   block: Block,
   previousBlockHash: string,
-  timestamp: number,
+  averageTimestamp: number,
   targetDifficulty: string
 ) => {
   if (block.previousHash !== previousBlockHash) {
     throw new Error(
       `Invalid previous block hash. Expected ${previousBlockHash}, got ${block.previousHash}`
     );
-  } else if (block.team && block.team.length !== 3) {
-    throw new Error("Invalid team name.");
-  } else if (block.player.length !== 3) {
-    throw new Error("Invalid player name.");
-  } else if (Math.abs(timestamp - block.timestamp) > 3600) {
-    throw new Error("Timestamp is too far in the future or past.");
+  } else if (block.team && !blockNameRegex.test(block.team)) {
+    throw new Error(`Invalid team name: ${block.team}`);
+  } else if (!blockNameRegex.test(block.player)) {
+    throw new Error(`Invalid player name: ${block.player}`);
+  } else if (block.timestamp < averageTimestamp){
+    throw new Error(`Timestamp is too far in the past. Average timestamp is ${averageTimestamp.toFixed(1)}, actual is ${block.timestamp}.`);
   }
 
   const blockDifficultyHash = getBlockDifficultyHash(

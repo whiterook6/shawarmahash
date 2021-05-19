@@ -3,23 +3,31 @@ import { hashSHA1 } from "./Hash";
 
 export type Chain = Block[];
 
+export const getAverageTimestamp = (chain: Chain, fallback: number): number => {
+  if (chain.length < 10){
+    return fallback;
+  } else {
+    return chain.slice(-10).reduce((previous, current) => previous + current.timestamp, 0) / 10;
+  }
+}
+
 export const verifyChain = (chain: Chain, targetDifficulty: string) => {
   if (chain.length === 0) {
     return;
   }
 
   let previousBlockHash = "0";
-  let previousBlockTimestamp = chain[0].timestamp;
   for (let index = 0; index < chain.length; index++) {
     const block = chain[index];
+    const averageBlockTimestamp = getAverageTimestamp(chain.slice(0, index + 1), 0);
+    
     verifyBlock(
       block,
       previousBlockHash,
-      previousBlockTimestamp,
+      averageBlockTimestamp,
       targetDifficulty
     );
 
-    previousBlockTimestamp = block.timestamp;
     previousBlockHash = block.hashCode;
   }
 };
@@ -79,17 +87,17 @@ export const verifyIncomingBlock = (
   };
 
   let previousBlockHash = "0";
-  let previousBlockTimestamp = block.timestamp;
   if (chain.length > 0) {
     const top = chain[chain.length - 1];
     previousBlockHash = top.hashCode;
-    previousBlockTimestamp = top.timestamp;
   }
+
+  const averageTimestamp = getAverageTimestamp(chain, 0);
 
   verifyBlock(
     block,
     previousBlockHash,
-    previousBlockTimestamp,
+    averageTimestamp,
     targetDifficulty
   );
   return block;

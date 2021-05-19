@@ -1,8 +1,9 @@
 import Express, { Request, Response } from "express";
+import helmet from "helmet";
 import { Socket } from "net";
 import path from "path";
 import { default as WebSocket, default as Websocket } from "ws";
-import { Chain } from "./Chain";
+import { Chain, verifyChain } from "./Chain";
 import { Game } from "./Game";
 import {
   IncChangeName,
@@ -29,6 +30,7 @@ const run = async () => {
   let chain;
   try {
     chain = await loadChain();
+    verifyChain(chain, "00000");
   } catch (error) {
     console.error(error);
     chain = [] as Chain;
@@ -38,6 +40,10 @@ const run = async () => {
   const app = Express();
   const indexFile = path.join(__dirname + "/../../static/index.html");
   app.use(Express.json());
+
+  // security
+  app.disable("x-powered-by");
+  app.use(helmet());
 
   const websockets = new WebSocket.Server({
     noServer: true,

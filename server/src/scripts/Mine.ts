@@ -3,8 +3,10 @@ import {
   calculateDifficulty,
   getAverageDifficulty,
   getAverageInterval,
+  verifyChain,
 } from "../Chain";
 import { mineChain } from "../Miner";
+import { saveChain } from "../Serialize";
 
 console.time("chain");
 const chain = mineChain(
@@ -25,3 +27,6 @@ console.timeEnd("chain");
 console.log("Average Difficulty", getAverageDifficulty(chain));
 console.log("Average Interval", getAverageInterval(chain));
 console.log("New Difficulty", calculateDifficulty(chain));
+verifyChain(chain, "00000");
+
+saveChain(chain).then(() => process.exit(0)).catch(console.error);
