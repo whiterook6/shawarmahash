@@ -52,7 +52,6 @@ const run = async () => {
   const getClients = () => websockets.clients as Set<GameSocket>;
 
   const broadcast = (message: { event: string; data: any }): Promise<any> => {
-    console.log(message);
     const promises: Array<Promise<void>> = new Array();
     for (const client of getClients()) {
       promises.push(

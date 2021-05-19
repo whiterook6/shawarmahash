@@ -8,10 +8,10 @@ export interface Block {
   /** at least 1 hex character. */
   nonce: string;
 
-  /** either an empty string (""), or three ascii characters */
+  /** either an empty string (""), or 3 [a-zA-Z0-9] characters */
   team: string;
 
-  /** three ascii characters */
+  /** 3 [a-zA-Z0-9] characters */
   player: string;
 
   /** number of seconds since epoch. */
