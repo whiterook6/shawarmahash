@@ -19,7 +19,7 @@ export const verifyChain = (chain: Chain, targetDifficulty: string) => {
   let previousBlockHash = "0";
   for (let index = 0; index < chain.length; index++) {
     const block = chain[index];
-    const averageBlockTimestamp = getAverageTimestamp(chain.slice(0, index), 0);
+    const averageBlockTimestamp = getAverageTimestamp(chain.slice(0, index + 1), 0);
     
     verifyBlock(
       block,
