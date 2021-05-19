@@ -1,5 +1,5 @@
 import { Block, getBlockDifficultyHash, mint } from "./Block";
-import { Chain } from "./Chain";
+import { appendBlock, Chain } from "./Chain";
 
 /** take an unfinished or easy block and give it enough work to finalize it. */
 export const mine = (
@@ -31,7 +31,7 @@ export const mineChain = (
   team: string = "",
   callback?: (newBlock: Block, index: number) => any
 ) => {
-  const chain: Chain = [];
+  let chain: Chain = [];
   while (chain.length < desiredLength) {
     const previousHash =
       chain.length > 0 ? chain[chain.length - 1].hashCode : "0";
@@ -39,7 +39,8 @@ export const mineChain = (
     if (callback) {
       callback(newBlock, chain.length + 1);
     }
-    chain.push(newBlock);
+
+    chain = appendBlock(chain, newBlock);
   }
   return chain;
 };
