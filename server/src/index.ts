@@ -3,7 +3,7 @@ import helmet from "helmet";
 import { Socket } from "net";
 import path from "path";
 import { default as WebSocket, default as Websocket } from "ws";
-import { Chain } from "./Chain";
+import { Chain, verifyChain } from "./Chain";
 import { Game } from "./Game";
 import {
   IncChangeName,
@@ -30,6 +30,7 @@ const run = async () => {
   let chain;
   try {
     chain = await loadChain();
+    verifyChain(chain, "00000");
   } catch (error) {
     console.error(error);
     chain = [] as Chain;
