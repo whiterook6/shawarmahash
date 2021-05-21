@@ -54,8 +54,12 @@ export const verifyBlock = (
     throw new Error(`Invalid team name: ${block.team}`);
   } else if (!blockNameRegex.test(block.player)) {
     throw new Error(`Invalid player name: ${block.player}`);
-  } else if (block.timestamp < averageTimestamp){
-    throw new Error(`Timestamp is too far in the past. Average timestamp is ${averageTimestamp.toFixed(1)}, actual is ${block.timestamp}.`);
+  } else if (block.timestamp < averageTimestamp) {
+    throw new Error(
+      `Timestamp is too far in the past. Average timestamp is ${averageTimestamp.toFixed(
+        1
+      )}, actual is ${block.timestamp}.`
+    );
   }
 
   const blockDifficultyHash = getBlockDifficultyHash(

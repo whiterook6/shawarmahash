@@ -29,4 +29,6 @@ console.log("Average Interval", getAverageInterval(chain));
 console.log("New Difficulty", calculateDifficulty(chain));
 verifyChain(chain, "00000");
 
-saveChain(chain).then(() => process.exit(0)).catch(console.error);
+saveChain(chain)
+  .then(() => process.exit(0))
+  .catch(console.error);

@@ -5,4 +5,6 @@ const run = async () => {
   console.log(JSON.stringify(chain, undefined, 2));
 };
 
-run().then(() => process.exit(0)).catch(console.error);
+run()
+  .then(() => process.exit(0))
+  .catch(console.error);

@@ -4,10 +4,10 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 module.exports = {
   
   // bundling mode
-  mode: "development",
+  mode: "production",
   
   // entry files
-  entry: "./src/index.ts",
+  entry: "./src/index.tsx",
   
   // output bundles (location)
   output: {
@@ -21,6 +21,10 @@ module.exports = {
     extensions: [ ".ts", ".js" ],
     fallback: {
       "buffer": require.resolve("buffer/") // webpack 5 doesn't include polyfills
+    },
+    alias: {
+      "react": "preact/compat",
+      "react-dom": "preact/compat"
     }
   },
   

@@ -5,7 +5,7 @@
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
-    "pretty": "prettier --write server/src/*.ts server/src/**/*.ts webui/src/**/*.ts"
+    "pretty": "prettier --write server/src/*.ts server/src/**/*.ts webui/src/**/*.ts webui/src/**/*.tsx"
   },
   "devDependencies": {
     "prettier": "^2.2.1"
