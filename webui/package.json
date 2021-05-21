@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "private": true,
   "scripts": {
-    "clean": "rm -rf ./dist",
+    "clean": "rm -rf ../static",
     "build": "webpack --config webpack.config.js --stats-children",
     "watch": "webpack --config webpack.config.js --watch"
   },
@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "buffer": "^6.0.3",
+    "preact": "^10.5.13",
     "sha.js": "^2.4.11"
   }
 }

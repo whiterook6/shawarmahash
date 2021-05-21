@@ -4,12 +4,16 @@ import { hashSHA1 } from "./Hash";
 export type Chain = Block[];
 
 export const getAverageTimestamp = (chain: Chain, fallback: number): number => {
-  if (chain.length < 10){
+  if (chain.length < 10) {
     return fallback;
   } else {
-    return chain.slice(-10).reduce((previous, current) => previous + current.timestamp, 0) / 10;
+    return (
+      chain
+        .slice(-10)
+        .reduce((previous, current) => previous + current.timestamp, 0) / 10
+    );
   }
-}
+};
 
 export const verifyChain = (chain: Chain, targetDifficulty: string) => {
   if (chain.length === 0) {
@@ -19,8 +23,11 @@ export const verifyChain = (chain: Chain, targetDifficulty: string) => {
   let previousBlockHash = "0";
   for (let index = 0; index < chain.length; index++) {
     const block = chain[index];
-    const averageBlockTimestamp = getAverageTimestamp(chain.slice(0, index + 1), 0);
-    
+    const averageBlockTimestamp = getAverageTimestamp(
+      chain.slice(0, index + 1),
+      0
+    );
+
     verifyBlock(
       block,
       previousBlockHash,
@@ -94,12 +101,7 @@ export const verifyIncomingBlock = (
 
   const averageTimestamp = getAverageTimestamp(chain, 0);
 
-  verifyBlock(
-    block,
-    previousBlockHash,
-    averageTimestamp,
-    targetDifficulty
-  );
+  verifyBlock(block, previousBlockHash, averageTimestamp, targetDifficulty);
   return block;
 };
 
