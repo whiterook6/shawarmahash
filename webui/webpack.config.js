@@ -4,7 +4,8 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 module.exports = {
   
   // bundling mode
-  mode: "production",
+  mode: "development",
+  devtool: "source-map",
   
   // entry files
   entry: "./src/index.tsx",
@@ -18,7 +19,7 @@ module.exports = {
   
   // file resolutions
   resolve: {
-    extensions: [ ".ts", ".js" ],
+    extensions: [ ".ts", ".js", ".tsx" ],
     fallback: {
       "buffer": require.resolve("buffer/") // webpack 5 doesn't include polyfills
     },

@@ -26,6 +26,8 @@ export interface Block {
   hashCode: string;
 }
 
+export type Chain = Block[];
+
 export const getBlockHash = (block: Block): string => {
   return hashSHA1(
     `${block.previousHash}${block.player}${block.team}${block.nonce}${block.timestamp}`

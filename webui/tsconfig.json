@@ -1,9 +1,10 @@
 {
-  "include": ["./src/*"],
+  "include": ["./src/**/*"],
   "exclude": ["./node_modules/*"],
   "compilerOptions": {
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
     "skipLibCheck": true,
+    "esModuleInterop": true,
   }
 }

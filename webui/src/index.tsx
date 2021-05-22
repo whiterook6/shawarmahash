@@ -1,5 +1,9 @@
 import { render } from "preact";
+import {App} from "./game/App";
+import {Game} from "./game/Game";
 
-const App = <h1>Hello, world!</h1>;
-console.log(App);
-render(App, document.body);
+render((
+  <Game>
+    <App />
+  </Game>
+), document.body);
