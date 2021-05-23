@@ -28,7 +28,13 @@ export interface Block {
 
 export type Chain = Block[];
 
-export const getBlockHash = (block: Block): string => {
+export const getBlockHash = (block: {
+  previousHash: string;
+  nonce: string;
+  team: string;
+  player: string;
+  timestamp: number;
+}): string => {
   return hashSHA1(
     `${block.previousHash}${block.player}${block.team}${block.nonce}${block.timestamp}`
   );
