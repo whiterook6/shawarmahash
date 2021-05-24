@@ -65,6 +65,10 @@ export class Game {
       });
   };
 
+  public getDifficultyTarget = (): string => {
+    return this.targetDifficulty;
+  }
+
   public addBlock = (block: object) => {
     const verifiedBlock = verifyIncomingBlock(
       this.chain,

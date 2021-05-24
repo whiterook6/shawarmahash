@@ -15,25 +15,22 @@ interface GameState {
 export class Game extends Component<any, GameState> {
   private miner?: Miner;
 
-  public state: GameState = {
-    hashRate: 0,
-    player: "UNK",
-    previousHash: "0",
-    target: "000000",
-    team: undefined,
-  };
+  constructor(props: any){
+    super(props);
+
+    this.state = {
+      hashRate: 0,
+      player: "UNK",
+      previousHash: "0",
+      target: "0000000000",
+      team: undefined,
+    };
+  }
   
-  public setPlayer = (player: string) => {
-    if (this.state.player !== player){
+  public setID = (player: string, team?: string) => {
+    if (this.state.player !== player || this.state.team !== team){
       this.setState({
-        player
-      });
-    }
-  };
-  
-  public setTeam = (team?: string) => {
-    if (this.state.team !== team){
-      this.setState({
+        player,
         team
       });
     }
@@ -53,6 +50,7 @@ export class Game extends Component<any, GameState> {
     if (this.miner){
       this.miner.terminate();
       this.miner = undefined;
+      this.forceUpdate();
     }
   }
 
@@ -60,8 +58,7 @@ export class Game extends Component<any, GameState> {
     return <GameContext.Provider value={{
       ...state,
       isMining: this.miner !== undefined,
-      setPlayer: this.setPlayer,
-      setTeam: this.setTeam,
+      setID: this.setID,
       startMining: this.startMining,
       stopMining: this.stopMining
     }}>{props.children}</GameContext.Provider>
@@ -83,6 +80,7 @@ export class Game extends Component<any, GameState> {
   }
 
   private fromMiner = (event: MessageEvent) => {
+    console.log(event.data);
     switch (event.data.type){
       case "nonce-found":
         const block: Block = {
@@ -96,6 +94,7 @@ export class Game extends Component<any, GameState> {
         block.hashCode = getBlockHash(block);
         this.stopMining();
         submitBlock(block);
+        return;
         
       case "hash-rate":
         const hashRate = event.data.hashRate as number;

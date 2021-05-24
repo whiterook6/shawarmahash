@@ -9,6 +9,15 @@ export const getBlocks = async (): Promise<Block[]> => {
   return response.json();
 };
 
+export const getTarget = async (): Promise<string> => {
+  const response = await fetch("/api/mining/target");
+  const body = await response.text();
+  if (!response.ok) {
+    throw new Error(body);
+  }
+  return body;
+}
+
 export const getTeams = async () => {
   const response = await fetch("/api/teams");
   if (!response.ok) {

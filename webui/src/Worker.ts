@@ -7,7 +7,11 @@ onmessage = (message) => {
       const previousHash: string = message.data.previousHash;
       const target: string = message.data.target;
 
-      let nonce = Math.floor(Math.random() * 1000000);
+      const startingNonce = Math.floor(Math.random() * 1000000);
+      let nonce = startingNonce;
+
+      const startingTime = Date.now();
+      let nextHashRateUpdate = startingTime + 1000;
 
       while (true) {
         const nonceString = (nonce++).toString(16);
@@ -22,6 +26,15 @@ onmessage = (message) => {
             previousHash
           });
           return;
+        }
+
+        const now = Date.now();
+        if (now > nextHashRateUpdate){
+          nextHashRateUpdate = now + 1000;
+          ctx.postMessage({
+            type: "hash-rate",
+            hashRate: Math.floor(1000 * (nonce - startingNonce) / (now - startingTime))
+          });
         }
       }
   }

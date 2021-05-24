@@ -149,6 +149,15 @@ const run = async () => {
     }
   });
 
+  app.get("/api/mining/target", async (_: Request, response: Response) => {
+    try {
+      return response.status(200).send(game.getDifficultyTarget())
+    } catch (error) {
+      console.error(error);
+      return response.status(503).send();
+    }
+  })
+
   app.get("/api/blocks/recent", async (_: Request, response: Response) => {
     try {
       return response.status(200).send(game.getRecentBlocks());

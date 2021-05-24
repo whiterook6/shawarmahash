@@ -8,8 +8,7 @@ export interface IGameContext {
   target: string;
   team?: string;
 
-  setPlayer: (player: string) => void;
-  setTeam: (team?: string) => void;
+  setID: (player: string, team?: string) => void;
   startMining: (previousHash: string, target: string) => void;
   stopMining: () => void;
 }
@@ -21,8 +20,7 @@ export const GameContext = createContext<IGameContext>({
   previousHash: "0",
   target: "00000",
 
-  setPlayer: () => {},
-  setTeam: () => {},
+  setID: () => {},
   startMining: () => {},
   stopMining: () => {},
 });

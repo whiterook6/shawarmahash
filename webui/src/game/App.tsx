@@ -1,11 +1,12 @@
 import {useContext, useState} from "preact/hooks";
+import { getBlocks, getTarget } from "../Api";
 import {GameContext} from "./GameContext";
 
 const nameRegexIncomplete = /^[a-zA-Z0-9]{0,3}$/
 const nameRegex = /^[a-zA-Z0-9]{3}$/
 
 export const App = () => {
-  const {setPlayer, setTeam, player, team} = useContext(GameContext);
+  const {setID, player, team, hashRate, startMining, stopMining, isMining} = useContext(GameContext);
   const [state, setState] = useState<{
     player: string,
     team?: string;
@@ -37,24 +38,51 @@ export const App = () => {
 
   const onSaveID = () => {
     if (nameRegex.test(state.player) && nameRegex.test(state.team)){
-      setTeam(state.team);
-      setPlayer(state.player);
+      setID(state.player, state.team);
+    }
+  }
+
+  const onClickStart = async () => {
+    const [blocks, target] = await Promise.all([
+      getBlocks(),
+      getTarget()
+    ]);
+    console.log(blocks, target);
+
+    if (blocks.length > 0){
+      const top = blocks[blocks.length - 1];
+      startMining(top.hashCode, target);
     }
   }
 
   return (
     <>
       <label>Player</label>
-      <input value={state.player || ""} onInput={onChangePlayer} />
+      <div>
+        <input value={state.player || ""} onInput={onChangePlayer} />
+      </div>
 
       <label>Team</label>
-      <input value={state.team || ""} onInput={onChangeTeam} />
+      <div>
+        <input value={state.team || ""} onInput={onChangeTeam} />
+      </div>
 
       <label>Save</label>
-      <button onClick={onSaveID}>Save new ID</button>
+      <div>
+        <button onClick={onSaveID}>Save new ID</button>
+      </div>
+
+      <label>Mining: {isMining ? "Yes" : "No"}</label>
+      <div>
+        <button onClick={stopMining}>Stop Mining</button>
+        <button onClick={onClickStart}>Start Mining</button>
+      </div>
 
       <label>From Context</label>
       <div>{player}-{team}</div>
+
+      <label>Hash Rate</label>
+      <div>{hashRate || "none"}</div>
     </>
   )
 }

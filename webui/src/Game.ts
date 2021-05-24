@@ -72,6 +72,7 @@ export class Game {
         console.log(JSON.stringify(foundBlock));
         submitBlock(foundBlock);
         this.mine(foundBlock.hashCode);
+        break;
     }
   };
 
