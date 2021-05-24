@@ -14,6 +14,7 @@ interface GameState {
 
 export class Game extends Component<any, GameState> {
   private miner?: Miner;
+  private webSocket?: WebSocket;
 
   constructor(props: any){
     super(props);
@@ -25,33 +26,7 @@ export class Game extends Component<any, GameState> {
       target: "0000000000",
       team: undefined,
     };
-  }
-  
-  public setID = (player: string, team?: string) => {
-    if (this.state.player !== player || this.state.team !== team){
-      this.setState({
-        player,
-        team
-      });
-    }
-  };
-
-  public startMining = (previousHash: string, target: string) => {
-    if (this.state.previousHash !== previousHash || this.state.target !== target){
-      this.mine(previousHash, target);
-      this.setState({
-        previousHash,
-        target
-      });
-    }
-  }
-
-  public stopMining = () => {
-    if (this.miner){
-      this.miner.terminate();
-      this.miner = undefined;
-      this.forceUpdate();
-    }
+    this.connectWebsocket();
   }
 
   public render = (props, state) => {
@@ -64,13 +39,40 @@ export class Game extends Component<any, GameState> {
     }}>{props.children}</GameContext.Provider>
   }
 
+  private setID = (player: string, team?: string) => {
+    if (this.state.player !== player || this.state.team !== team) {
+      this.setState({
+        player,
+        team
+      });
+    }
+  };
+
+  private startMining = (previousHash: string, target: string) => {
+    if (this.state.previousHash !== previousHash || this.state.target !== target) {
+      this.mine(previousHash, target);
+      this.setState({
+        previousHash,
+        target
+      });
+    }
+  }
+
+  private stopMining = () => {
+    if (this.miner) {
+      this.miner.terminate();
+      this.miner = undefined;
+      this.forceUpdate();
+    }
+  }
+
   private mine = (previousHash: string, target: string) => {
     if (this.miner){
       this.miner.terminate();
     }
 
     this.miner = new Miner();
-    this.miner.onmessage = this.fromMiner;
+    this.miner.onmessage = this.onMinerMessage;
 
     this.miner.postMessage({
       type: "begin-mining",
@@ -79,8 +81,7 @@ export class Game extends Component<any, GameState> {
     });
   }
 
-  private fromMiner = (event: MessageEvent) => {
-    console.log(event.data);
+  private onMinerMessage = async (event: MessageEvent) => {
     switch (event.data.type){
       case "nonce-found":
         const block: Block = {
@@ -92,9 +93,8 @@ export class Game extends Component<any, GameState> {
           hashCode: "",
         }
         block.hashCode = getBlockHash(block);
-        this.stopMining();
-        submitBlock(block);
-        return;
+        await submitBlock(block);
+        this.mine(block.hashCode, this.state.target);
         
       case "hash-rate":
         const hashRate = event.data.hashRate as number;
@@ -102,5 +102,38 @@ export class Game extends Component<any, GameState> {
           hashRate
         });
     }
+  }
+
+  private connectWebsocket = () => {
+    if (this.webSocket){
+      this.webSocket.close();
+    }
+
+    this.webSocket = new WebSocket(`ws://localhost:8080/`);
+    this.webSocket.onopen = this.onWebSocketOpen;
+  }
+
+  private onWebSocketOpen = (event: Event) => {
+    if (this.webSocket){
+      console.log("Websocket open");
+      this.webSocket.onmessage = this.onWebSocketMessage;
+      this.webSocket.onclose = this.onWebSocketClose;
+    }
+  }
+
+  private onWebSocketMessage = (event: MessageEvent) => {
+    const message = JSON.parse(event.data);
+    console.log("Websocket message", event.data);
+    switch (message.event){
+      case "block-found":
+        const block = message.data.block as Block;
+        const target = message.data.target as string;
+        this.mine(block.previousHash, target);
+        break;
+    }
+  }
+
+  private onWebSocketClose = (event: Event) => {
+    this.webSocket = undefined;
   }
 }

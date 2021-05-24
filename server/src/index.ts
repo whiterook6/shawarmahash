@@ -209,12 +209,13 @@ const run = async () => {
 
     try {
       const height = game.getHeight();
+      const target = game.getDifficultyTarget();
       await Promise.all([
         broadcast({
           event: "block-found",
           data: {
             block,
-            height,
+            target,
           },
         } as OutBlockFound),
         saveChain(game.getChain()),
