@@ -13,7 +13,6 @@ export const makeDataDir = async () => {
 
 export const saveChain = async (chain: Chain) => {
   const json = JSON.stringify(chain);
-  console.time("Compressing");
   const compressed = await new Promise<string>((resolve, reject) => {
     LZUTF8.compressAsync(
       json,
@@ -30,7 +29,6 @@ export const saveChain = async (chain: Chain) => {
       }
     );
   });
-  console.timeEnd("Compressing");
   await fs.writeFile(dataFilePath, compressed, { flag: "w" });
 };
 
@@ -47,7 +45,6 @@ export const loadChain = async (): Promise<Chain> => {
 
   let decompressed;
   try {
-    console.time("Decompressing");
     decompressed = await new Promise<string>((resolve, reject) => {
       LZUTF8.decompressAsync(
         compressed.toString(),
@@ -64,7 +61,6 @@ export const loadChain = async (): Promise<Chain> => {
         }
       );
     });
-    console.timeEnd("Decompressing");
   } catch (error) {
     console.error(error);
     return [];

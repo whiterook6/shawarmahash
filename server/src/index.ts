@@ -1,5 +1,9 @@
 import Express, { Request, Response } from "express";
+import fs from "fs/promises";
+import http from "http";
+import {Server} from "https";
 import helmet from "helmet";
+import { createServer as createHttps } from "https";
 import { Socket } from "net";
 import path from "path";
 import { default as WebSocket, default as Websocket } from "ws";
@@ -20,6 +24,22 @@ type GameSocket = Websocket &
     player: string;
     team: string;
   }>;
+
+const buildServer = async (app: Express.Application): Promise<Server> => {
+  
+  const [cert, key] = await Promise.all([
+    fs.readFile(path.join(__dirname, "../certificates/cert.pem")),
+    fs.readFile(path.join(__dirname, "../certificates/key.pem"))
+  ])
+  const server = createHttps({cert, key}, app);
+
+  return new Promise((resolve) => {
+    server.listen(8080, () => {
+      console.log("Server listening on 8080.");
+      resolve(server);
+    });
+  });
+}
 
 let nextID: 0;
 const getNextID = () => nextID++;
@@ -208,7 +228,6 @@ const run = async () => {
     }
 
     try {
-      const height = game.getHeight();
       const target = game.getDifficultyTarget();
       await Promise.all([
         broadcast({
@@ -220,7 +239,6 @@ const run = async () => {
         } as OutBlockFound),
         saveChain(game.getChain()),
       ]);
-      console.log("Chain saved.");
     } catch (error) {
       console.error(error);
     }
@@ -248,11 +266,8 @@ const run = async () => {
   // fallback for all other URLs
   app.all("/*", (_, response: Response) => response.status(404).send());
 
-  const httpServer = app.listen(8080, () => {
-    console.log("Server running.");
-  });
-
-  httpServer.on("upgrade", (request: Request, socket: Socket, head: Buffer) => {
+  const server = await buildServer(app);
+  server.on("upgrade", (request: Request, socket: Socket, head: Buffer) => {
     websockets.handleUpgrade(request, socket, head, (websocket: WebSocket) => {
       websockets.emit("connection", websocket, request);
     });

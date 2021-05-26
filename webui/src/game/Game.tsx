@@ -109,7 +109,7 @@ export class Game extends Component<any, GameState> {
       this.webSocket.close();
     }
 
-    this.webSocket = new WebSocket(`ws://localhost:8080/`);
+    this.webSocket = new WebSocket(`wss://${location.host}/`);
     this.webSocket.onopen = this.onWebSocketOpen;
   }
 
