@@ -1,5 +1,6 @@
 import {useContext, useEffect, useState} from "preact/hooks";
 import { getBlocks, getTarget } from "../Api";
+import { BlockFoundMSG, SetIDMSG } from "../MessageTypes";
 import {GameContext} from "./GameContext";
 import { WebSocketContext } from "./WebsocketContext";
 
@@ -8,10 +9,11 @@ const nameRegex = /^[a-zA-Z0-9]{3}$/
 
 export const App = () => {
   const {setID, player, team, hashRate, startMining, stopMining, isMining} = useContext(GameContext);
-  const {addEventListener, removeEventListener} = useContext(WebSocketContext);
-  const onNewBlock = (event: MessageEvent) => {
+  const {addEventListener, removeEventListener, send} = useContext(WebSocketContext);
+  const onNewBlock = (event: BlockFoundMSG) => {
     console.log("Mining from websocket block");
-    startMining(event.data.block.previousHash, event.data.target);
+    console.log(event);
+    startMining(event.block.previousHash, event.difficultyTarget);
   }
 
   useEffect(() => {
@@ -51,6 +53,11 @@ export const App = () => {
   const onSaveID = () => {
     if (nameRegex.test(state.player) && nameRegex.test(state.team)){
       setID(state.player, state.team);
+      send({
+        event: "set-id",
+        player: state.player,
+        team: state.team,
+      } as SetIDMSG);
     }
   }
 

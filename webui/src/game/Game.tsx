@@ -2,6 +2,7 @@ import { Component } from "preact";
 import Miner from "worker-loader!../Worker";
 import { getBlocks, submitBlock } from "../Api";
 import { Block, getBlockHash } from "../Block";
+import { BeginMiningMSG } from "../MessageTypes";
 import { GameContext } from "./GameContext";
 import { WebsocketContextProvider } from "./WebsocketContext";
 
@@ -55,12 +56,14 @@ export class Game extends Component<any, GameState> {
 
   private startMining = (previousHash: string, target: string) => {
     console.log("Request to start mining");
-    if (this.state.previousHash !== previousHash || this.state.target !== target) {
+    if (this.state.previousHash !== previousHash || this.state.target !== target || !this.miner) {
       this.mine(previousHash, target);
       this.setState({
         previousHash,
         target
       });
+    } else {
+      console.log("ignoring request; same target and previous hash.");
     }
   }
 
@@ -82,26 +85,33 @@ export class Game extends Component<any, GameState> {
     console.log(`Mining ${previousHash} to ${target}`);
 
     this.miner.postMessage({
-      type: "begin-mining",
+      event: "begin-mining",
       previousHash,
-      target
-    });
+      difficultyTarget: target,
+    } as BeginMiningMSG);
   }
 
   private onMinerMessage = async (event: MessageEvent) => {
-    switch (event.data.type){
+    const message = event.data;
+    switch (message.event){
       case "nonce-found":
         const block: Block = {
-          previousHash: event.data.previousHash as string,
+          previousHash: message.previousHash as string,
           player: this.state.player,
           team: this.state.team || "",
           timestamp: Math.floor(Date.now() / 1000),
-          nonce: event.data.nonce as string,
+          nonce: message.nonce as string,
           hashCode: "",
         }
+
         block.hashCode = getBlockHash(block);
+        this.setState({
+          hashRate: message.hashRate
+        })
+
         try {
           await submitBlock(block);
+          console.log("Mining after submission");
           this.mine(block.hashCode, this.state.target);
         } catch (error){
           const blocks = await getBlocks();
@@ -112,9 +122,10 @@ export class Game extends Component<any, GameState> {
             this.mine("0", this.state.target);
           }
         }
+        break;
         
       case "hash-rate":
-        const hashRate = event.data.hashRate as number;
+        const hashRate = message.hashRate as number;
         this.setState({
           hashRate
         });

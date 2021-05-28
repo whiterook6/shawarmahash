@@ -9,14 +9,9 @@ import path from "path";
 import { default as WebSocket, default as Websocket } from "ws";
 import { Chain, verifyChain } from "./Chain";
 import { Game } from "./Game";
-import {
-  IncChangeName,
-  IncChangeTeam,
-  IncChat,
-  OutBlockFound,
-  OutChat,
-} from "./MessageTypes";
+
 import { loadChain, makeDataDir, saveChain } from "./Serialize";
+import { BlockFoundMSG } from "./MessageTypes";
 
 type GameSocket = Websocket &
   Partial<{
@@ -71,7 +66,7 @@ const run = async () => {
 
   const getClients = () => websockets.clients as Set<GameSocket>;
 
-  const broadcast = (message: { event: string; data: any }): Promise<any> => {
+  const broadcast = (message: { event: string }): Promise<any> => {
     const promises: Array<Promise<void>> = new Array();
     for (const client of getClients()) {
       promises.push(
@@ -93,29 +88,7 @@ const run = async () => {
   websockets.on("connection", (client: GameSocket) => {
     client.id = getNextID();
     client.on("message", (message: any) => {
-      switch (message.event) {
-        case "change-name":
-          const newName = (message as IncChangeName).data.newName;
-          client.player = newName.substring(0, 3);
-          break;
-        case "change-team":
-          const newTeam = (message as IncChangeTeam).data.newTeam;
-          client.team = newTeam.substring(0, 3);
-          break;
-        case "chat":
-          const chatMessage = (message as IncChat).data.message;
-          broadcast({
-            event: "chat",
-            data: {
-              from: client.player || "UNK",
-              message: chatMessage,
-            },
-          } as OutChat);
-          break;
-        case "leave-team":
-          client.team = undefined;
-          break;
-      }
+      console.log(message);
     });
   });
 
@@ -232,11 +205,9 @@ const run = async () => {
       await Promise.all([
         broadcast({
           event: "block-found",
-          data: {
-            block,
-            target,
-          },
-        } as OutBlockFound),
+          block,
+          difficultyTarget: target
+        } as BlockFoundMSG),
         saveChain(game.getChain()),
       ]);
     } catch (error) {

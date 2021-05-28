@@ -1,59 +1,13 @@
 import { Block } from "./Block";
 
-// Incoming
-export type IncChangeName = {
-  event: "change-name";
-  data: {
-    newName: string;
-  };
-};
+export type SetIDMSG = {
+  event: "set-id";
+  player: string;
+  team: string;
+}
 
-export type IncChangeTeam = {
-  event: "change-team";
-  data: {
-    newTeam: string;
-  };
-};
-
-export type IncChat = {
-  event: "chat";
-  data: {
-    message: string;
-  };
-};
-
-export type IncLeaveTeam = {
-  event: "leave-team";
-};
-
-// Outgoing
-export type OutChat = {
-  event: "chat";
-  data: {
-    from: string;
-    message: string;
-  };
-};
-
-export type OutBlockFound = {
+export type BlockFoundMSG = {
   event: "block-found";
-  data: {
-    block: Block;
-  };
-};
-
-export type OutPlayerScore = {
-  event: "player-score";
-  data: {
-    player: string;
-    score: number;
-  };
-};
-
-export type outTeamScore = {
-  event: "team-score";
-  data: {
-    team: string;
-    score: number;
-  };
-};
+  block: Block;
+  difficultyTarget: string;
+}

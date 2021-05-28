@@ -1,12 +1,12 @@
-import Preact, { Component, createContext } from "preact";
+import { Component, createContext } from "preact";
 
-type MessageHandler = (event: MessageEvent) => void;
+type MessageHandler = (message: {event: string}) => void;
 
 export interface IWebSocketContext {
   addEventListener: (messageType: string, handler: MessageHandler) => void;
   removeEventListener: (messageType: string, handler: MessageHandler) => void;
   isReady: () => boolean;
-  send: (messageType: string, data: any) => void;
+  send: (message: {event: string}) => void;
 }
 
 export const WebSocketContext = createContext<IWebSocketContext>({
@@ -128,12 +128,9 @@ export class WebsocketContextProvider extends Component<any, any>{
     </WebSocketContext.Provider>
   );
 
-  public sendMessage = (messageType: string, data: any) => {
+  public sendMessage = (message: {event: string}) => {
     if (this.isReady()){
-      this.webSocket!.send(JSON.stringify({
-        type: messageType,
-        data
-      }));
+      this.webSocket!.send(JSON.stringify(message));
     }
   }
 }
