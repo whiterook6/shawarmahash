@@ -1,7 +1,7 @@
 import Express, { Request, Response } from "express";
 import fs from "fs/promises";
 import http from "http";
-import {Server} from "https";
+import { Server } from "https";
 import helmet from "helmet";
 import { createServer as createHttps } from "https";
 import { Socket } from "net";
@@ -21,12 +21,11 @@ type GameSocket = Websocket &
   }>;
 
 const buildServer = async (app: Express.Application): Promise<Server> => {
-  
   const [cert, key] = await Promise.all([
     fs.readFile(path.join(__dirname, "../certificates/cert.pem")),
-    fs.readFile(path.join(__dirname, "../certificates/key.pem"))
-  ])
-  const server = createHttps({cert, key}, app);
+    fs.readFile(path.join(__dirname, "../certificates/key.pem")),
+  ]);
+  const server = createHttps({ cert, key }, app);
 
   return new Promise((resolve) => {
     server.listen(8080, () => {
@@ -34,7 +33,7 @@ const buildServer = async (app: Express.Application): Promise<Server> => {
       resolve(server);
     });
   });
-}
+};
 
 let nextID: 0;
 const getNextID = () => nextID++;
@@ -144,12 +143,12 @@ const run = async () => {
 
   app.get("/api/mining/target", async (_: Request, response: Response) => {
     try {
-      return response.status(200).send(game.getDifficultyTarget())
+      return response.status(200).send(game.getDifficultyTarget());
     } catch (error) {
       console.error(error);
       return response.status(503).send();
     }
-  })
+  });
 
   app.get("/api/blocks/recent", async (_: Request, response: Response) => {
     try {
@@ -206,7 +205,7 @@ const run = async () => {
         broadcast({
           event: "block-found",
           block,
-          difficultyTarget: target
+          difficultyTarget: target,
         } as BlockFoundMSG),
         saveChain(game.getChain()),
       ]);

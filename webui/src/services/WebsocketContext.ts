@@ -10,8 +10,8 @@ export interface IWebSocketContext {
 }
 
 export const WebSocketContext = createContext<IWebSocketContext>({
-  addEventListener: () => { },
-  removeEventListener: () => { },
+  addEventListener: () => {},
+  removeEventListener: () => {},
   isReady: () => false,
-  send: () => { },
+  send: () => {},
 });

@@ -17,7 +17,7 @@ interface GameState {
 export class Game extends Component<any, GameState> {
   private miner?: Miner;
 
-  constructor(props: any){
+  constructor(props: any) {
     super(props);
 
     this.state = {
@@ -32,37 +32,43 @@ export class Game extends Component<any, GameState> {
   public render = (props, state) => {
     return (
       <WebsocketProvider>
-        <MiningContext.Provider value={{
-          ...state,
-          isMining: this.miner !== undefined,
-          setID: this.setID,
-          startMining: this.startMining,
-          stopMining: this.stopMining
-        }}>
+        <MiningContext.Provider
+          value={{
+            ...state,
+            isMining: this.miner !== undefined,
+            setID: this.setID,
+            startMining: this.startMining,
+            stopMining: this.stopMining,
+          }}
+        >
           {props.children}
         </MiningContext.Provider>
       </WebsocketProvider>
     );
-  }
+  };
 
   private setID = (player: string, team?: string) => {
     if (this.state.player !== player || this.state.team !== team) {
       this.setState({
         player,
-        team
+        team,
       });
     }
   };
 
   private startMining = (previousHash: string, target: string) => {
-    if (this.state.previousHash !== previousHash || this.state.target !== target || !this.miner) {
+    if (
+      this.state.previousHash !== previousHash ||
+      this.state.target !== target ||
+      !this.miner
+    ) {
       this.mine(previousHash, target);
       this.setState({
         previousHash,
-        target
+        target,
       });
     }
-  }
+  };
 
   private stopMining = () => {
     if (this.miner) {
@@ -70,10 +76,10 @@ export class Game extends Component<any, GameState> {
       this.miner = undefined;
       this.forceUpdate();
     }
-  }
+  };
 
   private mine = (previousHash: string, target: string) => {
-    if (this.miner){
+    if (this.miner) {
       this.miner.terminate();
     }
 
@@ -85,11 +91,11 @@ export class Game extends Component<any, GameState> {
       previousHash,
       difficultyTarget: target,
     } as BeginMiningMSG);
-  }
+  };
 
   private onMinerMessage = async (event: MessageEvent) => {
     const message = event.data;
-    switch (message.event){
+    switch (message.event) {
       case "nonce-found":
         const block: Block = {
           previousHash: message.previousHash as string,
@@ -98,17 +104,17 @@ export class Game extends Component<any, GameState> {
           timestamp: Math.floor(Date.now() / 1000),
           nonce: message.nonce as string,
           hashCode: "",
-        }
+        };
 
         block.hashCode = getBlockHash(block);
         this.setState({
-          hashRate: message.hashRate
-        })
+          hashRate: message.hashRate,
+        });
 
         try {
           await submitBlock(block);
           this.mine(block.hashCode, this.state.target);
-        } catch (error){
+        } catch (error) {
           const blocks = await getBlocks();
           if (blocks.length > 0) {
             const top = blocks[blocks.length - 1];
@@ -118,12 +124,12 @@ export class Game extends Component<any, GameState> {
           }
         }
         break;
-        
+
       case "hash-rate":
         const hashRate = message.hashRate as number;
         this.setState({
-          hashRate
+          hashRate,
         });
     }
-  }
+  };
 }

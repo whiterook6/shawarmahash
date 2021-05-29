@@ -16,7 +16,7 @@ export const getTarget = async (): Promise<string> => {
     throw new Error(body);
   }
   return body;
-}
+};
 
 export const getTeams = async () => {
   const response = await fetch("/api/teams");

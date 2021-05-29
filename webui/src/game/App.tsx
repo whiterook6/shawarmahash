@@ -1,18 +1,28 @@
-import {useContext, useEffect, useState} from "preact/hooks";
+import { useContext, useEffect, useState } from "preact/hooks";
 import { getBlocks, getTarget } from "../services/Api";
 import { BlockFoundMSG, SetIDMSG } from "../MessageTypes";
 import { MiningContext } from "../services/MiningContext";
 import { WebSocketContext } from "../services/WebsocketContext";
 
-const nameRegexIncomplete = /^[a-zA-Z0-9]{0,3}$/
-const nameRegex = /^[a-zA-Z0-9]{3}$/
+const nameRegexIncomplete = /^[a-zA-Z0-9]{0,3}$/;
+const nameRegex = /^[a-zA-Z0-9]{3}$/;
 
 export const App = () => {
-  const { setID, player, team, hashRate, startMining, stopMining, isMining } = useContext(MiningContext);
-  const {addEventListener, removeEventListener, send} = useContext(WebSocketContext);
+  const {
+    setID,
+    player,
+    team,
+    hashRate,
+    startMining,
+    stopMining,
+    isMining,
+  } = useContext(MiningContext);
+  const { addEventListener, removeEventListener, send } = useContext(
+    WebSocketContext
+  );
   const onNewBlock = (event: BlockFoundMSG) => {
     startMining(event.block.hashCode, event.difficultyTarget);
-  }
+  };
 
   useEffect(() => {
     addEventListener("block-found", onNewBlock);
@@ -20,10 +30,10 @@ export const App = () => {
   }, []);
 
   const [state, setState] = useState<{
-    player: string,
+    player: string;
     team?: string;
   }>({
-    player: ""
+    player: "",
   });
 
   const onChangePlayer = (event: { currentTarget: { value: string } }) => {
@@ -31,7 +41,7 @@ export const App = () => {
       if (nameRegexIncomplete.test(event.currentTarget.value)) {
         setState({
           ...state,
-          player: event.currentTarget.value
+          player: event.currentTarget.value,
         });
       }
     }
@@ -42,14 +52,14 @@ export const App = () => {
       if (nameRegexIncomplete.test(event.currentTarget.value)) {
         setState({
           ...state,
-          team: event.currentTarget.value
+          team: event.currentTarget.value,
         });
       }
     }
   };
 
   const onSaveID = () => {
-    if (nameRegex.test(state.player) && nameRegex.test(state.team)){
+    if (nameRegex.test(state.player) && nameRegex.test(state.team)) {
       setID(state.player, state.team);
       send({
         event: "set-id",
@@ -57,22 +67,19 @@ export const App = () => {
         team: state.team,
       } as SetIDMSG);
     }
-  }
+  };
 
   const onClickStart = async () => {
-    const [blocks, target] = await Promise.all([
-      getBlocks(),
-      getTarget()
-    ]);
+    const [blocks, target] = await Promise.all([getBlocks(), getTarget()]);
     console.log(blocks, target);
 
-    if (blocks.length > 0){
+    if (blocks.length > 0) {
       const top = blocks[blocks.length - 1];
       startMining(top.hashCode, target);
     } else {
       startMining("0", target);
     }
-  }
+  };
 
   return (
     <>
@@ -98,10 +105,12 @@ export const App = () => {
       </div>
 
       <label>From Context</label>
-      <div>{player}-{team}</div>
+      <div>
+        {player}-{team}
+      </div>
 
       <label>Hash Rate</label>
       <div>{hashRate || "none"}</div>
     </>
-  )
-}
+  );
+};
