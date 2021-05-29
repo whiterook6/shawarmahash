@@ -7,7 +7,6 @@ onmessage = (event: MessageEvent) => {
   if (message.event === "begin-mining"){
     const previousHash: string = (message as BeginMiningMSG).previousHash;
     const target: string = (message as BeginMiningMSG).difficultyTarget;
-    console.log("worker", previousHash, target);
 
     const startingNonce = Math.floor(Math.random() * 1000000);
     let nonce = startingNonce;
@@ -22,6 +21,13 @@ onmessage = (event: MessageEvent) => {
         .digest("hex");
 
       const now = Date.now();
+      if (now > nextHashRateUpdate) {
+        nextHashRateUpdate = now + 1000;
+        ctx.postMessage({
+          event: "hash-rate",
+          hashRate: Math.floor(1000 * (nonce - startingNonce) / (now - startingTime))
+        } as HashRateMSG);
+      }
 
       if (difficultyHash.startsWith(target)) {
         ctx.postMessage({
@@ -31,14 +37,6 @@ onmessage = (event: MessageEvent) => {
           hashRate: Math.floor(1000 * (nonce - startingNonce) / (now - startingTime))
         } as NonceFoundMSG);
         return;
-      }
-
-      if (now > nextHashRateUpdate){
-        nextHashRateUpdate = now + 1000;
-        ctx.postMessage({
-          event: "hash-rate",
-          hashRate: Math.floor(1000 * (nonce - startingNonce) / (now - startingTime))
-        } as HashRateMSG);
       }
     }
   }

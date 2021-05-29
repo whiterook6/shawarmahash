@@ -1,6 +1,6 @@
 import { createContext } from "preact";
 
-export interface IGameContext {
+export interface IMiningContext {
   hashRate: number;
   isMining: boolean;
   player: string;
@@ -13,7 +13,7 @@ export interface IGameContext {
   stopMining: () => void;
 }
 
-export const GameContext = createContext<IGameContext>({
+export const MiningContext = createContext<IMiningContext>({
   hashRate: 0,
   isMining: false,
   player: "",

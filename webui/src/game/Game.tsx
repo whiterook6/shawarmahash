@@ -1,10 +1,10 @@
 import { Component } from "preact";
 import Miner from "worker-loader!../Worker";
-import { getBlocks, submitBlock } from "../Api";
+import { getBlocks, submitBlock } from "../services/Api";
 import { Block, getBlockHash } from "../Block";
 import { BeginMiningMSG } from "../MessageTypes";
-import { GameContext } from "./GameContext";
-import { WebsocketContextProvider } from "./WebsocketContext";
+import { MiningContext } from "../services/MiningContext";
+import { WebsocketProvider } from "./WebsocketProvider";
 
 interface GameState {
   hashRate: number; // hashes per second. We can convert to nice numbers like 4.5K later.
@@ -31,8 +31,8 @@ export class Game extends Component<any, GameState> {
 
   public render = (props, state) => {
     return (
-      <WebsocketContextProvider>
-        <GameContext.Provider value={{
+      <WebsocketProvider>
+        <MiningContext.Provider value={{
           ...state,
           isMining: this.miner !== undefined,
           setID: this.setID,
@@ -40,8 +40,8 @@ export class Game extends Component<any, GameState> {
           stopMining: this.stopMining
         }}>
           {props.children}
-        </GameContext.Provider>
-      </WebsocketContextProvider>
+        </MiningContext.Provider>
+      </WebsocketProvider>
     );
   }
 
@@ -55,15 +55,12 @@ export class Game extends Component<any, GameState> {
   };
 
   private startMining = (previousHash: string, target: string) => {
-    console.log("Request to start mining");
     if (this.state.previousHash !== previousHash || this.state.target !== target || !this.miner) {
       this.mine(previousHash, target);
       this.setState({
         previousHash,
         target
       });
-    } else {
-      console.log("ignoring request; same target and previous hash.");
     }
   }
 
@@ -82,7 +79,6 @@ export class Game extends Component<any, GameState> {
 
     this.miner = new Miner();
     this.miner.onmessage = this.onMinerMessage;
-    console.log(`Mining ${previousHash} to ${target}`);
 
     this.miner.postMessage({
       event: "begin-mining",
@@ -111,7 +107,6 @@ export class Game extends Component<any, GameState> {
 
         try {
           await submitBlock(block);
-          console.log("Mining after submission");
           this.mine(block.hashCode, this.state.target);
         } catch (error){
           const blocks = await getBlocks();

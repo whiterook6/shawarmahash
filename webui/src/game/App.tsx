@@ -1,19 +1,17 @@
 import {useContext, useEffect, useState} from "preact/hooks";
-import { getBlocks, getTarget } from "../Api";
+import { getBlocks, getTarget } from "../services/Api";
 import { BlockFoundMSG, SetIDMSG } from "../MessageTypes";
-import {GameContext} from "./GameContext";
-import { WebSocketContext } from "./WebsocketContext";
+import { MiningContext } from "../services/MiningContext";
+import { WebSocketContext } from "../services/WebsocketContext";
 
 const nameRegexIncomplete = /^[a-zA-Z0-9]{0,3}$/
 const nameRegex = /^[a-zA-Z0-9]{3}$/
 
 export const App = () => {
-  const {setID, player, team, hashRate, startMining, stopMining, isMining} = useContext(GameContext);
+  const { setID, player, team, hashRate, startMining, stopMining, isMining } = useContext(MiningContext);
   const {addEventListener, removeEventListener, send} = useContext(WebSocketContext);
   const onNewBlock = (event: BlockFoundMSG) => {
-    console.log("Mining from websocket block");
-    console.log(event);
-    startMining(event.block.previousHash, event.difficultyTarget);
+    startMining(event.block.hashCode, event.difficultyTarget);
   }
 
   useEffect(() => {

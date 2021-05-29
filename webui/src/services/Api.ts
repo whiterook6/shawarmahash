@@ -1,4 +1,4 @@
-import { Block } from "./Block";
+import { Block } from "../Block";
 
 export const getBlocks = async (): Promise<Block[]> => {
   const response = await fetch("/api/blocks/recent");
