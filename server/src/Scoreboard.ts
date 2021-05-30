@@ -14,30 +14,34 @@ export const getPlayers = (chain: Chain): string[] => {
   return Array.from(players);
 };
 
-export const getPlayerScores = (chain: Chain): Map<string, number> => {
+export const getPlayerScores = (chain: Chain) => {
   const scores = new Map<string, number>();
   chain.forEach((block) => {
-    if (scores.has(block.player)) {
-      scores.set(block.player, scores.get(block.player)! + 1);
+    const player = block.player;
+
+    if (scores.has(player)) {
+      scores.set(player, scores.get(player)! + 1);
     } else {
-      scores.set(block.player, 1);
+      scores.set(player, 1);
     }
   });
 
   return scores;
 };
 
-export const getTeamScores = (chain: Chain): Map<string, number> => {
+export const getTeamScores = (chain: Chain) => {
   const scores = new Map<string, number>();
-  chain
-    .filter((block) => block.team !== "")
-    .forEach((block) => {
-      if (scores.has(block.team)) {
-        scores.set(block.team, scores.get(block.team)! + 1);
-      } else {
-        scores.set(block.team, 1);
-      }
-    });
+  chain.forEach((block) => {
+    const team = block.team;
+
+    if (!block.team) {
+      return;
+    } else if (scores.has(team)) {
+      scores.set(team, scores.get(team)! + 1);
+    } else {
+      scores.set(team, 1);
+    }
+  });
 
   return scores;
 };
