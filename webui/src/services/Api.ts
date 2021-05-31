@@ -18,25 +18,25 @@ export const getTarget = async (): Promise<string> => {
   return body;
 };
 
-export const getTeams = async () => {
+export const getTeams = async (): Promise<string[]> => {
   const response = await fetch("/api/teams");
   if (!response.ok) {
     const body = await response.text();
     throw new Error(body);
   }
-  return response.json();
+  return response.json() as Promise<string[]>;
 };
 
-export const getPlayers = async () => {
+export const getPlayers = async (): Promise<string[]> => {
   const response = await fetch("/api/players");
   if (!response.ok) {
     const body = await response.text();
     throw new Error(body);
   }
-  return response.json();
+  return response.json() as Promise<string[]>;
 };
 
-export const submitBlock = async (block: Block) => {
+export const submitBlock = async (block: Block): Promise<string> => {
   const response = await fetch("/api/blocks", {
     body: JSON.stringify(block),
     headers: {
@@ -48,4 +48,6 @@ export const submitBlock = async (block: Block) => {
     const body = await response.text();
     throw new Error(body);
   }
+  const { block: newBlock, newTarget } = await response.json();
+  return newTarget as string;
 };
