@@ -69,7 +69,7 @@ export const verifyBlock = (
     block.previousHash,
     block.nonce
   );
-  if (!blockDifficultyHash.startsWith(targetDifficulty)) {
+  if (blockDifficultyHash < targetDifficulty) {
     throw new Error(
       `Block doesn't meet target difficulty: sha1(${block.previousHash}${block.nonce}) = ${blockDifficultyHash}`
     );

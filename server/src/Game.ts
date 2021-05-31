@@ -20,6 +20,19 @@ export class Game {
   constructor(chain: Chain = []) {
     this.chain = chain;
     this.targetDifficulty = calculateDifficulty(chain);
+    if (chain.length === 0) {
+      console.log(
+        `Starting game. Empty chain. Target = ${this.targetDifficulty}.`
+      );
+    } else if (chain.length === 1) {
+      console.log(
+        `Starting game. One block. Target = ${this.targetDifficulty}.`
+      );
+    } else {
+      console.log(
+        `Starting game. ${chain.length} blocks. Target = ${this.targetDifficulty}.`
+      );
+    }
   }
 
   public getPreviousHash = () => {
@@ -77,9 +90,15 @@ export class Game {
       this.targetDifficulty
     );
     this.chain = appendBlock(this.chain, verifiedBlock);
+    console.log(
+      `Block added: #${this.chain.length.toString(10).padStart(4, " ")}: ${
+        verifiedBlock.hashCode
+      } at ${new Date(verifiedBlock.timestamp * 1000)}`
+    );
 
-    if (this.chain.length % 100) {
+    if (this.chain.length % 100 === 0) {
       this.targetDifficulty = calculateDifficulty(this.chain);
+      console.log(`New Difficulty: ${this.targetDifficulty}`);
     }
 
     return verifiedBlock;

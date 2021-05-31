@@ -29,7 +29,7 @@ onmessage = (event: MessageEvent) => {
         } as HashRateMSG);
       }
 
-      if (difficultyHash.startsWith(target)) {
+      if (difficultyHash < target) {
         ctx.postMessage({
           event: "nonce-found",
           nonce: nonceString,

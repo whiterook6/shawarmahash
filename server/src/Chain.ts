@@ -150,13 +150,13 @@ export const getAverageInterval = (chain: Chain): number => {
 export const buildDifficultyTargetString = (difficulty: number): string => {
   const decimal = difficulty % 1; // 32.456 => .456
   const middleChar = (15 - Math.floor(decimal * 16)).toString(16); // (0.456 => "8")
-  return middleChar.padStart(difficulty, "0").padEnd(64, "f"); // 0...08f...f, 64 chars long
+  return middleChar.padStart(difficulty + 1, "0").padEnd(64, "f"); // 0...08f...f, 64 chars long
 };
 
 const desiredIntervalInSeconds = 30;
 export const calculateDifficulty = (previousBlocks: Chain = []): string => {
   if (previousBlocks.length < 100) {
-    return "00000";
+    return buildDifficultyTargetString(5);
   }
 
   let oneHundredBlocks;

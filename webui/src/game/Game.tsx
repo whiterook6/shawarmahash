@@ -24,7 +24,8 @@ export class Game extends Component<any, GameState> {
       hashRate: 0,
       player: "UNK",
       previousHash: "0",
-      target: "0000000000",
+      target:
+        "00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
       team: undefined,
     };
   }
@@ -112,8 +113,8 @@ export class Game extends Component<any, GameState> {
         });
 
         try {
-          await submitBlock(block);
-          this.mine(block.hashCode, this.state.target);
+          const newTarget = await submitBlock(block);
+          this.startMining(block.hashCode, newTarget);
         } catch (error) {
           const blocks = await getBlocks();
           if (blocks.length > 0) {
