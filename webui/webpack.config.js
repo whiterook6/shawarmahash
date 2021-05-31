@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 module.exports = {
   
   // bundling mode
-  mode: "development",
+  mode: "production",
   devtool: "source-map",
   
   // entry files
@@ -27,6 +27,10 @@ module.exports = {
       "react": "preact/compat",
       "react-dom": "preact/compat"
     }
+  },
+
+  watchOptions: {
+    ignored: /node_modules/,
   },
   
   // loaders
