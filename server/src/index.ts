@@ -1,13 +1,17 @@
 import Express, { Request, Response } from "express";
 import fs from "fs/promises";
-import http from "http";
 import { Server } from "https";
 import helmet from "helmet";
 import { createServer as createHttps } from "https";
 import { Socket } from "net";
 import path from "path";
 import { default as WebSocket, default as Websocket } from "ws";
-import { Chain, verifyChain } from "./Chain";
+import {
+  buildDifficultyTargetString,
+  calculateDifficulty,
+  Chain,
+  verifyChain,
+} from "./Chain";
 import { Game } from "./Game";
 
 import { loadChain, makeDataDir, saveChain } from "./Serialize";
@@ -44,7 +48,10 @@ const run = async () => {
   let chain;
   try {
     chain = await loadChain();
-    verifyChain(chain, "00000");
+    verifyChain(
+      chain,
+      buildDifficultyTargetString(5) // minimum difficulty
+    );
   } catch (error) {
     console.error(error);
     chain = [] as Chain;
@@ -193,7 +200,10 @@ const run = async () => {
         return response.status(400).send(error.message);
       }
 
-      response.status(200).send(block);
+      response.status(200).send({
+        block,
+        newTarget: game.getDifficultyTarget(),
+      });
     } catch (error) {
       console.error(error);
       return response.status(503).send();
