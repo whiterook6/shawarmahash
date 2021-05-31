@@ -1,6 +1,7 @@
 import { Block } from "./Block";
 import {
   appendBlock,
+  buildDifficultyTargetString,
   calculateDifficulty,
   Chain,
   verifyIncomingBlock,
@@ -76,6 +77,11 @@ export class Game {
       this.targetDifficulty
     );
     this.chain = appendBlock(this.chain, verifiedBlock);
+
+    if (this.chain.length % 100) {
+      this.targetDifficulty = calculateDifficulty(this.chain);
+    }
+
     return verifiedBlock;
   };
 

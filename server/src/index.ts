@@ -1,6 +1,5 @@
 import Express, { Request, Response } from "express";
 import fs from "fs/promises";
-import http from "http";
 import { Server } from "https";
 import helmet from "helmet";
 import { createServer as createHttps } from "https";
@@ -44,7 +43,10 @@ const run = async () => {
   let chain;
   try {
     chain = await loadChain();
-    verifyChain(chain, "00000");
+    verifyChain(
+      chain,
+      "00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    );
   } catch (error) {
     console.error(error);
     chain = [] as Chain;

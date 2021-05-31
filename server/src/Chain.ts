@@ -173,7 +173,9 @@ export const calculateDifficulty = (previousBlocks: Chain = []): string => {
   );
   const totalOps = Math.pow(16, averageDifficulty);
   const opsPerSecond = totalOps / averageIntervalInSeconds;
-  const newDifficulty =
-    Math.log(opsPerSecond * desiredIntervalInSeconds) / Math.log(16);
+  const newDifficulty = Math.max(
+    5,
+    Math.log(opsPerSecond * desiredIntervalInSeconds) / Math.log(16)
+  );
   return buildDifficultyTargetString(newDifficulty);
 };
