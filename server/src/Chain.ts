@@ -140,6 +140,19 @@ export const getAverageInterval = (chain: Chain): number => {
   return elapsedSeconds / length;
 };
 
+/**
+ * @param difficulty a floating number between 0 and 64.
+ * @returns a hashcode-like string where the first `difficulty` chars are 0s and the rest are fs
+ *
+ * example: 32.456 => '00000000000000000000000000000008ffffffffffffffffffffffffffffffff'
+ * the fractional part contributes a character from f to 0. Don't worry about it.
+ */
+export const buildDifficultyTargetString = (difficulty: number): string => {
+  const decimal = difficulty % 1; // 32.456 => .456
+  const middleChar = (15 - Math.floor(decimal * 16)).toString(16); // (0.456 => "8")
+  return middleChar.padStart(difficulty, "0").padEnd(64, "f"); // 0...08f...f, 64 chars long
+};
+
 const desiredIntervalInSeconds = 30;
 export const calculateDifficulty = (previousBlocks: Chain = []): string => {
   if (previousBlocks.length < 100) {
@@ -159,11 +172,8 @@ export const calculateDifficulty = (previousBlocks: Chain = []): string => {
     getAverageInterval(oneHundredBlocks)
   );
   const totalOps = Math.pow(16, averageDifficulty);
-  console.log(`Estimated total ops: ${totalOps.toFixed(2)}`);
   const opsPerSecond = totalOps / averageIntervalInSeconds;
-  console.log(`Ops per second: ${opsPerSecond.toFixed(5)}`);
   const newDifficulty =
     Math.log(opsPerSecond * desiredIntervalInSeconds) / Math.log(16);
-  console.log(`newDifficulty: ${newDifficulty.toFixed(4)}`);
-  return "".padStart(newDifficulty, "0");
+  return buildDifficultyTargetString(newDifficulty);
 };
