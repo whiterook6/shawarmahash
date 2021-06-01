@@ -1,7 +1,7 @@
-import { Component } from "preact";
+import * as Preact from "preact";
 import { MessageHandler, WebSocketContext } from "../services/WebsocketContext";
 
-export class WebsocketProvider extends Component<any, any> {
+export class WebsocketProvider extends Preact.Component<any, any> {
   private isMounted: boolean;
   private webSocket?: WebSocket;
   private messageHandlers: Map<string, MessageHandler[]>;

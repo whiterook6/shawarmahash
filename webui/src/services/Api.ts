@@ -48,6 +48,6 @@ export const submitBlock = async (block: Block): Promise<string> => {
     const body = await response.text();
     throw new Error(body);
   }
-  const { block: newBlock, newTarget } = await response.json();
+  const { newTarget } = await response.json();
   return newTarget as string;
 };

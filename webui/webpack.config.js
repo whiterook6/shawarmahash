@@ -28,6 +28,10 @@ module.exports = {
       "react-dom": "preact/compat"
     }
   },
+
+  watchOptions: {
+    ignored: /node_modules/,
+  },
   
   // loaders
   module: {

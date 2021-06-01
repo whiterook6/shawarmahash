@@ -93,7 +93,11 @@ export class Game {
     console.log(
       `Block added: #${this.chain.length.toString(10).padStart(4, " ")}: ${
         verifiedBlock.hashCode
-      } at ${new Date(verifiedBlock.timestamp * 1000)}`
+      } at ${new Date(verifiedBlock.timestamp * 1000).toISOString()} by ${
+        verifiedBlock.team
+          ? `@${verifiedBlock.player}#${verifiedBlock.team}`
+          : `@${verifiedBlock.player}`
+      }`
     );
 
     if (this.chain.length % 100 === 0) {
