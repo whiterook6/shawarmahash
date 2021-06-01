@@ -1,136 +1,122 @@
-import { Component } from "preact";
-import Miner from "worker-loader!../Worker";
-import { getBlocks, submitBlock } from "../services/Api";
-import { Block, getBlockHash } from "../Block";
-import { BeginMiningMSG } from "../MessageTypes";
+import { useContext, useEffect, useState } from "preact/hooks";
+import { BlockFoundMSG } from "../MessageTypes";
+import { getBlocks, getTarget, submitBlock } from "../services/Api";
 import { MiningContext } from "../services/MiningContext";
-import { WebsocketProvider } from "./WebsocketProvider";
+import { WebSocketContext } from "../services/WebsocketContext";
 
-interface GameState {
-  hashRate: number; // hashes per second. We can convert to nice numbers like 4.5K later.
-  player: string;
-  previousHash: string;
-  target: string;
-  team?: string;
-}
+export const Game = () => {
+  const {
+    hashRate,
+    isMining,
+    player,
+    previousHash,
+    setID,
+    startMining,
+    stopMining,
+    target,
+    team,
+  } = useContext(MiningContext);
+  const { addEventListener, removeEventListener } = useContext(
+    WebSocketContext
+  );
 
-export class Game extends Component<any, GameState> {
-  private miner?: Miner;
-
-  constructor(props: any) {
-    super(props);
-
-    this.state = {
-      hashRate: 0,
-      player: "UNK",
-      previousHash: "0",
-      target:
-        "00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-      team: undefined,
-    };
-  }
-
-  public render = (props, state) => {
-    return (
-      <WebsocketProvider>
-        <MiningContext.Provider
-          value={{
-            ...state,
-            isMining: this.miner !== undefined,
-            setID: this.setID,
-            startMining: this.startMining,
-            stopMining: this.stopMining,
-          }}
-        >
-          {props.children}
-        </MiningContext.Provider>
-      </WebsocketProvider>
-    );
-  };
-
-  private setID = (player: string, team?: string) => {
-    if (this.state.player !== player || this.state.team !== team) {
-      this.setState({
-        player,
-        team,
+  const onBlock = (message: BlockFoundMSG) => {
+    const {
+      block: { hashCode },
+      difficultyTarget,
+    } = message;
+    if (isMining) {
+      startMining(hashCode, difficultyTarget, (newBlock) => {
+        submitBlock(newBlock);
       });
     }
   };
 
-  private startMining = (previousHash: string, target: string) => {
-    if (
-      this.state.previousHash !== previousHash ||
-      this.state.target !== target ||
-      !this.miner
-    ) {
-      this.mine(previousHash, target);
-      this.setState({
-        previousHash,
-        target,
-      });
+  useEffect(() => {
+    addEventListener("block-found", onBlock);
+
+    return () => removeEventListener("block-found", onBlock);
+  });
+
+  const [idForm, setIDForm] = useState<{
+    player?: string;
+    team?: string;
+  }>({
+    player,
+    team,
+  });
+
+  const onChangePlayer = (event: { currentTarget: { value: string } }) => {
+    setIDForm((previous) => {
+      return { player: event.currentTarget.value, team: previous.team };
+    });
+  };
+  const onChangeTeam = (event: { currentTarget: { value: string } }) => {
+    setIDForm((previous) => {
+      return { player: previous.player, team: event.currentTarget.value };
+    });
+  };
+  const onChangeID = () => {
+    if (idForm.player && idForm.team) {
+      setID(idForm.player, idForm.team);
     }
   };
 
-  private stopMining = () => {
-    if (this.miner) {
-      this.miner.terminate();
-      this.miner = undefined;
-      this.forceUpdate();
-    }
-  };
-
-  private mine = (previousHash: string, target: string) => {
-    if (this.miner) {
-      this.miner.terminate();
+  const onClickStartMining = async () => {
+    if (isMining) {
+      return;
     }
 
-    this.miner = new Miner();
-    this.miner.onmessage = this.onMinerMessage;
+    const [recentBlocks, difficultyTarget] = await Promise.all([
+      getBlocks(),
+      getTarget(),
+    ]);
 
-    this.miner.postMessage({
-      event: "begin-mining",
-      previousHash,
-      difficultyTarget: target,
-    } as BeginMiningMSG);
-  };
-
-  private onMinerMessage = async (event: MessageEvent) => {
-    const message = event.data;
-    switch (message.event) {
-      case "nonce-found":
-        const block: Block = {
-          previousHash: message.previousHash as string,
-          player: this.state.player,
-          team: this.state.team || "",
-          timestamp: Math.floor(Date.now() / 1000),
-          nonce: message.nonce as string,
-          hashCode: "",
-        };
-
-        block.hashCode = getBlockHash(block);
-        this.setState({
-          hashRate: message.hashRate,
-        });
-
-        try {
-          const newTarget = await submitBlock(block);
-          this.startMining(block.hashCode, newTarget);
-        } catch (error) {
-          const blocks = await getBlocks();
-          if (blocks.length > 0) {
-            const top = blocks[blocks.length - 1];
-            this.mine(top.hashCode, this.state.target);
-          } else {
-            this.mine("0", this.state.target);
-          }
+    if (recentBlocks.length > 0) {
+      startMining(
+        recentBlocks[recentBlocks.length - 1].hashCode,
+        difficultyTarget,
+        (newBlock) => {
+          submitBlock(newBlock);
         }
-        break;
-
-      case "hash-rate":
-        const hashRate = message.hashRate as number;
-        this.setState({
-          hashRate,
-        });
+      );
     }
   };
-}
+
+  const onClickStopMining = () => {
+    if (!isMining) {
+      return;
+    }
+
+    stopMining();
+  };
+
+  return (
+    <>
+      <label>Player</label>
+      <div>
+        <input onInput={onChangePlayer} value={idForm.player || ""}></input>
+      </div>
+      <label>Team</label>
+      <div>
+        <input onInput={onChangeTeam} value={idForm.team || ""}></input>
+      </div>
+      <button onClick={onChangeID}>Change ID</button>
+      <div>
+        <button onClick={onClickStartMining} disabled={isMining}>
+          Start Mining
+        </button>
+        <button onClick={onClickStopMining} disabled={!isMining}>
+          Stop Mining
+        </button>
+      </div>
+      <hr />
+      <label>HashRate</label>
+      <div>{hashRate}</div>
+      <label>Previous Hash</label>
+      <div>{previousHash}</div>
+      <label>Difficulty Target</label>
+      <div>{target}</div>
+    </>
+  );
+};

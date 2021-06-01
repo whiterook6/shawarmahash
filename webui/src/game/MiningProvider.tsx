@@ -1,4 +1,4 @@
-import Preact from "preact";
+import * as Preact from "preact";
 import Miner from "worker-loader!../Worker";
 import { Block, mint } from "../Block";
 import { BeginMiningMSG } from "../MessageTypes";
@@ -10,27 +10,28 @@ interface IState {
   previousHash: string;
   target: string;
   team?: string;
-  shouldBeMining: boolean;
+  isMining: boolean;
 }
 
 export class MiningProvider extends Preact.Component<any, IState> {
   private miner?: Miner;
+  private onMinedBlock?: (block: Block) => unknown;
   public state: IState = {
     hashRate: 0,
     player: "UNK",
     previousHash: "0",
     target: "00000",
-    shouldBeMining: false,
+    isMining: false,
   };
 
-  public render = (props, state) => {
+  public render = (props, state: IState) => {
     return (
       <MiningContext.Provider
         value={{
           hashRate: state.hashRate,
           isMining: state.isMining,
           player: state.player,
-          previousHash: "",
+          previousHash: state.previousHash,
           target: state.target,
           team: state.team,
 
@@ -42,20 +43,6 @@ export class MiningProvider extends Preact.Component<any, IState> {
         {props.children}
       </MiningContext.Provider>
     );
-  };
-
-  private startMining = (previousHash: string, target: string) => {
-    if (
-      this.state.previousHash !== previousHash ||
-      this.state.target !== target ||
-      !this.miner
-    ) {
-      this.mine(previousHash, target);
-      this.setState({
-        previousHash,
-        target,
-      });
-    }
   };
 
   private mine = (previousHash: string, target: string) => {
@@ -72,7 +59,8 @@ export class MiningProvider extends Preact.Component<any, IState> {
       difficultyTarget: target,
     } as BeginMiningMSG);
     this.setState({
-      shouldBeMining: true,
+      hashRate: 0,
+      isMining: true,
     });
   };
 
@@ -89,6 +77,9 @@ export class MiningProvider extends Preact.Component<any, IState> {
         this.setState({
           hashRate: message.hashRate,
         });
+        if (this.onMinedBlock) {
+          this.onMinedBlock(block);
+        }
         break;
 
       case "hash-rate":
@@ -108,12 +99,33 @@ export class MiningProvider extends Preact.Component<any, IState> {
     }
   };
 
+  private startMining = (
+    previousHash: string,
+    target: string,
+    onMinedBlock: (newBlock: Block) => void
+  ) => {
+    if (
+      this.state.previousHash !== previousHash ||
+      this.state.target !== target ||
+      !this.miner
+    ) {
+      this.onMinedBlock = onMinedBlock;
+      this.mine(previousHash, target);
+      this.setState({
+        previousHash,
+        target,
+      });
+    }
+  };
+
   private stopMining = () => {
     if (this.miner) {
       this.miner.terminate();
       this.miner = undefined;
+      this.onMinedBlock = undefined;
       this.setState({
-        shouldBeMining: false,
+        hashRate: 0,
+        isMining: false,
       });
     }
   };

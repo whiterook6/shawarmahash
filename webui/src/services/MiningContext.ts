@@ -1,4 +1,5 @@
 import { createContext } from "preact";
+import { Block } from "../Block";
 
 export interface IMiningContext {
   hashRate: number;
@@ -9,7 +10,11 @@ export interface IMiningContext {
   team?: string;
 
   setID: (player: string, team?: string) => void;
-  startMining: (previousHash: string, target: string) => void;
+  startMining: (
+    previousHash: string,
+    target: string,
+    onBlockMined: (newBlock: Block) => void
+  ) => void;
   stopMining: () => void;
 }
 
@@ -18,7 +23,7 @@ export const MiningContext = createContext<IMiningContext>({
   isMining: false,
   player: "",
   previousHash: "0",
-  target: "00000",
+  target: "00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
 
   setID: () => {},
   startMining: () => {},

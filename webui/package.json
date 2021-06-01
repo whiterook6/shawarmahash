@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "clean": "rm -rf ../static",
-    "build": "webpack --config webpack.config.js --stats-children",
+    "build": "webpack --config webpack.config.js --stats",
     "watch": "webpack --config webpack.config.js --watch"
   },
   "devDependencies": {

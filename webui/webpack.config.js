@@ -4,7 +4,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 module.exports = {
   
   // bundling mode
-  mode: "production",
+  mode: "development",
   devtool: "source-map",
   
   // entry files
