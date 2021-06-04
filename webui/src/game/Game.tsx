@@ -1,6 +1,7 @@
 import { useContext, useEffect, useState } from "preact/hooks";
 import { BlockFoundMSG } from "../MessageTypes";
 import { getBlocks, getTarget, submitBlock } from "../services/Api";
+import { ChainContext } from "../services/ChainContext";
 import { MiningContext } from "../services/MiningContext";
 import { WebSocketContext } from "../services/WebsocketContext";
 
@@ -19,23 +20,31 @@ export const Game = () => {
   const { addEventListener, removeEventListener } = useContext(
     WebSocketContext
   );
+  const { ourBlocks, chain, appendBlock, setChain } = useContext(ChainContext);
+  useEffect(() => {
+    const run = async () => {
+      const chain = await getBlocks();
+      setChain(chain);
+    };
+    run();
+  }, []);
 
-  const onBlock = (message: BlockFoundMSG) => {
-    const {
-      block: { hashCode },
-      difficultyTarget,
-    } = message;
+  const onBlockFromSocket = (message: BlockFoundMSG) => {
+    const { block, difficultyTarget } = message;
+    appendBlock(block);
     if (isMining) {
-      startMining(hashCode, difficultyTarget, (newBlock) => {
-        submitBlock(newBlock);
-      });
+      startMining(block.hashCode, difficultyTarget, onMinedBlock);
     }
   };
 
-  useEffect(() => {
-    addEventListener("block-found", onBlock);
+  const onMinedBlock = async (newBlock) => {
+    await submitBlock(newBlock);
+    appendBlock(newBlock, true);
+  };
 
-    return () => removeEventListener("block-found", onBlock);
+  useEffect(() => {
+    addEventListener("block-found", onBlockFromSocket);
+    return () => removeEventListener("block-found", onBlockFromSocket);
   });
 
   const [idForm, setIDForm] = useState<{
@@ -76,10 +85,10 @@ export const Game = () => {
       startMining(
         recentBlocks[recentBlocks.length - 1].hashCode,
         difficultyTarget,
-        (newBlock) => {
-          submitBlock(newBlock);
-        }
+        onMinedBlock
       );
+    } else {
+      startMining("0", difficultyTarget, onMinedBlock);
     }
   };
 
@@ -117,6 +126,19 @@ export const Game = () => {
       <div>{previousHash}</div>
       <label>Difficulty Target</label>
       <div>{target}</div>
+      <hr />
+      <label>My Blocks</label>
+      <div>
+        {ourBlocks.map((block) => (
+          <div key={block.hashCode}>{block.hashCode}</div>
+        ))}
+      </div>
+      <label>Chain</label>
+      <div>
+        {chain.map((block) => (
+          <div key={block.hashCode}>{block.hashCode}</div>
+        ))}
+      </div>
     </>
   );
 };

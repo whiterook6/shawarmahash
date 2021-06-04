@@ -1,3 +1,4 @@
+import { ChainProvider } from "./ChainProvider";
 import { Game } from "./Game";
 import { MiningProvider } from "./MiningProvider";
 import { WebsocketProvider } from "./WebsocketProvider";
@@ -5,7 +6,9 @@ import { WebsocketProvider } from "./WebsocketProvider";
 export const App = () => (
   <WebsocketProvider>
     <MiningProvider>
-      <Game />
+      <ChainProvider>
+        <Game />
+      </ChainProvider>
     </MiningProvider>
   </WebsocketProvider>
 );
