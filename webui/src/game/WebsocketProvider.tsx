@@ -4,6 +4,7 @@ import { MessageHandler, WebSocketContext } from "../services/WebsocketContext";
 export class WebsocketProvider extends Preact.Component<any, any> {
   private isMounted: boolean;
   private webSocket?: WebSocket;
+  private reconnectTimeout?: any;
   private messageHandlers: Map<string, MessageHandler[]>;
 
   constructor(props) {
@@ -44,6 +45,9 @@ export class WebsocketProvider extends Preact.Component<any, any> {
     if (this.webSocket) {
       this.webSocket.close();
     }
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+    }
   };
 
   public isReady = () => {
@@ -57,7 +61,6 @@ export class WebsocketProvider extends Preact.Component<any, any> {
     }
 
     const message = JSON.parse(event.data);
-    console.log(message);
     if (this.messageHandlers.has(message.event)) {
       const messageHandlers = this.messageHandlers.get(message.event);
       for (const messageHandler of messageHandlers) {
@@ -66,29 +69,36 @@ export class WebsocketProvider extends Preact.Component<any, any> {
     }
   };
 
-  public reconnectWebSocket = (attempts: number = 0) => {
+  public reconnectWebSocket = () => {
+    this.disconnectWebSocket();
     if (!this.isMounted) {
-      return;
-    } else if (attempts > 3) {
       return;
     }
 
-    this.disconnectWebSocket();
-
     try {
       this.webSocket = new WebSocket(`wss://${location.host}`);
+      this.webSocket.onerror = this.waitToReconnect;
       this.webSocket.onopen = () => {
         if (this.isMounted) {
+          console.log("Websocket connected");
           this.webSocket.onmessage = this.onMessage;
-          this.webSocket.onclose = () => this.reconnectWebSocket();
+          this.webSocket.onerror = this.waitToReconnect;
+          this.webSocket.onclose = this.reconnectWebSocket;
         } else {
           this.disconnectWebSocket();
         }
       };
     } catch (error) {
       console.error(error);
-      setTimeout(() => this.reconnectWebSocket(attempts + 1), 1000);
+      this.waitToReconnect();
     }
+  };
+
+  public waitToReconnect = () => {
+    if (!this.isMounted) {
+      return;
+    }
+    this.reconnectTimeout = setTimeout(this.reconnectWebSocket, 5000);
   };
 
   public removeEventListener = (
