@@ -4,6 +4,7 @@ import { getBlocks, getTarget, submitBlock } from "../services/Api";
 import { ChainContext } from "../services/ChainContext";
 import { MiningContext } from "../services/MiningContext";
 import { WebSocketContext } from "../services/WebsocketContext";
+import { Block } from "./Block";
 
 export const Game = () => {
   const {
@@ -129,15 +130,21 @@ export const Game = () => {
       <hr />
       <label>My Blocks</label>
       <div>
-        {ourBlocks.map((block) => (
-          <div key={block.hashCode}>{block.hashCode}</div>
-        ))}
+        {ourBlocks
+          .slice(-10)
+          .reverse()
+          .map((block) => (
+            <Block block={block} />
+          ))}
       </div>
       <label>Chain</label>
       <div>
-        {chain.map((block) => (
-          <div key={block.hashCode}>{block.hashCode}</div>
-        ))}
+        {chain
+          .slice(-10)
+          .reverse()
+          .map((block) => (
+            <Block block={block} />
+          ))}
       </div>
     </>
   );

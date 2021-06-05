@@ -12,7 +12,7 @@ onmessage = (event: MessageEvent) => {
     let nonce = startingNonce;
 
     const startingTime = Date.now();
-    let nextHashRateUpdate = startingTime + 1000;
+    let nextHashRateUpdate = startingTime + 100;
 
     while (true) {
       const nonceString = (nonce++).toString(16);
