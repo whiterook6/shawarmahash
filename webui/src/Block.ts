@@ -104,3 +104,30 @@ export const mint = (
     hashCode,
   } as Block;
 };
+
+/**
+ * Takes a chain, inserts a new block (usually at the end, but sometimes by chopping off blocks
+ * from the middle onward). Returns the updated chain.
+ */
+export const appendBlock = (chain: Chain, newBlock: Block): Chain => {
+  if (chain.length === 0){
+    return [newBlock];
+  }
+
+  if (chain[chain.length - 1].hashCode === newBlock.previousHash){
+    return [
+      ...chain,
+      newBlock
+    ];
+  }
+
+  const indexOf = chain.findIndex(block => block.hashCode === newBlock.previousHash);
+  if (indexOf >= 0){
+    return [
+      ...chain.slice(0, indexOf + 1),
+      newBlock
+    ];
+  }
+
+  throw new Error("Cannot append block: previous hash not found in chain.");
+}
