@@ -8,8 +8,9 @@
   "private": true,
   "scripts": {
     "clean": "rm -rf ../static",
-    "build": "webpack --config webpack.config.js --stats",
-    "watch": "webpack --config webpack.config.js --watch"
+    "build": "webpack --config webpack.dev.js --stats",
+    "watch": "webpack --config webpack.dev.js --watch",
+    "prod": "webpack --config webpack.prod.js --stats"
   },
   "devDependencies": {
     "@types/sha.js": "^2.4.0",
