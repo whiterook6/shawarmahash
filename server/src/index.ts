@@ -230,6 +230,9 @@ const run = async () => {
       maxAge: "1d",
     })
   );
+  app.all("/favicon.ico", (_, response) => {
+    response.sendFile(path.join(__dirname, "..", "..", "static", "favicon.ico"));
+  });
 
   // fallback for all other URLs
   app.all("/*", (_, response: Response) => response.status(404).send());

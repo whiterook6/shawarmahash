@@ -28,9 +28,11 @@ export const Game = () => {
   }, []);
 
   const onBlockFromServer = (message: MessageEvent<string>) => {
-    const { block, difficultyTarget } = JSON.parse(message.data);
+    const { block, difficultyTarget } = JSON.parse(message.data) as BlockFoundMSG;
     appendBlock(block);
-    startMining(block.hashCode, difficultyTarget, onMinedBlock);
+    if (isMining){
+      startMining(block.hashCode, difficultyTarget, onMinedBlock);
+    }
   };
 
   const onMinedBlock = async (newBlock) => {

@@ -28,19 +28,9 @@ export type HashRateMSG = {
 }
 
 /**
- * Send to the server, via Server Events
- */
-export type SetIDMSG = {
-  event: "set-id";
-  player: string;
-  team?: string;
-}
-
-/**
  * Comes from the server, via Server Events.
  */
 export type BlockFoundMSG = {
-  event: "block-found",
   block: Block;
   difficultyTarget: string;
 }

@@ -24,6 +24,15 @@ export class MiningProvider extends Preact.Component<any, IState> {
     isMining: false,
   };
 
+  public componentDidMount() {
+    console.log("MiningProvider mounted");
+  }
+
+  public componentWillUnmount(): void {
+    console.log("MiningProvider unmounted");
+    this.stopMining();
+  }
+
   public render = (props, state: IState) => {
     return (
       <MiningContext.Provider
