@@ -1,4 +1,3 @@
-import { getBlockDifficultyHash } from "../Block";
 import { loadChain } from "../Serialize";
 
 const run = async () => {

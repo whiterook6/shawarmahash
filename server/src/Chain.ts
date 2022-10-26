@@ -119,7 +119,7 @@ export const getAverageDifficulty = (chain: Chain): number => {
       for (
         leadingZeroes = 0;
         leadingZeroes < difficultyHash.length;
-        leadingZeroes++
+        leadingZeroes ++
       ) {
         if (difficultyHash[leadingZeroes] !== "0") {
           break;

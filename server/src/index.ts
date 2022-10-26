@@ -3,12 +3,9 @@ import fs from "fs/promises";
 import { Server } from "https";
 import helmet from "helmet";
 import { createServer as createHttps } from "https";
-import { Socket } from "net";
 import path from "path";
-import { default as WebSocket, default as Websocket } from "ws";
 import {
   buildDifficultyTargetString,
-  calculateDifficulty,
   Chain,
   verifyChain,
 } from "./Chain";
@@ -16,13 +13,6 @@ import { Game } from "./Game";
 
 import { loadChain, makeDataDir, saveChain } from "./Serialize";
 import { BlockFoundMSG } from "./MessageTypes";
-
-type GameSocket = Websocket &
-  Partial<{
-    id: number;
-    player: string;
-    team: string;
-  }>;
 
 const buildServer = async (app: Express.Application): Promise<Server> => {
   const [cert, key] = await Promise.all([
@@ -39,7 +29,7 @@ const buildServer = async (app: Express.Application): Promise<Server> => {
   });
 };
 
-let nextID: 0;
+let nextID = 0;
 const getNextID = () => nextID++;
 
 const run = async () => {
@@ -57,44 +47,44 @@ const run = async () => {
     chain = [] as Chain;
   }
 
+  const indexFile = path.join(__dirname + "/../../static/index.html");
+  try {
+    await fs.stat(indexFile);
+  } catch (error) {
+    console.error("Could not find index.html");
+    process.exit(1);
+  }
+
   const game = new Game(chain);
   const app = Express();
-  const indexFile = path.join(__dirname + "/../../static/index.html");
+
   app.use(Express.json());
 
   // security
   app.disable("x-powered-by");
   app.use(helmet());
 
-  const websockets = new WebSocket.Server({
-    noServer: true,
-  });
-
-  const getClients = () => websockets.clients as Set<GameSocket>;
-
-  const broadcast = (message: { event: string }): Promise<any> => {
-    const promises: Array<Promise<void>> = new Array();
-    for (const client of getClients()) {
-      promises.push(
-        new Promise((resolve, reject) => {
-          client.send(JSON.stringify(message), (error?: Error) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve();
-            }
-          });
-        })
-      );
+  const clients = new Map<number, Express.Response>();
+  const broadcast = (event: string, data: unknown) => {
+    for (const client of clients.values()) {
+      client.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
     }
-
-    return Promise.all(promises);
   };
 
-  websockets.on("connection", (client: GameSocket) => {
-    client.id = getNextID();
-    client.on("message", (message: any) => {
-      console.log(message);
+  app.get("/watch", (request: Request, response: Response) => {
+    const headers = {
+      "Content-Type": "text/event-stream",
+      "Connection": "keep-alive",
+      "Cache-Control": "no-cache",
+    };
+    response.writeHead(200, headers);
+    const clientID = getNextID();
+    clients.set(clientID, response);
+    console.log(`Client ${clientID} connected.`);
+
+    request.on("close", () => {
+      clients.delete(clientID);
+      console.log(`Client ${clientID} disconnected`);
     });
   });
 
@@ -188,6 +178,7 @@ const run = async () => {
 
   app.post("/api/blocks", async (request: Request, response: Response) => {
     let block;
+    let newTarget;
     try {
       const possibleBlock = request.body;
       if (!possibleBlock || typeof possibleBlock !== "object") {
@@ -197,12 +188,13 @@ const run = async () => {
       try {
         block = game.addBlock(possibleBlock as object);
       } catch (error) {
-        return response.status(400).send(error.message);
+        return response.status(400).send((error as Error).message);
       }
 
+      newTarget = game.getDifficultyTarget();
       response.status(200).send({
         block,
-        newTarget: game.getDifficultyTarget(),
+        newTarget
       });
     } catch (error) {
       console.error(error);
@@ -210,15 +202,11 @@ const run = async () => {
     }
 
     try {
-      const target = game.getDifficultyTarget();
-      await Promise.all([
-        broadcast({
-          event: "block-found",
-          block,
-          difficultyTarget: target,
-        } as BlockFoundMSG),
-        saveChain(game.getChain()),
-      ]);
+      broadcast("block-found", {
+        block,
+        difficultyTarget: newTarget,
+      } as BlockFoundMSG);
+      await saveChain(game.getChain());
     } catch (error) {
       console.error(error);
     }
@@ -246,12 +234,7 @@ const run = async () => {
   // fallback for all other URLs
   app.all("/*", (_, response: Response) => response.status(404).send());
 
-  const server = await buildServer(app);
-  server.on("upgrade", (request: Request, socket: Socket, head: Buffer) => {
-    websockets.handleUpgrade(request, socket, head, (websocket: WebSocket) => {
-      websockets.emit("connection", websocket, request);
-    });
-  });
+  await buildServer(app);
 };
 
 run();

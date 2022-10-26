@@ -29,7 +29,7 @@ export const saveChain = async (chain: Chain) => {
       }
     );
   });
-  await fs.writeFile(dataFilePath, compressed, { flag: "w" });
+  return fs.writeFile(dataFilePath, compressed, { flag: "w" });
 };
 
 export const loadChain = async (): Promise<Chain> => {

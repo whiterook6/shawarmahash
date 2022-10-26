@@ -28,7 +28,7 @@ export type HashRateMSG = {
 }
 
 /**
- * Send to the server, via websocket
+ * Send to the server, via Server Events
  */
 export type SetIDMSG = {
   event: "set-id";
@@ -37,7 +37,7 @@ export type SetIDMSG = {
 }
 
 /**
- * Comes from the server, via websocket.
+ * Comes from the server, via Server Events.
  */
 export type BlockFoundMSG = {
   event: "block-found",

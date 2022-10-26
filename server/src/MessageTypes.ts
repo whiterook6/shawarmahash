@@ -1,13 +1,7 @@
 import { Block } from "./Block";
 
-export type SetIDMSG = {
-  event: "set-id";
-  player: string;
-  team: string;
-};
-
+/** Sent to clients via server side events. Type = "block-found" */
 export type BlockFoundMSG = {
-  event: "block-found";
   block: Block;
   difficultyTarget: string;
 };

@@ -1,5 +1,4 @@
-import Preact, { render } from "preact";
+import * as Preact from "preact";
 import {App} from "./game/App";
 
-
-render(<App />, document.body);
+Preact.render(<App />, document.body);

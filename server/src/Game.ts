@@ -1,7 +1,6 @@
 import { Block } from "./Block";
 import {
   appendBlock,
-  buildDifficultyTargetString,
   calculateDifficulty,
   Chain,
   verifyIncomingBlock,

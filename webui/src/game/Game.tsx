@@ -3,8 +3,7 @@ import { BlockFoundMSG } from "../MessageTypes";
 import { getBlocks, getTarget, submitBlock } from "../services/Api";
 import { ChainContext } from "../services/ChainContext";
 import { MiningContext } from "../services/MiningContext";
-import { WebSocketContext } from "../services/WebsocketContext";
-import { Block } from "./Block";
+import { ServerEventsContext } from "../services/ServerEventsContext";
 
 export const Game = () => {
   const {
@@ -18,9 +17,7 @@ export const Game = () => {
     target,
     team,
   } = useContext(MiningContext);
-  const { addEventListener, removeEventListener } = useContext(
-    WebSocketContext
-  );
+  const {addMessageHandler, removeMessageHandler} = useContext(ServerEventsContext);
   const { ourBlocks, chain, appendBlock, setChain } = useContext(ChainContext);
   useEffect(() => {
     const run = async () => {
@@ -30,12 +27,10 @@ export const Game = () => {
     run();
   }, []);
 
-  const onBlockFromSocket = (message: BlockFoundMSG) => {
-    const { block, difficultyTarget } = message;
+  const onBlockFromServer = (message: MessageEvent<string>) => {
+    const { block, difficultyTarget } = JSON.parse(message.data);
     appendBlock(block);
-    if (isMining) {
-      startMining(block.hashCode, difficultyTarget, onMinedBlock);
-    }
+    startMining(block.hashCode, difficultyTarget, onMinedBlock);
   };
 
   const onMinedBlock = async (newBlock) => {
@@ -44,9 +39,9 @@ export const Game = () => {
   };
 
   useEffect(() => {
-    addEventListener("block-found", onBlockFromSocket);
-    return () => removeEventListener("block-found", onBlockFromSocket);
-  });
+    addMessageHandler("block-found", onBlockFromServer);
+    return () => removeMessageHandler("block-found", onBlockFromServer);
+  }, []);
 
   const [idForm, setIDForm] = useState<{
     player?: string;
@@ -134,7 +129,7 @@ export const Game = () => {
           .slice(-10)
           .reverse()
           .map((block) => (
-            <Block block={block} />
+            <div>{block.hashCode}</div>
           ))}
       </div>
       <label>Chain</label>
@@ -143,7 +138,7 @@ export const Game = () => {
           .slice(-10)
           .reverse()
           .map((block) => (
-            <Block block={block} />
+            <div>{block.hashCode}</div>
           ))}
       </div>
     </>

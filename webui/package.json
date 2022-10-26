@@ -22,7 +22,6 @@
     "worker-loader": "^3.0.8"
   },
   "dependencies": {
-    "@emeraldpay/hashicon": "^0.5.1",
     "buffer": "^6.0.3",
     "preact": "^10.5.13",
     "sha.js": "^2.4.11"

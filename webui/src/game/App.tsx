@@ -1,14 +1,14 @@
 import { ChainProvider } from "./ChainProvider";
 import { Game } from "./Game";
 import { MiningProvider } from "./MiningProvider";
-import { WebsocketProvider } from "./WebsocketProvider";
+import { ServerEventsProvider } from "./ServerEventsProvider";
 
 export const App = () => (
-  <WebsocketProvider>
+  <ServerEventsProvider>
     <MiningProvider>
       <ChainProvider>
         <Game />
       </ChainProvider>
     </MiningProvider>
-  </WebsocketProvider>
+  </ServerEventsProvider>
 );
