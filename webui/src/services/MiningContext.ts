@@ -3,12 +3,12 @@ import { Block } from "../Block";
 
 export interface IMiningContext {
   hashRate: number;
-  isMining: boolean;
   player: string;
   previousHash: string;
   target: string;
   team?: string;
 
+  isMining: () => boolean;
   setID: (player: string, team?: string) => void;
   startMining: (
     previousHash: string,
@@ -20,11 +20,11 @@ export interface IMiningContext {
 
 export const MiningContext = createContext<IMiningContext>({
   hashRate: 0,
-  isMining: false,
   player: "",
   previousHash: "0",
   target: "00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
 
+  isMining: () => false,
   setID: () => {},
   startMining: () => {},
   stopMining: () => {},

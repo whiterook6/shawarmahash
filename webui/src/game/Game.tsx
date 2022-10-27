@@ -30,7 +30,7 @@ export const Game = () => {
   const onBlockFromServer = (message: MessageEvent<string>) => {
     const { block, difficultyTarget } = JSON.parse(message.data) as BlockFoundMSG;
     appendBlock(block);
-    if (isMining){
+    if (isMining()){
       startMining(block.hashCode, difficultyTarget, onMinedBlock);
     }
   };
@@ -70,7 +70,7 @@ export const Game = () => {
   };
 
   const onClickStartMining = async () => {
-    if (isMining) {
+    if (isMining()) {
       return;
     }
 
@@ -91,7 +91,7 @@ export const Game = () => {
   };
 
   const onClickStopMining = () => {
-    if (!isMining) {
+    if (!isMining()) {
       return;
     }
 
@@ -110,10 +110,10 @@ export const Game = () => {
       </div>
       <button onClick={onChangeID}>Change ID</button>
       <div>
-        <button onClick={onClickStartMining} disabled={isMining}>
+        <button onClick={onClickStartMining} disabled={isMining()}>
           Start Mining
         </button>
-        <button onClick={onClickStopMining} disabled={!isMining}>
+        <button onClick={onClickStopMining} disabled={!isMining()}>
           Stop Mining
         </button>
       </div>

@@ -16,13 +16,18 @@ interface IState {
 export class MiningProvider extends Preact.Component<any, IState> {
   private miner?: Miner;
   private onMinedBlock?: (block: Block) => unknown;
-  public state: IState = {
-    hashRate: 0,
-    player: "UNK",
-    previousHash: "0",
-    target: "00000",
-    isMining: false,
-  };
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      hashRate: 0,
+      player: "UNK",
+      previousHash: "0",
+      target: "00000",
+      isMining: false,
+    };
+    console.log("MiningProvider constructor");
+  }
 
   public componentDidMount() {
     console.log("MiningProvider mounted");
@@ -38,7 +43,7 @@ export class MiningProvider extends Preact.Component<any, IState> {
       <MiningContext.Provider
         value={{
           hashRate: state.hashRate,
-          isMining: state.isMining,
+          isMining: () => this.state.isMining,
           player: state.player,
           previousHash: state.previousHash,
           target: state.target,
@@ -131,11 +136,12 @@ export class MiningProvider extends Preact.Component<any, IState> {
     if (this.miner) {
       this.miner.terminate();
       this.miner = undefined;
-      this.onMinedBlock = undefined;
-      this.setState({
-        hashRate: 0,
-        isMining: false,
-      });
     }
+
+    this.onMinedBlock = undefined;
+    this.setState({
+      hashRate: 0,
+      isMining: false,
+    });
   };
 }
