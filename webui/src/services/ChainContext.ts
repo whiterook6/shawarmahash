@@ -3,7 +3,7 @@ import { Block, Chain } from "../Block";
 
 export interface IChainContext {
   chain: Chain;
-  ourBlocks: Block[];
+  ourBlocks: Chain;
   setChain: (chain: Chain) => void;
   appendBlock: (block: Block, ours?: boolean) => void;
 }

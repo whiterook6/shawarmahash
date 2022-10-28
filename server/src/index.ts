@@ -1,4 +1,4 @@
-import Express, { Request, Response } from "express";
+import Express, { NextFunction, Request, Response } from "express";
 import fs from "fs/promises";
 import { Server } from "https";
 import helmet from "helmet";
@@ -10,9 +10,9 @@ import {
   verifyChain,
 } from "./Chain";
 import { Game } from "./Game";
-
 import { loadChain, makeDataDir, saveChain } from "./Serialize";
 import { BlockFoundMSG } from "./MessageTypes";
+import { ChatHistory, ChatMessage } from "./Chat";
 
 const buildServer = async (app: Express.Application): Promise<Server> => {
   const [cert, key] = await Promise.all([
@@ -35,6 +35,14 @@ const getNextID = () => nextID++;
 const run = async () => {
   await makeDataDir();
 
+  const indexFile = path.join(__dirname + "/../../static/index.html");
+  try {
+    await fs.stat(indexFile);
+  } catch (error) {
+    console.error("Could not find index.html");
+    process.exit(1);
+  }
+
   let chain;
   try {
     chain = await loadChain();
@@ -47,15 +55,8 @@ const run = async () => {
     chain = [] as Chain;
   }
 
-  const indexFile = path.join(__dirname + "/../../static/index.html");
-  try {
-    await fs.stat(indexFile);
-  } catch (error) {
-    console.error("Could not find index.html");
-    process.exit(1);
-  }
-
   const game = new Game(chain);
+  const chat = new ChatHistory();
   const app = Express();
 
   app.use(Express.json());
@@ -101,9 +102,9 @@ const run = async () => {
     "/api/players/:player",
     async (request: Request, response: Response) => {
       try {
-        const player = request.params.playerID as string;
-        if (typeof player !== "string" || player.length !== 3) {
-          return response.status(400).send(`Invalid player name.`);
+        const player = request.params.player as string;
+        if (!player || player.length !== 3) {
+          return response.status(400).send("Invalid player name");
         }
         return response
           .status(200)
@@ -124,19 +125,22 @@ const run = async () => {
     }
   });
 
-  app.get("/api/teams/:team", async (request: Request, response: Response) => {
-    try {
-      const team = request.params.team as string;
-      if (typeof team !== "string" || team.length !== 3) {
-        return response.status(400).send(`Invalid team name.`);
-      }
+  app.get(
+    "/api/teams/:team",
+    async (request: Request, response: Response) => {
+      try {
+        const team = request.params.team as string;
+        if (team && team.length !== 3) {
+          return response.status(400).send("Invalid team name");
+        }
 
-      return response.status(200).send(game.getTeamScore(team).toString(10));
-    } catch (error) {
-      console.error(error);
-      return response.status(503).send();
+        return response.status(200).send(game.getTeamScore(team).toString(10));
+      } catch (error) {
+        console.error(error);
+        return response.status(503).send();
+      }
     }
-  });
+  );
 
   app.get("/api/mining/target", async (_: Request, response: Response) => {
     try {
@@ -162,8 +166,8 @@ const run = async () => {
       try {
         const height = parseInt(request.params.height, 10);
         const chainHeight = game.getHeight();
-        if (height < 0) {
-          return response.status(404).send();
+        if (height < 0){
+          return response.status(400).send("Invalid block height");
         } else if (height >= chainHeight) {
           return response.status(404).send();
         } else {
@@ -176,39 +180,68 @@ const run = async () => {
     }
   );
 
-  app.post("/api/blocks", async (request: Request, response: Response) => {
-    let block;
-    let newTarget;
-    try {
-      const possibleBlock = request.body;
-      if (!possibleBlock || typeof possibleBlock !== "object") {
-        return response.status(400).send("Invalid block: empty.");
+  app.post(
+    "/api/blocks",
+    async (request: Request, response: Response) => {
+      let block;
+      let newTarget;
+      try {
+        const possibleBlock = request.body;
+        if (!possibleBlock || typeof possibleBlock !== "object") {
+          return response.status(400).send("Invalid block: empty.");
+        }
+
+        try {
+          block = game.addBlock(possibleBlock as object);
+        } catch (error) {
+          return response.status(400).send((error as Error).message);
+        }
+
+        newTarget = game.getDifficultyTarget();
+        response.status(200).send({
+          block,
+          newTarget
+        });
+      } catch (error) {
+        console.error(error);
+        return response.status(503).send();
       }
 
       try {
-        block = game.addBlock(possibleBlock as object);
+        broadcast("block-found", {
+          block,
+          difficultyTarget: newTarget,
+        } as BlockFoundMSG);
+        await saveChain(game.getChain());
       } catch (error) {
-        return response.status(400).send((error as Error).message);
+        console.error(error);
       }
+    }
+  );
 
-      newTarget = game.getDifficultyTarget();
-      response.status(200).send({
-        block,
-        newTarget
-      });
+  app.get("/api/chat/recent", async (_: Request, response: Response) => {
+    try {
+      return response.status(200).send(chat.getRecentMessages(100));
     } catch (error) {
       console.error(error);
       return response.status(503).send();
     }
+  });
 
+  app.post("/api/chat", async (request: Request, response: Response) => {
     try {
-      broadcast("block-found", {
-        block,
-        difficultyTarget: newTarget,
-      } as BlockFoundMSG);
-      await saveChain(game.getChain());
+      const newMessage = request.body as ChatMessage;
+      if (!newMessage || typeof newMessage !== "object") {
+        return response.status(400).send("Invalid message: empty.");
+      }
+
+      const message = chat.addMessage(newMessage);
+      response.status(200).send(message);
+
+      broadcast("chat-message", message);
     } catch (error) {
       console.error(error);
+      return response.status(503).send();
     }
   });
 

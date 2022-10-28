@@ -1,10 +1,12 @@
 {
   "include": ["./src/**/*"],
   "compilerOptions": {
+    "esModuleInterop": true,
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
-    "sourceMap": true,
+    "moduleResolution": "node",
     "skipLibCheck": true,
-    "esModuleInterop": true,
+    "sourceMap": true,
+    "target": "esnext"
   }
 }
