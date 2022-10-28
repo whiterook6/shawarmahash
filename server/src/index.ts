@@ -29,8 +29,8 @@ const buildServer = async (app: Express.Application): Promise<Server> => {
   });
 };
 
-let nextID = 0;
-const getNextID = () => nextID++;
+let nextSSEClientID = 0;
+const getNextID = () => nextSSEClientID++;
 
 const run = async () => {
   await makeDataDir();
@@ -72,6 +72,16 @@ const run = async () => {
     }
   };
 
+  const sendToClient = (clientID: number, event: string, data: unknown) => {
+    if (!clients.has(clientID)) {
+      return;
+    }
+
+    clients.get(clientID)!.write(
+      `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`
+    );
+  }
+
   app.get("/watch", (request: Request, response: Response) => {
     const headers = {
       "Content-Type": "text/event-stream",
@@ -81,12 +91,14 @@ const run = async () => {
     response.writeHead(200, headers);
     const clientID = getNextID();
     clients.set(clientID, response);
-    console.log(`Client ${clientID} connected.`);
 
     request.on("close", () => {
       clients.delete(clientID);
       console.log(`Client ${clientID} disconnected`);
     });
+
+    sendToClient(clientID, "init", {clientID});
+    console.log(`Client ${clientID} connected.`);
   });
 
   app.get("/api/players", async (_: Request, response: Response) => {
@@ -233,6 +245,15 @@ const run = async () => {
       const newMessage = request.body as ChatMessage;
       if (!newMessage || typeof newMessage !== "object") {
         return response.status(400).send("Invalid message: empty.");
+      }
+
+      if (!newMessage.fromPlayer || newMessage.fromPlayer.length !== 3) {
+        return response.status(400).send("Invalid message: invalid player.");
+      }
+      if (!newMessage.content || newMessage.content.length === 0) {
+        return response.status(400).send("Invalid message: empty content.");
+      } else if (newMessage.content.length > 1023){
+        return response.status(400).send("Invalid message: content too long.");
       }
 
       const message = chat.addMessage(newMessage);

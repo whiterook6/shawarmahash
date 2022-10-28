@@ -1,7 +1,8 @@
 import { useContext, useEffect, useState } from "preact/hooks";
 import { BlockFoundMSG } from "../MessageTypes";
-import { getBlocks, getTarget, submitBlock } from "../services/Api";
+import { getBlocks, getChatMessages, getTarget, submitBlock } from "../services/Api";
 import { ChainContext } from "../services/ChainContext";
+import { ChatContext } from "../services/ChatContext";
 import { MiningContext } from "../services/MiningContext";
 import { ServerEventsContext } from "../services/ServerEventsContext";
 
@@ -17,12 +18,22 @@ export const Game = () => {
     target,
     team,
   } = useContext(MiningContext);
+  const {
+    messages,
+    sendMessage,
+    setMessages,
+    appendMessage,
+  } = useContext(ChatContext);
   const {addMessageHandler, removeMessageHandler} = useContext(ServerEventsContext);
   const { ourBlocks, chain, appendBlock, setChain } = useContext(ChainContext);
   useEffect(() => {
     const run = async () => {
-      const chain = await getBlocks();
+      const [chain, messages] = await Promise.all([
+        getBlocks(),
+        getChatMessages()
+      ]);
       setChain(chain);
+      setMessages(messages);
     };
     run();
   }, []);
@@ -35,6 +46,10 @@ export const Game = () => {
     }
   };
 
+  const onMessageFromServer = (message: MessageEvent<string>) => {
+    appendMessage(JSON.parse(message.data));
+  };
+
   const onMinedBlock = async (newBlock) => {
     await submitBlock(newBlock);
     appendBlock(newBlock, true);
@@ -42,7 +57,11 @@ export const Game = () => {
 
   useEffect(() => {
     addMessageHandler("block-found", onBlockFromServer);
-    return () => removeMessageHandler("block-found", onBlockFromServer);
+    addMessageHandler("chat-message", onMessageFromServer);
+    return () => {
+      removeMessageHandler("block-found", onBlockFromServer);
+      removeMessageHandler("chat-message", onMessageFromServer);
+    };
   }, []);
 
   const [idForm, setIDForm] = useState<{
@@ -53,6 +72,7 @@ export const Game = () => {
     team,
   });
 
+  
   const onChangePlayer = (event: { currentTarget: { value: string } }) => {
     setIDForm((previous) => {
       return { player: event.currentTarget.value, team: previous.team };
@@ -68,6 +88,18 @@ export const Game = () => {
       setID(idForm.player, idForm.team);
     }
   };
+  
+  const [chatForm, setChatForm] = useState<string>("");
+  const onChangeChat = (event: { currentTarget: { value: string } }) => {
+    setChatForm(event.currentTarget.value);
+  };
+  const onSendChatMessage = () => {
+    sendMessage({
+      fromPlayer: player,
+      fromTeam: team,
+      content: chatForm,
+    });
+  }
 
   const onClickStartMining = async () => {
     if (isMining()) {
@@ -143,6 +175,15 @@ export const Game = () => {
             <div>{block.hashCode}</div>
           ))}
       </div>
+      <hr />
+      <label>Chat</label>
+      {messages.map(message => (
+        <div>{message.content}</div>
+      ))}
+      <input onInput={onChangeChat} value={chatForm || ""} />
+      <button onClick={onSendChatMessage} disabled={chatForm.length === 0}>
+        Send
+      </button>
     </>
   );
 };

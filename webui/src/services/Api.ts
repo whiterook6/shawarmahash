@@ -1,4 +1,5 @@
 import { Block } from "../Block";
+import { IChatMessage } from "./ChatContext";
 
 export const getBlocks = async (): Promise<Block[]> => {
   const response = await fetch("/api/blocks/recent");
@@ -51,3 +52,34 @@ export const submitBlock = async (block: Block): Promise<string> => {
   const { newTarget } = await response.json();
   return newTarget as string;
 };
+
+export const getChatMessages = async (): Promise<IChatMessage[]> => {
+  const response = await fetch("/api/chat/recent");
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(body);
+  }
+  return response.json() as Promise<IChatMessage[]>;
+};
+
+export const postChatMessage = async (message: {
+  fromPlayer: string;
+  fromTeam?: string;
+  toPlayer?: string;
+  toTeam?: string;
+  content: string;
+  afterHash?: string;
+}): Promise<IChatMessage> => {
+  const response = await fetch("/api/chat", {
+    body: JSON.stringify(message),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "POST",
+  });
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(body);
+  }
+  return response.json() as Promise<IChatMessage>;
+}

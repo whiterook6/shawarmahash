@@ -4,7 +4,7 @@ export interface ChatMessage {
   fromPlayer: string;
   fromTeam?: string;
   hash: string;
-  message: string;
+  content: string;
   afterHash: string;
   timestamp: number;
   toPlayer?: string;
@@ -30,7 +30,7 @@ export const getToID = (message: ChatMessage): string => {
 }
 
 export const getChatMessageHash = (message: ChatMessage) => {
-  return hashSHA1(`${message.timestamp.toString()}${message.afterHash}${getFromID(message)}${getToID(message)}`);
+  return hashSHA1(`${message.timestamp.toString()}${message.content}${getFromID(message)}${getToID(message)}`);
 };
 
 export class ChatHistory {
@@ -70,35 +70,5 @@ export class ChatHistory {
 
   public getRecentMessages = (count: number) => {
     return this.history.slice(-count);
-  }
-
-  public getMessages = (fromPlayer?: string, toPlayer?: string, fromTeam?: string, toTeam?: string) => {
-    return this.history.filter((message) => {
-      if (fromPlayer && message.fromPlayer !== fromPlayer){
-        return false;
-      }
-      if (toPlayer && message.toPlayer !== toPlayer){
-        return false;
-      }
-      if (fromTeam && message.fromTeam !== fromTeam){
-        return false;
-      }
-      if (toTeam && message.toTeam !== toTeam){
-        return false;
-      }
-      return true;
-    });
-  }
-
-  public getMessagesSinceTimestamp = (timestamp: number) => {
-    return this.history.filter((message) => message.timestamp > timestamp);
-  }
-
-  public getMessagesSinceHash = (hash: string) => {
-    const index = this.history.findIndex((message) => message.hash === hash);
-    if (index === -1){
-      throw new Error("Invalid hash");
-    }
-    return this.history.slice(index + 1);
   }
 }
