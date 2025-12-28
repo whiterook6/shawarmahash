@@ -1,6 +1,6 @@
 import Fastify, { FastifyRequest } from "fastify";
 import crypto from "crypto";
-import { Chain } from "./chain";
+import { Chain, calculateDifficulty } from "./chain";
 import { Block, PendingBlock } from "./block";
 
 const fastify = Fastify({
@@ -30,9 +30,10 @@ const mineBlock = (previousBlock: Block, player: string): Block => {
   let nonce = 0;
   const previousHash = previousBlock.hash;
   const previousTimestamp = previousBlock.timestamp;
+  const difficulty = calculateDifficulty(chain);
   while (true) {
     const currentHash = calculateHash(previousHash, previousTimestamp, player, nonce.toString(16));
-    if (currentHash.startsWith("00")) {
+    if (currentHash.startsWith(difficulty)) {
       return {
         hash: currentHash,
         player,
@@ -49,7 +50,8 @@ fastify.get("/mine", async (request: FastifyRequest<{ Querystring: { player: str
   const block = mineBlock(chain[chain.length - 1], request.query.player);
   chain.push(block);
   return {
-    chain: chain
+    chain: chain,
+    difficulty: calculateDifficulty(chain)
   };
 });
 
