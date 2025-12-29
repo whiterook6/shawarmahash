@@ -4,6 +4,7 @@ import { Chain, calculateDifficulty } from "./chain";
 import { loadChain, saveChain, getDataFilePath } from "./data";
 import { access } from "fs/promises";
 import { constants } from "fs";
+import { getPlayerScore, getTeamScore, getAllTeams, getAllPlayers } from "./game";
 
 // Start server
 const start = async () => {
@@ -18,7 +19,8 @@ const start = async () => {
     const genesisBlock: Block = {
       index: 0,
       hash: "0",
-      player: "genesis",
+      player: "",
+      team: "",
       timestamp: Date.now(),
       nonce: "0",
     };
@@ -43,16 +45,111 @@ const start = async () => {
     reply.status(200).send(getChainState());
   });
 
+  // Endpoint to get a player's score
+  fastify.get("/players/:player", {
+    schema: {
+      params: {
+        type: "object",
+        required: ["player"],
+        properties: {
+          player: {
+            type: "string",
+            pattern: "^[A-Z]{3}$",
+            description: "Three uppercase letters (AAA-ZZZ)"
+          }
+        }
+      }
+    }
+  }, async (request: FastifyRequest<{
+    Params: {
+      player: string;
+    }
+  }>, reply: FastifyReply) => {
+    const score = getPlayerScore(chain, request.params.player);
+    reply.status(200).send({ player: request.params.player, score });
+  });
+
+  // Endpoint to get a team's score
+  fastify.get("/teams/:team", {
+    schema: {
+      params: {
+        type: "object",
+        required: ["team"],
+        properties: {
+          team: {
+            type: "string",
+            pattern: "^[A-Z]{3}$",
+            description: "Three uppercase letters (AAA-ZZZ)"
+          }
+        }
+      }
+    }
+  }, async (request: FastifyRequest<{
+    Params: {
+      team: string;
+    }
+  }>, reply: FastifyReply) => {
+    const score = getTeamScore(chain, request.params.team);
+    reply.status(200).send({ team: request.params.team, score });
+  });
+
+  // Endpoint to get all teams
+  fastify.get("/teams", async (_: FastifyRequest, reply: FastifyReply) => {
+    const teams = getAllTeams(chain);
+    reply.status(200).send({ teams });
+  });
+
+  // Endpoint to get all players
+  fastify.get("/players", async (_: FastifyRequest, reply: FastifyReply) => {
+    const players = getAllPlayers(chain);
+    reply.status(200).send({ players });
+  });
+
   // Endpoint to submit a mined block
-  fastify.post("/submit", async (request: FastifyRequest<{
+  fastify.post("/submit", {
+    schema: {
+      body: {
+        type: "object",
+        required: ["previousHash", "player", "team", "nonce", "hash"],
+        properties: {
+          previousHash: {
+            type: "string",
+            pattern: "^[0-9a-fA-F]+$",
+            description: "Base-16 (hexadecimal) string"
+          },
+          player: {
+            type: "string",
+            pattern: "^[A-Z]{3}$",
+            description: "Three uppercase letters (AAA-ZZZ)"
+          },
+          team: {
+            type: "string",
+            pattern: "^[A-Z]{3}$",
+            description: "Three uppercase letters (AAA-ZZZ)"
+          },
+          nonce: {
+            type: "string",
+            pattern: "^[0-9a-fA-F]+$",
+            description: "Base-16 (hexadecimal) string"
+          },
+          hash: {
+            type: "string",
+            pattern: "^[0-9a-fA-F]+$",
+            description: "Base-16 (hexadecimal) string"
+          }
+        }
+      }
+    }
+  }, async (request: FastifyRequest<{
     Body: {
       previousHash: string;
       player: string;
+      team: string;
       nonce: string;
       hash: string;
     }
   }>, reply: FastifyReply) => {
-    const { previousHash, player, nonce, hash: providedHash } = request.body;
+    const { previousHash, player, team, nonce, hash: providedHash } = request.body;
 
     // verify the previous hash is correct
     const previousBlock = chain[chain.length - 1];
@@ -68,6 +165,7 @@ const start = async () => {
       previousBlock.hash,
       previousBlock.timestamp,
       player,
+      team,
       nonce
     );
     if (providedHash !== newBlockhash) {
@@ -90,6 +188,7 @@ const start = async () => {
       index: chain.length,
       hash: newBlockhash,
       player: player,
+      team: team,
       timestamp: Date.now(),
       nonce: nonce,
     };
@@ -102,7 +201,7 @@ const start = async () => {
     difficulty = calculateDifficulty(chain);
 
     reply.status(200).send(getChainState());
-    console.log(`Block ${newBlock.index} mined by ${newBlock.player}`);
+    console.log(`Block ${newBlock.index} mined by ${newBlock.player} (team: ${newBlock.team})`);
   });
 
   try {
