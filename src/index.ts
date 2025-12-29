@@ -7,6 +7,7 @@ import { constants } from "fs";
 import { getPlayerScore, getTeamScore, getAllTeams, getAllPlayers } from "./game";
 import { mineBlock } from "./miner";
 import { schemas } from "./schemas";
+import { getRecentChatMessages, getRecentPlayerMentions, getRecentTeamMentions } from "./chat";
 
 // Start server
 const start = async () => {
@@ -93,6 +94,36 @@ const start = async () => {
   fastify.get("/players", async (_: FastifyRequest, reply: FastifyReply) => {
     const players = getAllPlayers(chain);
     reply.status(200).send({ players });
+  });
+
+  // Endpoint to get recent chat messages
+  fastify.get("/chat", async (_: FastifyRequest, reply: FastifyReply) => {
+    const messages = getRecentChatMessages(chain);
+    reply.status(200).send({ messages });
+  });
+
+  // Endpoint to get recent chat messages to a player
+  fastify.get("/chat/players/:player", {
+    schema: schemas.chatPlayerMessagesSchema
+  }, async (request: FastifyRequest<{
+    Params: {
+      player: string;
+    }
+  }>, reply: FastifyReply) => {
+    const messages = getRecentPlayerMentions(chain, request.params.player);
+    reply.status(200).send({ player: request.params.player, messages });
+  });
+
+  // Endpoint to get recent chat messages to a team
+  fastify.get("/chat/teams/:team", {
+    schema: schemas.chatTeamMessagesSchema
+  }, async (request: FastifyRequest<{
+    Params: {
+      team: string;
+    }
+  }>, reply: FastifyReply) => {
+    const messages = getRecentTeamMentions(chain, request.params.team);
+    reply.status(200).send({ team: request.params.team, messages });
   });
 
   // Endpoint to submit a mined block

@@ -77,5 +77,31 @@ export const schemas = {
         description: "Optional message (max 256 characters)"
       }
     }
+  },
+  chatPlayerMessagesSchema: {
+    params: {
+      type: "object",
+      required: ["player"],
+      properties: {
+        player: {
+          type: "string",
+          pattern: "^[A-Z]{3}$",
+          description: "Three uppercase letters (AAA-ZZZ)"
+        }
+      }
+    }
+  },
+  chatTeamMessagesSchema: {
+    params: {
+      type: "object",
+      required: ["team"],
+      properties: {
+        team: {
+          type: "string",
+          pattern: "^[A-Z]{3}$",
+          description: "Three uppercase letters (AAA-ZZZ)"
+        }
+      }
+    }
   }
 };
