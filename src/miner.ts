@@ -1,15 +1,15 @@
 import { Block, calculateHash } from "./block";
 import { Chain, calculateDifficulty } from "./chain";
 
-export const mineBlock = (previousBlock: Block, player: string, team: string, chain: Chain): Block => {
+export const mineBlock = (previousBlock: Block, player: string, team: string, chain: Chain, message?: string): Block => {
   let nonce = 0;
   const previousHash = previousBlock.hash;
   const previousTimestamp = previousBlock.timestamp;
   const difficulty = calculateDifficulty(chain);
   while (true) {
-    const currentHash = calculateHash(previousHash, previousTimestamp, player, team, nonce.toString(16));
+    const currentHash = calculateHash(previousHash, previousTimestamp, player, team, nonce.toString(16), message);
     if (currentHash.startsWith(difficulty)) {
-      return {
+      const block: Block = {
         hash: currentHash,
         player,
         team,
@@ -17,6 +17,10 @@ export const mineBlock = (previousBlock: Block, player: string, team: string, ch
         nonce: nonce.toString(16),
         index: chain.length,
       };
+      if (message) {
+        block.message = message;
+      }
+      return block;
     }
     nonce++;
   }

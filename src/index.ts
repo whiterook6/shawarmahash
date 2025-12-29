@@ -5,6 +5,8 @@ import { loadChain, saveChain, getDataFilePath } from "./data";
 import { access } from "fs/promises";
 import { constants } from "fs";
 import { getPlayerScore, getTeamScore, getAllTeams, getAllPlayers } from "./game";
+import { mineBlock } from "./miner";
+import { schemas } from "./schemas";
 
 // Start server
 const start = async () => {
@@ -40,6 +42,14 @@ const start = async () => {
     difficulty,
   });
 
+  // Common function to append a block, recalculate difficulty and recent chain, and save
+  const appendBlock = async (newBlock: Block) => {
+    chain.push(newBlock);
+    recentChain = chain.slice(-5);
+    difficulty = calculateDifficulty(chain);
+    await saveChain(chain, chainFilePath);
+  };
+
   // Endpoint to get current chain state (for clients to know what to mine)
   fastify.get("/chain", async (_: FastifyRequest, reply: FastifyReply) => {
     reply.status(200).send(getChainState());
@@ -48,17 +58,7 @@ const start = async () => {
   // Endpoint to get a player's score
   fastify.get("/players/:player", {
     schema: {
-      params: {
-        type: "object",
-        required: ["player"],
-        properties: {
-          player: {
-            type: "string",
-            pattern: "^[A-Z]{3}$",
-            description: "Three uppercase letters (AAA-ZZZ)"
-          }
-        }
-      }
+      params: schemas.playerParamsSchema
     }
   }, async (request: FastifyRequest<{
     Params: {
@@ -72,17 +72,7 @@ const start = async () => {
   // Endpoint to get a team's score
   fastify.get("/teams/:team", {
     schema: {
-      params: {
-        type: "object",
-        required: ["team"],
-        properties: {
-          team: {
-            type: "string",
-            pattern: "^[A-Z]{3}$",
-            description: "Three uppercase letters (AAA-ZZZ)"
-          }
-        }
-      }
+      params: schemas.teamParamsSchema
     }
   }, async (request: FastifyRequest<{
     Params: {
@@ -108,37 +98,7 @@ const start = async () => {
   // Endpoint to submit a mined block
   fastify.post("/submit", {
     schema: {
-      body: {
-        type: "object",
-        required: ["previousHash", "player", "team", "nonce", "hash"],
-        properties: {
-          previousHash: {
-            type: "string",
-            pattern: "^[0-9a-fA-F]+$",
-            description: "Base-16 (hexadecimal) string"
-          },
-          player: {
-            type: "string",
-            pattern: "^[A-Z]{3}$",
-            description: "Three uppercase letters (AAA-ZZZ)"
-          },
-          team: {
-            type: "string",
-            pattern: "^[A-Z]{3}$",
-            description: "Three uppercase letters (AAA-ZZZ)"
-          },
-          nonce: {
-            type: "string",
-            pattern: "^[0-9a-fA-F]+$",
-            description: "Base-16 (hexadecimal) string"
-          },
-          hash: {
-            type: "string",
-            pattern: "^[0-9a-fA-F]+$",
-            description: "Base-16 (hexadecimal) string"
-          }
-        }
-      }
+      body: schemas.submitBodySchema
     }
   }, async (request: FastifyRequest<{
     Body: {
@@ -147,9 +107,18 @@ const start = async () => {
       team: string;
       nonce: string;
       hash: string;
+      message?: string;
     }
   }>, reply: FastifyReply) => {
-    const { previousHash, player, team, nonce, hash: providedHash } = request.body;
+    const { previousHash, player, team, nonce, hash: providedHash, message } = request.body;
+
+    // Validate message length if provided
+    if (message && message.length > 256) {
+      return reply.status(400).send({
+        error: `Message exceeds maximum length of 256 characters`,
+        ...getChainState()
+      });
+    }
 
     // verify the previous hash is correct
     const previousBlock = chain[chain.length - 1];
@@ -192,16 +161,50 @@ const start = async () => {
       timestamp: Date.now(),
       nonce: nonce,
     };
+    if (message) {
+      newBlock.message = message;
+    }
 
     // Append to chain
-    chain.push(newBlock);
-    await saveChain(chain, chainFilePath);
-
-    recentChain = chain.slice(-5);
-    difficulty = calculateDifficulty(chain);
+    await appendBlock(newBlock);
 
     reply.status(200).send(getChainState());
     console.log(`Block ${newBlock.index} mined by ${newBlock.player} (team: ${newBlock.team})`);
+  });
+
+  // Testing endpoint to mine a new block
+  fastify.post("/test/mine", {
+    schema: {
+      body: schemas.testMineBodySchema
+    }
+  }, async (request: FastifyRequest<{
+    Body: {
+      team: string;
+      player: string;
+      message?: string;
+    }
+  }>, reply: FastifyReply) => {
+    const { team, player, message } = request.body;
+
+    // Validate message length if provided
+    if (message && message.length > 256) {
+      return reply.status(400).send({
+        error: `Message exceeds maximum length of 256 characters`,
+        ...getChainState()
+      });
+    }
+
+    // Get the previous block
+    const previousBlock = chain[chain.length - 1];
+
+    // Mine a new block
+    const newBlock = mineBlock(previousBlock, player, team, chain, message);
+
+    // Append to chain
+    await appendBlock(newBlock);
+
+    reply.status(200).send(getChainState());
+    console.log(`Test block ${newBlock.index} mined by ${newBlock.player} (team: ${newBlock.team})`);
   });
 
   try {

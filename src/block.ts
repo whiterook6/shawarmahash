@@ -7,6 +7,7 @@ export type Block = {
   timestamp: number;
   nonce: string;
   hash: string;
+  message?: string;
 };
 
 export type PendingBlock = {
