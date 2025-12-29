@@ -12,6 +12,9 @@ lerna-debug.log*
 # Build outputs
 build/
 
+# Runtime data
+data/
+
 
 # OS
 Thumbs.db
