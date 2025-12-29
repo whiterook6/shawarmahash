@@ -26,39 +26,83 @@ const start = async () => {
     await saveChain(chain, chainFilePath);
   }
 
-  const mineBlock = (previousBlock: Block, player: string): Block => {
-    let nonce = 0;
-    const previousHash = previousBlock.hash;
-    const previousTimestamp = previousBlock.timestamp;
-    const difficulty = calculateDifficulty(chain);
-    while (true) {
-      const currentHash = calculateHash(previousHash, previousTimestamp, player, nonce.toString(16));
-      if (currentHash.startsWith(difficulty)) {
-        return {
-          hash: currentHash,
-          player,
-          timestamp: Date.now(),
-          nonce: nonce.toString(16),
-          index: chain.length,
-        };
-      }
-      nonce++;
-    }
-  }
+  let recentChain: Chain = chain.slice(-5);
+  let difficulty: string = calculateDifficulty(chain);
 
   const fastify = Fastify({
     logger: true
   });
 
-  fastify.get("/mine", async (request: FastifyRequest<{ Querystring: { player: string } }>, reply: FastifyReply) => {
-    const block = mineBlock(chain[chain.length - 1], request.query.player);
-    chain.push(block);
-    reply.status(200).send({
-      chain: chain,
-      difficulty: calculateDifficulty(chain)
-    });
+  const getChainState = () => ({
+    recent: recentChain.reverse(),
+    difficulty,
+  });
+
+  // Endpoint to get current chain state (for clients to know what to mine)
+  fastify.get("/chain", async (_: FastifyRequest, reply: FastifyReply) => {
+    reply.status(200).send(getChainState());
+  });
+
+  // Endpoint to submit a mined block
+  fastify.post("/submit", async (request: FastifyRequest<{
+    Body: {
+      previousHash: string;
+      player: string;
+      nonce: string;
+      hash: string;
+    }
+  }>, reply: FastifyReply) => {
+    const { previousHash, player, nonce, hash: providedHash } = request.body;
+
+    // verify the previous hash is correct
+    const previousBlock = chain[chain.length - 1];
+    if (previousHash !== previousBlock.hash) {
+      return reply.status(400).send({
+        error: `Invalid previous hash: ${previousHash} !== ${previousBlock.hash}`,
+        ...getChainState()
+      });
+    }
+    
+    // verify the provided hash is correct
+    const newBlockhash = calculateHash(
+      previousBlock.hash,
+      previousBlock.timestamp,
+      player,
+      nonce
+    );
+    if (providedHash !== newBlockhash) {
+      return reply.status(400).send({
+        error: `Invalid block hash: ${providedHash} !== ${newBlockhash}`,
+        ...getChainState()
+      });
+    }
+
+    // Verify the hash meets difficulty requirement
+    if (!newBlockhash.startsWith(difficulty)) {
+      return reply.status(400).send({ 
+        error: `Block does not meet difficulty requirement: ${newBlockhash} does not start with ${difficulty}`,
+        ...getChainState()
+      });
+    }
+
+    // Create the new block
+    const newBlock: Block = {
+      index: chain.length,
+      hash: newBlockhash,
+      player: player,
+      timestamp: Date.now(),
+      nonce: nonce,
+    };
+
+    // Append to chain
+    chain.push(newBlock);
     await saveChain(chain, chainFilePath);
-    console.log(`Block ${block.index} mined by ${block.player}`);
+
+    recentChain = chain.slice(-5);
+    difficulty = calculateDifficulty(chain);
+
+    reply.status(200).send(getChainState());
+    console.log(`Block ${newBlock.index} mined by ${newBlock.player}`);
   });
 
   try {
