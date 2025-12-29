@@ -1,14 +1,12 @@
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
-import { Block, calculateHash } from "./block";
-import { Chain, calculateDifficulty, verifyChain } from "./chain";
-import { loadChain, saveChain, appendBlockToChain, getDataFilePath } from "./data";
+import { Block } from "./block";
+import { Chain, verifyChain } from "./chain";
+import { loadChain, saveChain, getDataFilePath } from "./data";
 import { access } from "fs/promises";
 import { constants } from "fs";
-import { getPlayerScore, getAllPlayers } from "./players";
-import { getTeamScore, getAllTeams } from "./teams";
-import { mineBlock } from "./miner";
 import { schemas } from "./schemas";
-import { getRecentChatMessages, getRecentPlayerMentions, getRecentTeamMentions } from "./chat";
+import { Game, ValidationError } from "./game";
+import { AddressInfo } from "net";
 
 // Start server
 const start = async () => {
@@ -36,107 +34,77 @@ const start = async () => {
     throw new Error("Invalid chain");
   }
 
-  let recentChain: Chain = chain.slice(-5);
-  let difficulty: string = calculateDifficulty(chain);
+  const game = new Game(chain, chainFilePath);
 
   const fastify = Fastify({
     logger: true
   });
 
-  const getChainState = () => ({
-    recent: recentChain.reverse(),
-    difficulty,
-  });
-
-  // Common function to append a block, recalculate difficulty and recent chain, and save
-  const appendBlock = async (newBlock: Block) => {
-    chain.push(newBlock);
-    recentChain = chain.slice(-5);
-    difficulty = calculateDifficulty(chain);
-    await appendBlockToChain(newBlock, chainFilePath);
-  };
-
   // Endpoint to get current chain state (for clients to know what to mine)
   fastify.get("/chain", async (_: FastifyRequest, reply: FastifyReply) => {
-    reply.status(200).send(getChainState());
-  });
-
-  // Endpoint to get a player's score
-  fastify.get("/players/:player", {
-    schema: {
-      params: schemas.playerParamsSchema
-    }
-  }, async (request: FastifyRequest<{
-    Params: {
-      player: string;
-    }
-  }>, reply: FastifyReply) => {
-    const score = getPlayerScore(chain, request.params.player);
-    reply.status(200).send({ player: request.params.player, score });
-  });
-
-  // Endpoint to get a team's score
-  fastify.get("/teams/:team", {
-    schema: {
-      params: schemas.teamParamsSchema
-    }
-  }, async (request: FastifyRequest<{
-    Params: {
-      team: string;
-    }
-  }>, reply: FastifyReply) => {
-    const score = getTeamScore(chain, request.params.team);
-    reply.status(200).send({ team: request.params.team, score });
-  });
-
-  // Endpoint to get all teams
-  fastify.get("/teams", async (_: FastifyRequest, reply: FastifyReply) => {
-    const teams = getAllTeams(chain);
-    reply.status(200).send({ teams });
+    reply.status(200).send(game.getChainState());
   });
 
   // Endpoint to get all players
   fastify.get("/players", async (_: FastifyRequest, reply: FastifyReply) => {
-    const players = getAllPlayers(chain);
-    reply.status(200).send({ players });
+    const result = game.getAllPlayers();
+    reply.status(200).send(result);
   });
 
-  // Endpoint to get recent chat messages
-  fastify.get("/chat", async (_: FastifyRequest, reply: FastifyReply) => {
-    const messages = getRecentChatMessages(chain);
-    reply.status(200).send({ messages });
-  });
-
-  // Endpoint to get recent chat messages to a player
-  fastify.get("/chat/players/:player", {
-    schema: schemas.chatPlayerMessagesSchema
-  }, async (request: FastifyRequest<{
+  // Endpoint to get a player's score
+  fastify.get("/players/:player", schemas.getPlayers, async (request: FastifyRequest<{
     Params: {
       player: string;
     }
   }>, reply: FastifyReply) => {
-    const messages = getRecentPlayerMentions(chain, request.params.player);
-    reply.status(200).send({ player: request.params.player, messages });
+    const result = game.getPlayer(request.params.player);
+    reply.status(200).send(result);
   });
 
-  // Endpoint to get recent chat messages to a team
-  fastify.get("/chat/teams/:team", {
-    schema: schemas.chatTeamMessagesSchema
-  }, async (request: FastifyRequest<{
+  // Endpoint to get all teams
+  fastify.get("/teams", async (_: FastifyRequest, reply: FastifyReply) => {
+    const result = game.getAllTeams();
+    reply.status(200).send(result);
+  });
+
+  // Endpoint to get a team's score
+  fastify.get("/teams/:team", schemas.getTeams, async (request: FastifyRequest<{
     Params: {
       team: string;
     }
   }>, reply: FastifyReply) => {
-    const messages = getRecentTeamMentions(chain, request.params.team);
-    reply.status(200).send({ team: request.params.team, messages });
+    const result = game.getTeam(request.params.team);
+    reply.status(200).send(result);
+  });
+
+  // Endpoint to get recent chat messages
+  fastify.get("/chat", async (_: FastifyRequest, reply: FastifyReply) => {
+    const result = game.getChat();
+    reply.status(200).send(result);
+  });
+
+  // Endpoint to get recent chat messages to a player
+  fastify.get("/chat/players/:player", schemas.getPlayerChat, async (request: FastifyRequest<{
+    Params: {
+      player: string;
+    }
+  }>, reply: FastifyReply) => {
+    const result = game.getChatPlayer(request.params.player);
+    reply.status(200).send(result);
+  });
+
+  // Endpoint to get recent chat messages to a team
+  fastify.get("/chat/teams/:team", schemas.getTeamChat, async (request: FastifyRequest<{
+    Params: {
+      team: string;
+    }
+  }>, reply: FastifyReply) => {
+    const result = game.getChatTeam(request.params.team);
+    reply.status(200).send(result);
   });
 
   // Endpoint to submit a mined block
-  fastify.post("/submit", {
-    schema: {
-      body: schemas.submitBodySchema
-    }
-  }, async (request: FastifyRequest<{
+  fastify.post("/submit", schemas.submitBlock, async (request: FastifyRequest<{
     Body: {
       previousHash: string;
       player: string;
@@ -146,106 +114,50 @@ const start = async () => {
       message?: string;
     }
   }>, reply: FastifyReply) => {
-    const { previousHash, player, team, nonce, hash: providedHash, message } = request.body;
-
-    // Validate message length if provided
-    if (message && message.length > 256) {
-      return reply.status(400).send({
-        error: `Message exceeds maximum length of 256 characters`,
-        ...getChainState()
-      });
+    try {
+      const { previousHash, player, team, nonce, hash, message } = request.body;
+      const result = await game.submitBlock(previousHash, player, team, nonce, hash, message);
+      reply.status(200).send(result);
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        reply.status(400).send({
+          error: error.message,
+          ...game.getChainState()
+        });
+      } else {
+        throw error;
+      }
     }
-
-    // verify the previous hash is correct
-    const previousBlock = chain[chain.length - 1];
-    if (previousHash !== previousBlock.hash) {
-      return reply.status(400).send({
-        error: `Invalid previous hash: ${previousHash} !== ${previousBlock.hash}`,
-        ...getChainState()
-      });
-    }
-    
-    // verify the provided hash is correct
-    const newBlockhash = calculateHash(
-      previousBlock.hash,
-      previousBlock.timestamp,
-      player,
-      team,
-      nonce
-    );
-    if (providedHash !== newBlockhash) {
-      return reply.status(400).send({
-        error: `Invalid block hash: ${providedHash} !== ${newBlockhash}`,
-        ...getChainState()
-      });
-    }
-
-    // Verify the hash meets difficulty requirement
-    if (!newBlockhash.startsWith(difficulty)) {
-      return reply.status(400).send({ 
-        error: `Block does not meet difficulty requirement: ${newBlockhash} does not start with ${difficulty}`,
-        ...getChainState()
-      });
-    }
-
-    // Create the new block
-    const newBlock: Block = {
-      index: chain.length,
-      hash: newBlockhash,
-      player: player,
-      team: team,
-      timestamp: Date.now(),
-      nonce: nonce,
-    };
-    if (message) {
-      newBlock.message = message;
-    }
-
-    // Append to chain
-    await appendBlock(newBlock);
-
-    reply.status(200).send(getChainState());
-    console.log(`Block ${newBlock.index} mined by ${newBlock.player} (team: ${newBlock.team})`);
   });
 
   // Testing endpoint to mine a new block
-  fastify.post("/test/mine", {
-    schema: {
-      body: schemas.testMineBodySchema
-    }
-  }, async (request: FastifyRequest<{
+  fastify.post("/test/mine", schemas.mineBlock, async (request: FastifyRequest<{
     Body: {
       team: string;
       player: string;
       message?: string;
     }
   }>, reply: FastifyReply) => {
-    const { team, player, message } = request.body;
-
-    // Validate message length if provided
-    if (message && message.length > 256) {
-      return reply.status(400).send({
-        error: `Message exceeds maximum length of 256 characters`,
-        ...getChainState()
-      });
+    try {
+      const { team, player, message } = request.body;
+      const result = await game.testMine(team, player, message);
+      reply.status(200).send(result);
+    } catch (error) {
+      if (error instanceof ValidationError) {
+        reply.status(400).send({
+          error: error.message,
+          ...game.getChainState()
+        });
+      } else {
+        throw error;
+      }
     }
-
-    // Get the previous block
-    const previousBlock = chain[chain.length - 1];
-
-    // Mine a new block
-    const newBlock = mineBlock(previousBlock, player, team, chain, message);
-
-    // Append to chain
-    await appendBlock(newBlock);
-
-    reply.status(200).send(getChainState());
-    console.log(`Test block ${newBlock.index} mined by ${newBlock.player} (team: ${newBlock.team})`);
   });
 
   try {
     await fastify.listen({ port: 3000, host: "0.0.0.0" });
-    console.log(`Server listening on ${fastify.server.address()!}`);
+    const address = fastify.server.address() as AddressInfo
+    console.log(`Server listening on ${address.address}:${address.port}`);
   } catch (err) {
     fastify.log.error(err);
     process.exit(1);
