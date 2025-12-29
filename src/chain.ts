@@ -89,8 +89,7 @@ export const verifyChain = (chain: Chain): boolean => {
       previousBlock.timestamp,
       currentBlock.player,
       currentBlock.team,
-      currentBlock.nonce,
-      currentBlock.message
+      currentBlock.nonce
     );
 
     // Verify hash matches

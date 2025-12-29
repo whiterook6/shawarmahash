@@ -5,7 +5,7 @@ export type Block = {
   player: string;
   team: string;
   timestamp: number;
-  nonce: string;
+  nonce: number;
   hash: string;
   message?: string;
 };
@@ -13,7 +13,7 @@ export type Block = {
 export type PendingBlock = {
   player: string;
   team: string;
-  nonce: string;
+  nonce: number;
 }
 
 export const calculateHash = (
@@ -21,7 +21,7 @@ export const calculateHash = (
   previousTimestamp: number,
   player: string,
   team: string,
-  nonce: string
+  nonce: number
 ) => {
   return crypto.createHash("sha256").update(
     `${previousHash}${previousTimestamp}${player}${team}${nonce}`

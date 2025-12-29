@@ -1,10 +1,11 @@
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
 import { Block, calculateHash } from "./block";
-import { Chain, calculateDifficulty } from "./chain";
-import { loadChain, saveChain, getDataFilePath } from "./data";
+import { Chain, calculateDifficulty, verifyChain } from "./chain";
+import { loadChain, saveChain, appendBlockToChain, getDataFilePath } from "./data";
 import { access } from "fs/promises";
 import { constants } from "fs";
-import { getPlayerScore, getTeamScore, getAllTeams, getAllPlayers } from "./game";
+import { getPlayerScore, getAllPlayers } from "./players";
+import { getTeamScore, getAllTeams } from "./teams";
 import { mineBlock } from "./miner";
 import { schemas } from "./schemas";
 import { getRecentChatMessages, getRecentPlayerMentions, getRecentTeamMentions } from "./chat";
@@ -25,10 +26,14 @@ const start = async () => {
       player: "",
       team: "",
       timestamp: Date.now(),
-      nonce: "0",
+      nonce: 0,
     };
     chain = [genesisBlock];
     await saveChain(chain, chainFilePath);
+  }
+
+  if (!verifyChain(chain)) {
+    throw new Error("Invalid chain");
   }
 
   let recentChain: Chain = chain.slice(-5);
@@ -48,7 +53,7 @@ const start = async () => {
     chain.push(newBlock);
     recentChain = chain.slice(-5);
     difficulty = calculateDifficulty(chain);
-    await saveChain(chain, chainFilePath);
+    await appendBlockToChain(newBlock, chainFilePath);
   };
 
   // Endpoint to get current chain state (for clients to know what to mine)
@@ -136,7 +141,7 @@ const start = async () => {
       previousHash: string;
       player: string;
       team: string;
-      nonce: string;
+      nonce: number;
       hash: string;
       message?: string;
     }

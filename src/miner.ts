@@ -7,14 +7,14 @@ export const mineBlock = (previousBlock: Block, player: string, team: string, ch
   const previousTimestamp = previousBlock.timestamp;
   const difficulty = calculateDifficulty(chain);
   while (true) {
-    const currentHash = calculateHash(previousHash, previousTimestamp, player, team, nonce.toString(16), message);
+    const currentHash = calculateHash(previousHash, previousTimestamp, player, team, nonce);
     if (currentHash.startsWith(difficulty)) {
       const block: Block = {
         hash: currentHash,
         player,
         team,
         timestamp: Date.now(),
-        nonce: nonce.toString(16),
+        nonce,
         index: chain.length,
       };
       if (message) {

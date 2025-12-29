@@ -1,7 +1,9 @@
 import { Chain } from "./chain"
-import { gzip, gunzip } from "zlib";
-import { writeFile, readFile, mkdir } from "fs/promises";
+import { writeFile, appendFile, mkdir } from "fs/promises";
+import { createReadStream } from "fs";
+import { createInterface } from "readline";
 import { join } from "path";
+import { Block } from "./block";
 
 const DATA_DIR = join(process.cwd(), "data");
 
@@ -11,29 +13,30 @@ export const getDataFilePath = async (filename: string): Promise<string> => {
 }
 
 export const saveChain = async (chain: Chain, filepath: string): Promise<void> => {
-  const json = JSON.stringify(chain);
-  const buffer = Buffer.from(json, "utf-8");
-  const compressed = await new Promise<Buffer>((resolve, reject) => {
-    gzip(buffer, (err, result) => {
-      if (err) {
-        reject(err);
-      }
-      resolve(result);
-    });
-  });
-  await writeFile(filepath, compressed);
+  const lines = chain.map(block => JSON.stringify(block));
+  const content = lines.join("\n") + "\n";
+  await writeFile(filepath, content, "utf-8");
+}
+
+export const appendBlockToChain = async (block: Block, filepath: string): Promise<void> => {
+  const line = JSON.stringify(block) + "\n";
+  await appendFile(filepath, line, "utf-8");
 }
 
 export const loadChain = async (filepath: string): Promise<Chain> => {
-  const compressed = await readFile(filepath);
-  const decompressed = await new Promise<Buffer>((resolve, reject) => {
-    gunzip(compressed, (err, result) => {
-      if (err) {
-        reject(err);
-      }
-      resolve(result);
-    });
+  const fileStream = createReadStream(filepath, { encoding: "utf-8" });
+  const rl = createInterface({
+    input: fileStream,
+    crlfDelay: Infinity, // Handle Windows line endings
   });
-  const json = decompressed.toString("utf-8");
-  return JSON.parse(json) as Chain;
+
+  const chain: Chain = [];
+  for await (const line of rl) {
+    const trimmed = line.trim();
+    if (trimmed) {
+      chain.push(JSON.parse(trimmed) as Block);
+    }
+  }
+
+  return chain;
 }

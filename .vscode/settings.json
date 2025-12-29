@@ -1,4 +1,7 @@
 {
   "typescript.preferences.quoteStyle": "double",
-  "javascript.preferences.quoteStyle": "double"
+  "javascript.preferences.quoteStyle": "double",
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false
 }
