@@ -1,4 +1,5 @@
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
+import ssePlugin, { SSEReplyInterface } from "@fastify/sse";
 import { Block } from "./block";
 import { Chain, verifyChain } from "./chain";
 import { loadChain, saveChain, getDataFilePath } from "./data";
@@ -7,6 +8,7 @@ import { constants } from "fs";
 import { schemas } from "./schemas";
 import { Game, ValidationError } from "./game";
 import { AddressInfo } from "net";
+import { Broadcast } from "./broadcast";
 
 // Start server
 const start = async () => {
@@ -40,7 +42,13 @@ const start = async () => {
     logger: true
   });
 
-  // Endpoint to get current chain state (for clients to know what to mine)
+  // Register SSE plugin
+  await fastify.register(ssePlugin);
+
+  const broadcast = new Broadcast();
+  fastify.get("/events", { sse: true }, broadcast.addClient);
+
+  
   fastify.get("/chain", async (_: FastifyRequest, reply: FastifyReply) => {
     reply.status(200).send(game.getChainState());
   });
