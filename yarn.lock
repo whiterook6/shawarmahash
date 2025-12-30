@@ -158,13 +158,6 @@
     "@fastify/forwarded" "^3.0.0"
     ipaddr.js "^2.1.0"
 
-"@fastify/sse@^0.4.0":
-  version "0.4.0"
-  resolved "https://registry.yarnpkg.com/@fastify/sse/-/sse-0.4.0.tgz#1b808d18d4fe57c7b659f737972dea1bc5ddd81d"
-  integrity sha512-bBV96iT2kHEw6h3i8IMkZGaqA7Gk81ugUzTNctXuE6N2BEC/qBnUuzlD/O17V43OkJP73h0/kf3Bp/asXlSuFA==
-  dependencies:
-    fastify-plugin "^5.0.0"
-
 "@pinojs/redact@^0.4.0":
   version "0.4.0"
   resolved "https://registry.yarnpkg.com/@pinojs/redact/-/redact-0.4.0.tgz#c3de060dd12640dcc838516aa2a6803cc7b2e9d6"
@@ -284,11 +277,6 @@ fast-uri@^3.0.0, fast-uri@^3.0.1:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/fast-uri/-/fast-uri-3.1.0.tgz#66eecff6c764c0df9b762e62ca7edcfb53b4edfa"
   integrity sha512-iPeeDKJSWf4IEOasVVrknXpaBV0IApz/gp7S2bb7Z4Lljbl2MGJRqInZiUrQwV16cpzw/D3S5j5Julj/gT52AA==
-
-fastify-plugin@^5.0.0:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/fastify-plugin/-/fastify-plugin-5.1.0.tgz#7083e039d6418415f9a669f8c25e72fc5bf2d3e7"
-  integrity sha512-FAIDA8eovSt5qcDgcBvDuX/v0Cjz0ohGhENZ/wpc3y+oZCY2afZ9Baqql3g/lC+OHRnciQol4ww7tuthOb9idw==
 
 fastify@^5.6.2:
   version "5.6.2"

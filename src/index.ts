@@ -1,14 +1,13 @@
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
-import ssePlugin, { SSEReplyInterface } from "@fastify/sse";
 import { Block } from "./block";
 import { Chain, verifyChain } from "./chain";
 import { loadChain, saveChain, getDataFilePath } from "./data";
 import { access } from "fs/promises";
 import { constants } from "fs";
 import { schemas } from "./schemas";
-import { Game, ValidationError } from "./game";
+import { Game } from "./game";
 import { AddressInfo } from "net";
-import { Broadcast } from "./broadcast";
+import { errorHandler } from "./errors";
 
 // Start server
 const start = async () => {
@@ -42,12 +41,7 @@ const start = async () => {
     logger: true
   });
 
-  // Register SSE plugin
-  await fastify.register(ssePlugin);
-
-  const broadcast = new Broadcast();
-  fastify.get("/events", { sse: true }, broadcast.addClient);
-
+  fastify.setErrorHandler(errorHandler);
   
   fastify.get("/chain", async (_: FastifyRequest, reply: FastifyReply) => {
     reply.status(200).send(game.getChainState());
@@ -122,20 +116,9 @@ const start = async () => {
       message?: string;
     }
   }>, reply: FastifyReply) => {
-    try {
-      const { previousHash, player, team, nonce, hash, message } = request.body;
-      const result = await game.submitBlock(previousHash, player, team, nonce, hash, message);
-      reply.status(200).send(result);
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        reply.status(400).send({
-          error: error.message,
-          ...game.getChainState()
-        });
-      } else {
-        throw error;
-      }
-    }
+    const { previousHash, player, team, nonce, hash, message } = request.body;
+    const result = await game.submitBlock(previousHash, player, team, nonce, hash, message);
+    reply.status(200).send(result);
   });
 
   // Testing endpoint to mine a new block
@@ -146,20 +129,9 @@ const start = async () => {
       message?: string;
     }
   }>, reply: FastifyReply) => {
-    try {
-      const { team, player, message } = request.body;
-      const result = await game.testMine(team, player, message);
-      reply.status(200).send(result);
-    } catch (error) {
-      if (error instanceof ValidationError) {
-        reply.status(400).send({
-          error: error.message,
-          ...game.getChainState()
-        });
-      } else {
-        throw error;
-      }
-    }
+    const { team, player, message } = request.body;
+    const result = await game.testMine(team, player, message);
+    reply.status(200).send(result);
   });
 
   try {

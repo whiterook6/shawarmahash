@@ -5,13 +5,7 @@ import { getPlayerScore, getAllPlayers } from "./players";
 import { getTeamScore, getAllTeams } from "./teams";
 import { getRecentChatMessages, getRecentPlayerMentions, getRecentTeamMentions } from "./chat";
 import { mineBlock } from "./miner";
-
-export class ValidationError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "ValidationError";
-  }
-}
+import { ValidationError } from "./errors";
 
 export class Game {
   chain: Chain;
@@ -69,15 +63,13 @@ export class Game {
   }
 
   async submitBlock(previousHash: string, player: string, team: string, nonce: number, providedHash: string, message?: string) {
-    // Validate message length if provided
-    if (message && message.length > 256) {
-      throw new ValidationError(`Message exceeds maximum length of 256 characters`);
-    }
 
     // verify the previous hash is correct
     const previousBlock = this.chain[this.chain.length - 1];
     if (previousHash !== previousBlock.hash) {
-      throw new ValidationError(`Invalid previous hash: ${previousHash} !== ${previousBlock.hash}`);
+      throw new ValidationError({
+        previousHash: [`Invalid previous hash: ${previousHash} !== ${previousBlock.hash}`]
+      });
     }
     
     // verify the provided hash is correct
@@ -89,12 +81,16 @@ export class Game {
       nonce
     );
     if (providedHash !== newBlockhash) {
-      throw new ValidationError(`Invalid block hash: ${providedHash} !== ${newBlockhash}`);
+      throw new ValidationError({
+        blockHash: [`Invalid block hash: ${providedHash} !== ${newBlockhash}`]
+      });
     }
 
     // Verify the hash meets difficulty requirement
     if (!newBlockhash.startsWith(this.difficulty)) {
-      throw new ValidationError(`Block does not meet difficulty requirement: ${newBlockhash} does not start with ${this.difficulty}`);
+      throw new ValidationError({
+        blockHash: [`Block does not meet difficulty requirement: ${newBlockhash} does not start with ${this.difficulty}`]
+      });
     }
 
     // Create the new block
@@ -116,11 +112,6 @@ export class Game {
   }
 
   async testMine(team: string, player: string, message?: string) {
-    // Validate message length if provided
-    if (message && message.length > 256) {
-      throw new ValidationError(`Message exceeds maximum length of 256 characters`);
-    }
-
     // Get the previous block
     const previousBlock = this.chain[this.chain.length - 1];
 
