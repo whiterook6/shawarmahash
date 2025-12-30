@@ -32,8 +32,7 @@ function isFastifyValidationError(error: Error): error is FastifyError & {
   validation: FastifySchemaValidationError[];
 } {
   return (
-    "validation" in error &&
-    Array.isArray((error as FastifyError).validation)
+    "validation" in error && Array.isArray((error as FastifyError).validation)
   );
 }
 

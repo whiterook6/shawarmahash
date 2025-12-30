@@ -31,8 +31,9 @@ const start = async () => {
     await saveChain(chain, chainFilePath);
   }
 
-  if (!verifyChain(chain)) {
-    throw new Error("Invalid chain");
+  const validationResult = verifyChain(chain);
+  if (!validationResult.valid) {
+    throw new Error(`Invalid chain: ${validationResult.error}`);
   }
 
   const game = new Game(chain, chainFilePath);

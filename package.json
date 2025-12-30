@@ -14,7 +14,7 @@
   },
   "scripts": {
     "format": "prettier --write src",
-    "lint:fix": "eslint src --fix",
+    "lint": "eslint src --fix",
     "build": "esbuild src/index.ts --bundle --platform=node --target=node18 --format=esm --outfile=build/index.js --packages=external",
     "dev": "esbuild src/index.ts --bundle --platform=node --target=node18 --format=esm --outfile=build/index.js --sourcemap --packages=external"
   },
