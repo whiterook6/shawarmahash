@@ -10,7 +10,8 @@ export type TeamWithScore = {
  * The genesis block (index 0) is excluded from the count.
  */
 export const getTeamScore = (chain: Chain, teamName: string): number => {
-  return chain.filter(block => block.index > 0 && block.team === teamName).length;
+  return chain.filter((block) => block.index > 0 && block.team === teamName)
+    .length;
 };
 
 /**
@@ -19,11 +20,15 @@ export const getTeamScore = (chain: Chain, teamName: string): number => {
  * Results are sorted by team name.
  */
 export const getAllTeams = (chain: Chain): TeamWithScore[] => {
-  const teams = new Set<string>(chain.filter(block => block.index > 0 && block.team).map(block => block.team));
+  const teams = new Set<string>(
+    chain
+      .filter((block) => block.index > 0 && block.team)
+      .map((block) => block.team),
+  );
   return Array.from(teams)
     .sort()
-    .map(team => ({
+    .map((team) => ({
       team,
-      score: getTeamScore(chain, team)
+      score: getTeamScore(chain, team),
     }));
 };

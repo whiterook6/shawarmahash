@@ -7,7 +7,7 @@ import { Block } from "./block";
  */
 export const getRecentChatMessages = (chain: Chain): Block[] => {
   return chain
-    .filter(block => block.message !== undefined)
+    .filter((block) => block.message !== undefined)
     .sort((a, b) => b.index - a.index);
 };
 
@@ -16,9 +16,12 @@ export const getRecentChatMessages = (chain: Chain): Block[] => {
  * Player names are 3 uppercase letters following the @ symbol.
  * Messages are returned in descending block order (newest first).
  */
-export const getRecentPlayerMentions = (chain: Chain, playerName: string): Block[] => {
-  return getRecentChatMessages(chain).filter(
-    block => block.message?.startsWith(`@${playerName}`)
+export const getRecentPlayerMentions = (
+  chain: Chain,
+  playerName: string,
+): Block[] => {
+  return getRecentChatMessages(chain).filter((block) =>
+    block.message?.startsWith(`@${playerName}`),
   );
 };
 
@@ -27,9 +30,11 @@ export const getRecentPlayerMentions = (chain: Chain, playerName: string): Block
  * Team names are 3 uppercase letters following the # symbol.
  * Messages are returned in descending block order (newest first).
  */
-export const getRecentTeamMentions = (chain: Chain, playerName: string): Block[] => {
-  return getRecentChatMessages(chain).filter(
-    block => block.message?.startsWith(`#${playerName}`)
+export const getRecentTeamMentions = (
+  chain: Chain,
+  playerName: string,
+): Block[] => {
+  return getRecentChatMessages(chain).filter((block) =>
+    block.message?.startsWith(`#${playerName}`),
   );
 };
-

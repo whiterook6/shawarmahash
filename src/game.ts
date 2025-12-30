@@ -3,7 +3,11 @@ import { Block, calculateHash } from "./block";
 import { appendBlockToChain } from "./data";
 import { getPlayerScore, getAllPlayers } from "./players";
 import { getTeamScore, getAllTeams } from "./teams";
-import { getRecentChatMessages, getRecentPlayerMentions, getRecentTeamMentions } from "./chat";
+import {
+  getRecentChatMessages,
+  getRecentPlayerMentions,
+  getRecentTeamMentions,
+} from "./chat";
 import { mineBlock } from "./miner";
 import { ValidationError } from "./errors";
 
@@ -62,34 +66,44 @@ export class Game {
     return getRecentTeamMentions(this.chain, team);
   }
 
-  async submitBlock(previousHash: string, player: string, team: string, nonce: number, providedHash: string, message?: string) {
-
+  async submitBlock(
+    previousHash: string,
+    player: string,
+    team: string,
+    nonce: number,
+    providedHash: string,
+    message?: string,
+  ) {
     // verify the previous hash is correct
     const previousBlock = this.chain[this.chain.length - 1];
     if (previousHash !== previousBlock.hash) {
       throw new ValidationError({
-        previousHash: [`Invalid previous hash: ${previousHash} !== ${previousBlock.hash}`]
+        previousHash: [
+          `Invalid previous hash: ${previousHash} !== ${previousBlock.hash}`,
+        ],
       });
     }
-    
+
     // verify the provided hash is correct
     const newBlockhash = calculateHash(
       previousBlock.hash,
       previousBlock.timestamp,
       player,
       team,
-      nonce
+      nonce,
     );
     if (providedHash !== newBlockhash) {
       throw new ValidationError({
-        blockHash: [`Invalid block hash: ${providedHash} !== ${newBlockhash}`]
+        blockHash: [`Invalid block hash: ${providedHash} !== ${newBlockhash}`],
       });
     }
 
     // Verify the hash meets difficulty requirement
     if (!newBlockhash.startsWith(this.difficulty)) {
       throw new ValidationError({
-        blockHash: [`Block does not meet difficulty requirement: ${newBlockhash} does not start with ${this.difficulty}`]
+        blockHash: [
+          `Block does not meet difficulty requirement: ${newBlockhash} does not start with ${this.difficulty}`,
+        ],
       });
     }
 
@@ -116,7 +130,13 @@ export class Game {
     const previousBlock = this.chain[this.chain.length - 1];
 
     // Mine a new block
-    const newBlock = mineBlock(previousBlock, player, team, this.chain, message);
+    const newBlock = mineBlock(
+      previousBlock,
+      player,
+      team,
+      this.chain,
+      message,
+    );
 
     // Append to chain
     await this.appendBlock(newBlock);

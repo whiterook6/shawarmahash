@@ -27,12 +27,15 @@ const calculateAverageMiningTime = (blocks: Block[]): number => {
   return totalMiningTime / (blocks.length - 1);
 };
 
-const adjustDifficulty = (currentDifficulty: number, averageMiningTime: number): number => {
+const adjustDifficulty = (
+  currentDifficulty: number,
+  averageMiningTime: number,
+): number => {
   // Proportional adjustment: new_difficulty = old_difficulty × (target_time / actual_time)
   // This matches Bitcoin and Ethereum"s approach
   const ratio = TARGET_MINING_TIME_MS / averageMiningTime;
   const newDifficulty = currentDifficulty * ratio;
-  
+
   // Round to nearest integer and ensure minimum difficulty
   return Math.max(MIN_DIFFICULTY, Math.round(newDifficulty));
 };
@@ -46,7 +49,10 @@ export const calculateDifficulty = (chain: Chain): string => {
   const averageMiningTime = calculateAverageMiningTime(recentBlocks);
   const lastBlock = chain[chain.length - 1];
   const currentDifficulty = countLeadingZeroes(lastBlock.hash);
-  const adjustedDifficulty = adjustDifficulty(currentDifficulty, averageMiningTime);
+  const adjustedDifficulty = adjustDifficulty(
+    currentDifficulty,
+    averageMiningTime,
+  );
 
   return "0".repeat(adjustedDifficulty);
 };
@@ -62,7 +68,7 @@ export const verifyChain = (chain: Chain): boolean => {
   if (genesisBlock.index !== 0) {
     return false;
   }
-  
+
   // Verify genesis block has the correct hash value
   if (genesisBlock.hash !== "0") {
     return false;
@@ -89,7 +95,7 @@ export const verifyChain = (chain: Chain): boolean => {
       previousBlock.timestamp,
       currentBlock.player,
       currentBlock.team,
-      currentBlock.nonce
+      currentBlock.nonce,
     );
 
     // Verify hash matches
@@ -101,7 +107,7 @@ export const verifyChain = (chain: Chain): boolean => {
     // Calculate difficulty that would have been used when mining this block
     const chainUpToThisBlock = chain.slice(0, i);
     const requiredDifficulty = calculateDifficulty(chainUpToThisBlock);
-    
+
     if (!currentBlock.hash.startsWith(requiredDifficulty)) {
       return false;
     }

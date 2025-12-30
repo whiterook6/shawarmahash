@@ -8,11 +8,11 @@ export const schemas = {
           player: {
             type: "string",
             pattern: "^[A-Z]{3}$",
-            description: "Three uppercase letters (AAA-ZZZ)"
-          }
-        }
-      }
-    }
+            description: "Three uppercase letters (AAA-ZZZ)",
+          },
+        },
+      },
+    },
   },
   getTeams: {
     schema: {
@@ -23,11 +23,11 @@ export const schemas = {
           team: {
             type: "string",
             pattern: "^[A-Z]{3}$",
-            description: "Three uppercase letters (AAA-ZZZ)"
-          }
-        }
+            description: "Three uppercase letters (AAA-ZZZ)",
+          },
+        },
       },
-    }
+    },
   },
   getPlayerChat: {
     schema: {
@@ -38,11 +38,11 @@ export const schemas = {
           player: {
             type: "string",
             pattern: "^[A-Z]{3}$",
-            description: "Three uppercase letters (AAA-ZZZ)"
-          }
-        }
-      }
-    }
+            description: "Three uppercase letters (AAA-ZZZ)",
+          },
+        },
+      },
+    },
   },
   getTeamChat: {
     schema: {
@@ -53,11 +53,11 @@ export const schemas = {
           team: {
             type: "string",
             pattern: "^[A-Z]{3}$",
-            description: "Three uppercase letters (AAA-ZZZ)"
-          }
-        }
-      }
-    }
+            description: "Three uppercase letters (AAA-ZZZ)",
+          },
+        },
+      },
+    },
   },
   submitBlock: {
     schema: {
@@ -68,36 +68,36 @@ export const schemas = {
           previousHash: {
             type: "string",
             pattern: "^[0-9a-fA-F]+$",
-            description: "Base-16 (hexadecimal) string"
+            description: "Base-16 (hexadecimal) string",
           },
           player: {
             type: "string",
             pattern: "^[A-Z]{3}$",
-            description: "Three uppercase letters (AAA-ZZZ)"
+            description: "Three uppercase letters (AAA-ZZZ)",
           },
           team: {
             type: "string",
             pattern: "^[A-Z]{3}$",
-            description: "Three uppercase letters (AAA-ZZZ)"
+            description: "Three uppercase letters (AAA-ZZZ)",
           },
           nonce: {
             type: "string",
             pattern: "^[0-9a-fA-F]+$",
-            description: "Base-16 (hexadecimal) string"
+            description: "Base-16 (hexadecimal) string",
           },
           hash: {
             type: "string",
             pattern: "^[0-9a-fA-F]+$",
-            description: "Base-16 (hexadecimal) string"
+            description: "Base-16 (hexadecimal) string",
           },
           message: {
             type: "string",
             maxLength: 256,
-            description: "Optional message (max 256 characters)"
-          }
-        }
+            description: "Optional message (max 256 characters)",
+          },
+        },
       },
-    }
+    },
   },
   mineBlock: {
     schema: {
@@ -108,20 +108,20 @@ export const schemas = {
           team: {
             type: "string",
             pattern: "^[A-Z]{3}$",
-            description: "Three uppercase letters (AAA-ZZZ)"
+            description: "Three uppercase letters (AAA-ZZZ)",
           },
           player: {
             type: "string",
             pattern: "^[A-Z]{3}$",
-            description: "Three uppercase letters (AAA-ZZZ)"
+            description: "Three uppercase letters (AAA-ZZZ)",
           },
           message: {
             type: "string",
             maxLength: 256,
-            description: "Optional message (max 256 characters)"
-          }
-        }
-      }
-    }
+            description: "Optional message (max 256 characters)",
+          },
+        },
+      },
+    },
   },
 };
