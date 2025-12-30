@@ -22,14 +22,32 @@ export class ValidationError extends Error {
   }
 }
 
+// Type guard to check if error is a ValidationError
+function isValidationError(error: Error): error is ValidationError {
+  return error instanceof ValidationError || error.name === "ValidationError";
+}
+
+// Type guard to check if error is a FastifyError with validation
+function isFastifyValidationError(error: Error): error is FastifyError & {
+  validation: FastifySchemaValidationError[];
+} {
+  return (
+    "validation" in error &&
+    Array.isArray((error as FastifyError).validation)
+  );
+}
+
 export const errorHandler = (
-  error: FastifyError,
+  error: Error,
   _: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  if (error.name === "ValidationError") {
-    return reply.status(400).send((error as any).toJSON());
-  } else if (error.validation) {
+  // Handle custom ValidationError
+  if (isValidationError(error)) {
+    return reply.status(400).send(error.toJSON());
+  }
+  // Handle Fastify validation errors
+  else if (isFastifyValidationError(error)) {
     return reply.status(400).send({
       error: "Validation error",
       validationErrors: error.validation.reduce(
