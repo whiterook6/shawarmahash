@@ -1,9 +1,4 @@
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
-import { Block } from "./block";
-import { Chain, verifyChain } from "./chain";
-import { loadChain, saveChain, getDataFilePath } from "./data";
-import { access } from "fs/promises";
-import { constants } from "fs";
 import { schemas } from "./schemas";
 import { Game } from "./game";
 import { AddressInfo } from "net";
@@ -11,32 +6,7 @@ import { errorHandler } from "./errors";
 
 // Start server
 const start = async () => {
-  const chainFilePath = await getDataFilePath("chain");
-
-  let chain: Chain;
-  try {
-    await access(chainFilePath, constants.F_OK);
-    chain = await loadChain(chainFilePath);
-  } catch {
-    // File doesn't exist, create genesis block
-    const genesisBlock: Block = {
-      index: 0,
-      hash: "0",
-      player: "",
-      team: "",
-      timestamp: Date.now(),
-      nonce: 0,
-    };
-    chain = [genesisBlock];
-    await saveChain(chain, chainFilePath);
-  }
-
-  const validationResult = verifyChain(chain);
-  if (!validationResult.valid) {
-    throw new Error(`Invalid chain: ${validationResult.error}`);
-  }
-
-  const game = new Game(chain, chainFilePath);
+  const game = new Game();
 
   const fastify = Fastify({
     logger: true,
@@ -44,9 +14,28 @@ const start = async () => {
 
   fastify.setErrorHandler(errorHandler);
 
-  fastify.get("/chain", async (_: FastifyRequest, reply: FastifyReply) => {
-    reply.status(200).send(game.getChainState());
-  });
+  // Endpoint to get chain for a player
+  fastify.get(
+    "/players/:player/chain",
+    schemas.getPlayers,
+    async (
+      request: FastifyRequest<{
+        Params: {
+          player: string;
+        };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      const { player } = request.params;
+      const chainState = game.getChainState(player);
+      // If there's no chain, return an empty array
+      if (!game.chains.has(player) || chainState.recent.length === 0) {
+        reply.status(200).send([]);
+        return;
+      }
+      reply.status(200).send(chainState);
+    },
+  );
 
   // Endpoint to get all players
   fastify.get("/players", async (_: FastifyRequest, reply: FastifyReply) => {
@@ -160,26 +149,6 @@ const start = async () => {
         hash,
         message,
       );
-      reply.status(200).send(result);
-    },
-  );
-
-  // Testing endpoint to mine a new block
-  fastify.post(
-    "/test/mine",
-    schemas.mineBlock,
-    async (
-      request: FastifyRequest<{
-        Body: {
-          team: string;
-          player: string;
-          message?: string;
-        };
-      }>,
-      reply: FastifyReply,
-    ) => {
-      const { team, player, message } = request.body;
-      const result = await game.testMine(team, player, message);
       reply.status(200).send(result);
     },
   );

@@ -7,9 +7,11 @@ import { Block } from "./block";
 
 const DATA_DIR = join(process.cwd(), "data");
 
-export const getDataFilePath = async (filename: string): Promise<string> => {
+export const getPlayerChainFilePath = async (
+  player: string,
+): Promise<string> => {
   await mkdir(DATA_DIR, { recursive: true });
-  return join(DATA_DIR, filename);
+  return join(DATA_DIR, `chain-${player}`);
 };
 
 export const saveChain = async (
