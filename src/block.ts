@@ -10,12 +10,6 @@ export type Block = {
   message?: string;
 };
 
-export type PendingBlock = {
-  player: string;
-  team: string;
-  nonce: number;
-};
-
 export const calculateHash = (
   previousHash: string,
   previousTimestamp: number,

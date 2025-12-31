@@ -3,6 +3,7 @@ import { schemas } from "./schemas";
 import { Game } from "./game";
 import { errorHandler } from "./errors";
 import { DEFAULT_DIFFICULTY } from "./chain";
+import { mineBlock } from "./miner";
 
 export function createServer(game: Game) {
   const fastify = Fastify({
@@ -150,6 +151,29 @@ export function createServer(game: Game) {
       reply.status(200).send(result);
     },
   );
+
+  fastify.post("/mine", schemas.mineBlock, (request: FastifyRequest<{
+    Body: { team: string; player: string; message?: string; }
+  }>, reply: FastifyReply) => {
+    const { team, player, message } = request.body;
+    console.log(`Mining block for player ${player} and team ${team}`);
+    const playerChain = game.getChainState(player);
+    const newBlock = mineBlock(
+      player,
+      team,
+      playerChain.recent,
+      message,
+    );
+    const result = game.submitBlock(
+      newBlock.hash,
+      player,
+      team,
+      newBlock.nonce,
+      newBlock.hash,
+      message,
+    );
+    reply.status(200).send(result);
+  });
 
   return fastify;
 }

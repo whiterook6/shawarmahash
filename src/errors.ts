@@ -62,6 +62,7 @@ export const errorHandler = (
       ),
     });
   } else {
+    console.error(error);
     return reply.status(500).send({
       error: "Internal server error",
     });

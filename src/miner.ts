@@ -2,16 +2,16 @@ import { Block, calculateHash } from "./block";
 import { Chain, calculateDifficulty } from "./chain";
 
 export const mineBlock = (
-  previousBlock: Block,
   player: string,
   team: string,
-  chain: Chain,
+  recentChain: Chain,
   message?: string,
 ): Block => {
   let nonce = 0;
-  const previousHash = previousBlock.hash;
-  const previousTimestamp = previousBlock.timestamp;
-  const difficulty = calculateDifficulty(chain);
+  const previousBlock = recentChain[recentChain.length - 1];
+  const previousHash = previousBlock?.hash ?? "0";
+  const previousTimestamp = previousBlock?.timestamp ?? Date.now();
+  const difficulty = calculateDifficulty(recentChain);
   while (true) {
     const currentHash = calculateHash(
       previousHash,
@@ -27,7 +27,7 @@ export const mineBlock = (
         team,
         timestamp: Date.now(),
         nonce,
-        index: chain.length,
+        index: previousBlock ? previousBlock.index + 1 : 0,
       };
       if (message) {
         block.message = message;
