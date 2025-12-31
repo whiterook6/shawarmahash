@@ -3,9 +3,10 @@ import { schemas } from "./schemas";
 import { Game } from "./game";
 import { AddressInfo } from "net";
 import { errorHandler } from "./errors";
+import { DEFAULT_DIFFICULTY } from "./chain";
 
 // Start server
-const start = async () => {
+const start = () => {
   const game = new Game();
 
   const fastify = Fastify({
@@ -18,7 +19,7 @@ const start = async () => {
   fastify.get(
     "/players/:player/chain",
     schemas.getPlayers,
-    async (
+    (
       request: FastifyRequest<{
         Params: {
           player: string;
@@ -29,16 +30,17 @@ const start = async () => {
       const { player } = request.params;
       const chainState = game.getChainState(player);
       // If there's no chain, return an empty array
-      if (!game.chains.has(player) || chainState.recent.length === 0) {
-        reply.status(200).send([]);
-        return;
+      if (chainState.recent.length === 0) {
+        return reply
+          .status(200)
+          .send({ recent: [], difficulty: DEFAULT_DIFFICULTY });
       }
-      reply.status(200).send(chainState);
+      return reply.status(200).send(chainState);
     },
   );
 
   // Endpoint to get all players
-  fastify.get("/players", async (_: FastifyRequest, reply: FastifyReply) => {
+  fastify.get("/players", (_: FastifyRequest, reply: FastifyReply) => {
     const result = game.getAllPlayers();
     reply.status(200).send(result);
   });
@@ -47,7 +49,7 @@ const start = async () => {
   fastify.get(
     "/players/:player",
     schemas.getPlayers,
-    async (
+    (
       request: FastifyRequest<{
         Params: {
           player: string;
@@ -61,7 +63,7 @@ const start = async () => {
   );
 
   // Endpoint to get all teams
-  fastify.get("/teams", async (_: FastifyRequest, reply: FastifyReply) => {
+  fastify.get("/teams", (_: FastifyRequest, reply: FastifyReply) => {
     const result = game.getAllTeams();
     reply.status(200).send(result);
   });
@@ -70,7 +72,7 @@ const start = async () => {
   fastify.get(
     "/teams/:team",
     schemas.getTeams,
-    async (
+    (
       request: FastifyRequest<{
         Params: {
           team: string;
@@ -84,7 +86,7 @@ const start = async () => {
   );
 
   // Endpoint to get recent chat messages
-  fastify.get("/chat", async (_: FastifyRequest, reply: FastifyReply) => {
+  fastify.get("/chat", (_: FastifyRequest, reply: FastifyReply) => {
     const result = game.getChat();
     reply.status(200).send(result);
   });
@@ -93,7 +95,7 @@ const start = async () => {
   fastify.get(
     "/chat/players/:player",
     schemas.getPlayerChat,
-    async (
+    (
       request: FastifyRequest<{
         Params: {
           player: string;
@@ -110,7 +112,7 @@ const start = async () => {
   fastify.get(
     "/chat/teams/:team",
     schemas.getTeamChat,
-    async (
+    (
       request: FastifyRequest<{
         Params: {
           team: string;
@@ -127,7 +129,7 @@ const start = async () => {
   fastify.post(
     "/submit",
     schemas.submitBlock,
-    async (
+    (
       request: FastifyRequest<{
         Body: {
           previousHash: string;
@@ -141,7 +143,7 @@ const start = async () => {
       reply: FastifyReply,
     ) => {
       const { previousHash, player, team, nonce, hash, message } = request.body;
-      const result = await game.submitBlock(
+      const result = game.submitBlock(
         previousHash,
         player,
         team,
@@ -153,14 +155,16 @@ const start = async () => {
     },
   );
 
-  try {
-    await fastify.listen({ port: 3000, host: "0.0.0.0" });
-    const address = fastify.server.address() as AddressInfo;
-    console.log(`Server listening on ${address.address}:${address.port}`);
-  } catch (err) {
-    fastify.log.error(err);
-    process.exit(1);
-  }
+  fastify
+    .listen({ port: 3000, host: "0.0.0.0" })
+    .then(() => {
+      const address = fastify.server.address() as AddressInfo;
+      console.log(`Server listening on ${address.address}:${address.port}`);
+    })
+    .catch((err) => {
+      fastify.log.error(err);
+      process.exit(1);
+    });
 };
 
 start();

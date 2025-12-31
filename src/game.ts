@@ -1,11 +1,5 @@
-import { Chain, calculateDifficulty } from "./chain";
+import { Chain, DEFAULT_DIFFICULTY, calculateDifficulty } from "./chain";
 import { Block, calculateHash } from "./block";
-import {
-  appendBlockToChain,
-  getPlayerChainFilePath,
-  loadChain,
-  saveChain,
-} from "./data";
 import { getPlayerScore, getAllPlayers } from "./players";
 import { getTeamScore, getAllTeams } from "./teams";
 import {
@@ -14,44 +8,28 @@ import {
   getRecentTeamMentions,
 } from "./chat";
 import { ValidationError } from "./errors";
-import { access } from "fs/promises";
-import { constants } from "fs";
 
 export class Game {
-  chains: Map<string, Chain>;
+  private chains: Map<string, Chain> = new Map();
 
-  constructor() {
-    this.chains = new Map();
-  }
-
-  private async getOrCreatePlayerChain(player: string): Promise<Chain> {
+  private getOrCreatePlayerChain(player: string): Chain {
     // Check if chain exists in memory
     if (this.chains.has(player)) {
       return this.chains.get(player)!;
     }
 
-    // Check if chain file exists on disk
-    const chainFilePath = await getPlayerChainFilePath(player);
-    try {
-      await access(chainFilePath, constants.F_OK);
-      const chain = await loadChain(chainFilePath);
-      this.chains.set(player, chain);
-      return chain;
-    } catch {
-      // File doesn't exist, create new chain with genesis block containing player's initials
-      const genesisBlock: Block = {
-        index: 0,
-        hash: "0",
-        player: player,
-        team: "",
-        timestamp: Date.now(),
-        nonce: 0,
-      };
-      const chain: Chain = [genesisBlock];
-      await saveChain(chain, chainFilePath);
-      this.chains.set(player, chain);
-      return chain;
-    }
+    // Create new chain with genesis block containing player's initials
+    const genesisBlock: Block = {
+      index: 0,
+      hash: "0",
+      player: player,
+      team: "",
+      timestamp: Date.now(),
+      nonce: 0,
+    };
+    const chain: Chain = [genesisBlock];
+    this.chains.set(player, chain);
+    return chain;
   }
 
   getChainState(player: string) {
@@ -59,7 +37,7 @@ export class Game {
     if (!chain) {
       return {
         recent: [],
-        difficulty: calculateDifficulty([]),
+        difficulty: DEFAULT_DIFFICULTY,
       };
     }
     const recentChain = chain.slice(-5);
@@ -70,13 +48,8 @@ export class Game {
     };
   }
 
-  private async appendBlock(
-    newBlock: Block,
-    chain: Chain,
-    chainFilePath: string,
-  ) {
+  private appendBlock(newBlock: Block, chain: Chain) {
     chain.push(newBlock);
-    await appendBlockToChain(newBlock, chainFilePath);
   }
 
   private aggregateChains<T>(fn: (chain: Chain) => T[]): T[] {
@@ -158,7 +131,7 @@ export class Game {
     return allMessages.sort((a, b) => b.timestamp - a.timestamp);
   }
 
-  async submitBlock(
+  submitBlock(
     previousHash: string,
     player: string,
     team: string,
@@ -167,7 +140,7 @@ export class Game {
     message?: string,
   ) {
     // Get or create the player's chain
-    const chain = await this.getOrCreatePlayerChain(player);
+    const chain = this.getOrCreatePlayerChain(player);
 
     // verify the previous hash is correct
     const previousBlock = chain[chain.length - 1];
@@ -217,8 +190,7 @@ export class Game {
     }
 
     // Append to chain
-    const chainFilePath = await getPlayerChainFilePath(player);
-    await this.appendBlock(newBlock, chain, chainFilePath);
+    this.appendBlock(newBlock, chain);
     return this.getChainState(player);
   }
 }

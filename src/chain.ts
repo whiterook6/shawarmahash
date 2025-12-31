@@ -2,10 +2,10 @@ import { Block, calculateHash } from "./block";
 
 export type Chain = Block[];
 
-const MIN_DIFFICULTY = 5;
-const DEFAULT_DIFFICULTY = Array(MIN_DIFFICULTY).fill("0").join("");
-const TARGET_MINING_TIME_MS = 1000;
-const BLOCKS_TO_CONSIDER = 10;
+export const MIN_DIFFICULTY = 5;
+export const DEFAULT_DIFFICULTY = Array(MIN_DIFFICULTY).fill("0").join("");
+export const TARGET_MINING_TIME_MS = 1000;
+export const BLOCKS_TO_CONSIDER = 10;
 
 const countLeadingZeroes = (hash: string): number => {
   let count = 0;
