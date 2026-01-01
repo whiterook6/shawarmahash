@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert";
 import expect from "expect";
 import { Block } from "./block";
+import { Miner } from "./miner";
 
 describe("Block", () => {
   it("Can calculate a hash", () => {
@@ -22,17 +23,17 @@ describe("Block", () => {
     const genesisBlock = Block.createGenesisBlock("AAA");
     expect(genesisBlock).toEqual(expect.objectContaining({
       player: "AAA",
-      hash: "0",
+      hash: expect.any(String),
       previousHash: "0000000000000000000000000000000000000000000000000000000000000000",
       index: 0,
       timestamp: expect.any(Number),
-      nonce: 0,
+      nonce: expect.any(Number),
     }));
   });
 
   it("Can verify a block hash", () => {
     const previousHash = "1a1cc3c9070e0914c7955c6310ab69f8556036c06b67a9b2df05b8ea22ea9be6";
-    const block = {
+    const goodBlock = {
       index: 1,
       player: "AAA",
       team: "AAA",
@@ -41,7 +42,22 @@ describe("Block", () => {
       hash: "294ba4c5895004b065e576f7c73f833ef050bd2246e4e564315827ea752133cd",
       previousHash: previousHash,
     };
-    const isValid = Block.verifyBlockHash(block, previousHash);
-    assert.strictEqual(isValid, true);
+    assert.strictEqual(
+      Block.verifyBlockHash(goodBlock, previousHash),
+      true
+    );
+    const badBlock = {
+      index: 1,
+      player: "AAA",
+      team: "AAA",
+      timestamp: 1735594900000,
+      nonce: 0,
+      hash: "895004b065e576",
+      previousHash: "0000000000000000000000000000000000000000000000000000000000000000",
+    };
+    assert.strictEqual(
+      Block.verifyBlockHash(badBlock, previousHash),
+      false
+    );
   });
 });

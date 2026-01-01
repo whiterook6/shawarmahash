@@ -42,25 +42,77 @@ export function createServer(game: Game) {
     reply.status(200).send(result);
   });
 
-  // Endpoint to create a player (creates genesis block)
+  // Endpoint to create a player or submit a block
   fastify.post(
     "/players/:player",
-    schemas.createPlayer,
+    schemas.postPlayer,
     (
       request: FastifyRequest<{
         Params: {
           player: string;
         };
+        Body?: {
+          previousHash?: string;
+          player?: string;
+          team?: string;
+          nonce?: string;
+          hash?: string;
+          message?: string;
+        };
       }>,
       reply: FastifyReply,
     ) => {
       const { player } = request.params;
-      const result = game.createPlayer(player);
-      reply.status(201).send(result);
+      const body = request.body || {};
+
+      // Check if all required block parameters are present
+      const hasBlockParams =
+        body.previousHash !== undefined &&
+        body.nonce !== undefined &&
+        body.hash !== undefined;
+
+      if (hasBlockParams) {
+        // Block submission - validate player matches if provided in body
+        if (body.player && body.player !== player) {
+          return reply.status(400).send({
+            error: "Validation error",
+            validationErrors: {
+              player: [
+                `Player in body (${body.player}) does not match player in URL (${player})`,
+              ],
+            },
+          });
+        }
+
+        // Convert nonce from string to number (parse as decimal)
+        const nonce = parseInt(body.nonce!, 10);
+        if (isNaN(nonce)) {
+          return reply.status(400).send({
+            error: "Validation error",
+            validationErrors: {
+              nonce: [`Invalid nonce: ${body.nonce} is not a valid number`],
+            },
+          });
+        }
+
+        const result = game.submitBlock(
+          body.previousHash!,
+          player,
+          body.team,
+          nonce,
+          body.hash!,
+          body.message,
+        );
+        return reply.status(200).send(result);
+      } else {
+        // Chain initialization
+        const result = game.createPlayer(player);
+        return reply.status(201).send(result);
+      }
     },
   );
 
-  // Endpoint to get a player's score
+  // Endpoint to get a player's chain state
   fastify.get(
     "/players/:player",
     schemas.getPlayers,
@@ -72,7 +124,7 @@ export function createServer(game: Game) {
       }>,
       reply: FastifyReply,
     ) => {
-      const result = game.getPlayer(request.params.player);
+      const result = game.getChainStateOrEmpty(request.params.player);
       reply.status(200).send(result);
     },
   );

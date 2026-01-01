@@ -4,6 +4,7 @@ import { Players } from "./players";
 import { Teams } from "./teams";
 import { Chat } from "./chat";
 import { ValidationError } from "./errors";
+import { Data } from "./data";
 
 export type ChainState = {
   recent: Block[];
@@ -13,17 +14,30 @@ export type ChainState = {
 export class Game {
   private chains: Map<string, Chain> = new Map();
 
+  /**
+   * Initializes a new player chain with a genesis block.
+   * This is the single point where player creation happens,
+   * making it easy to add callbacks or other logic later.
+   */
+  private initializePlayerChain(player: string, message?: string): Chain {
+    // Create new chain with genesis block
+    const genesisBlock: Block = Block.createGenesisBlock(player, message);
+    const chain: Chain = [genesisBlock];
+    this.chains.set(player, chain);
+    
+    // TODO: Add callbacks here if needed (e.g., onPlayerCreated callback)
+    
+    return chain;
+  }
+
   private getOrCreatePlayerChain(player: string): Chain {
     // Check if chain exists in memory
     if (this.chains.has(player)) {
       return this.chains.get(player)!;
     }
 
-    // Create new chain with genesis block containing player's initials
-    const genesisBlock: Block = Block.createGenesisBlock(player);
-    const chain: Chain = [genesisBlock];
-    this.chains.set(player, chain);
-    return chain;
+    // Initialize new player chain (no message for auto-created chains)
+    return this.initializePlayerChain(player);
   }
 
   getChainState(player: string): ChainState {
@@ -36,22 +50,38 @@ export class Game {
     };
   }
 
+  getChainStateOrEmpty(player: string): ChainState {
+    const chain = this.chains.get(player);
+    if (!chain) {
+      return {
+        recent: [],
+        difficulty: DEFAULT_DIFFICULTY,
+      };
+    }
+    const recentChain = chain.slice(-5);
+    const difficulty = Chain.calculateDifficulty(chain);
+    return {
+      recent: recentChain.slice(),
+      difficulty: difficulty,
+    };
+  }
+
   createPlayer(player: string): { recent: Block[]; difficulty: string } {
     // Check if chain already exists
     if (!this.chains.has(player)) {
-      // Create new chain with genesis block
+      // Initialize new player chain with welcome message
       const message = `Are you ready for a story?`;
-      const genesisBlock: Block = Block.createGenesisBlock(player, message);
-      const chain: Chain = [genesisBlock];
-      this.chains.set(player, chain);
+      this.initializePlayerChain(player, message);
     }
     
     // Return the recent chain state
     return this.getChainState(player);
   }
 
-  private appendBlock(newBlock: Block, chain: Chain) {
+  private appendBlock(newBlock: Block, chain: Chain, player: string) {
     chain.push(newBlock);
+    // TODO: Implement Data.saveChain if needed
+    // await Data.saveChain(chain, player);
   }
 
   private aggregateChains<T>(fn: (chain: Chain) => T[]): T[] {
@@ -143,8 +173,15 @@ export class Game {
     providedHash: string,
     message?: string,
   ) {
-    // Get or create the player's chain
-    const chain = this.getOrCreatePlayerChain(player);
+    // Check if chain exists - don't auto-create
+    if (!this.chains.has(player)) {
+      throw new ValidationError({
+        player: [
+          `Player ${player} must initialize their chain before submitting blocks`,
+        ],
+      });
+    }
+    const chain = this.chains.get(player)!;
 
     // verify the previous hash is correct
     const previousBlock = chain[chain.length - 1];
@@ -197,7 +234,7 @@ export class Game {
     }
 
     // Append to chain
-    this.appendBlock(newBlock, chain);
+    this.appendBlock(newBlock, chain, player);
     return this.getChainState(player);
   }
 }

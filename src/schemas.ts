@@ -139,4 +139,55 @@ export const schemas = {
       },
     },
   },
+  postPlayer: {
+    schema: {
+      params: {
+        type: "object",
+        required: ["player"],
+        properties: {
+          player: {
+            type: "string",
+            pattern: "^[A-Z]{3}$",
+            description: "Three uppercase letters (AAA-ZZZ)",
+          },
+        },
+      },
+      body: {
+        type: "object",
+        required: [],
+        properties: {
+          previousHash: {
+            type: "string",
+            pattern: "^[0-9a-fA-F]+$",
+            description: "Base-16 (hexadecimal) string",
+          },
+          player: {
+            type: "string",
+            pattern: "^[A-Z]{3}$",
+            description: "Three uppercase letters (AAA-ZZZ) - optional, uses param if not provided",
+          },
+          team: {
+            type: "string",
+            pattern: "^[A-Z]{3}$",
+            description: "Optional three uppercase letters (AAA-ZZZ)",
+          },
+          nonce: {
+            type: "string",
+            pattern: "^[0-9a-fA-F]+$",
+            description: "Base-16 (hexadecimal) string",
+          },
+          hash: {
+            type: "string",
+            pattern: "^[0-9a-fA-F]+$",
+            description: "Base-16 (hexadecimal) string",
+          },
+          message: {
+            type: "string",
+            maxLength: 256,
+            description: "Optional message (max 256 characters)",
+          },
+        },
+      },
+    },
+  },
 };
