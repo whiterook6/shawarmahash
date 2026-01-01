@@ -38,14 +38,15 @@ export const Block = {
     return block.hash === Block.calculateHash(previousHash, block.timestamp, block.player, block.team, block.nonce);
   },
 
-  createGenesisBlock: (player: string): Block => {
+  createGenesisBlock: (player: string, message?: string): Block => {
     // I think the genesis block for a player has to be mined manually
+    const timestamp = Date.now();
     let nonce = 0;
     let hash = "";
     while (true) {
       hash = Block.calculateHash(
         "0000000000000000000000000000000000000000000000000000000000000000",
-        Date.now(),
+        timestamp,
         player,
         undefined,
         nonce,
@@ -57,11 +58,12 @@ export const Block = {
     }
     return {
       index: 0,
-      hash,
+      hash: hash,
       previousHash: "0000000000000000000000000000000000000000000000000000000000000000",
       player: player,
-      timestamp: Date.now(),
-      nonce: 0,
+      timestamp: timestamp, 
+      nonce: nonce,
+      message: message,
     };
   },
 

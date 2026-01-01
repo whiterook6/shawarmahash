@@ -5,6 +5,11 @@ import { Teams } from "./teams";
 import { Chat } from "./chat";
 import { ValidationError } from "./errors";
 
+export type ChainState = {
+  recent: Block[];
+  difficulty: string;
+};
+
 export class Game {
   private chains: Map<string, Chain> = new Map();
 
@@ -21,7 +26,7 @@ export class Game {
     return chain;
   }
 
-  getChainState(player: string) {
+  getChainState(player: string): ChainState {
     const chain = this.chains.get(player) || this.getOrCreatePlayerChain(player);
     const recentChain = chain.slice(-5);
     const difficulty = Chain.calculateDifficulty(chain);
@@ -29,6 +34,20 @@ export class Game {
       recent: recentChain.slice(),
       difficulty: difficulty,
     };
+  }
+
+  createPlayer(player: string): { recent: Block[]; difficulty: string } {
+    // Check if chain already exists
+    if (!this.chains.has(player)) {
+      // Create new chain with genesis block
+      const message = `Are you ready for a story?`;
+      const genesisBlock: Block = Block.createGenesisBlock(player, message);
+      const chain: Chain = [genesisBlock];
+      this.chains.set(player, chain);
+    }
+    
+    // Return the recent chain state
+    return this.getChainState(player);
   }
 
   private appendBlock(newBlock: Block, chain: Chain) {

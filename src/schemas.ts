@@ -124,4 +124,19 @@ export const schemas = {
       },
     },
   },
+  createPlayer: {
+    schema: {
+      params: {
+        type: "object",
+        required: ["player"],
+        properties: {
+          player: {
+            type: "string",
+            pattern: "^[A-Z]{3}$",
+            description: "Three uppercase letters (AAA-ZZZ)",
+          },
+        },
+      },
+    },
+  },
 };

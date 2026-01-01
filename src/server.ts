@@ -42,6 +42,24 @@ export function createServer(game: Game) {
     reply.status(200).send(result);
   });
 
+  // Endpoint to create a player (creates genesis block)
+  fastify.post(
+    "/players/:player",
+    schemas.createPlayer,
+    (
+      request: FastifyRequest<{
+        Params: {
+          player: string;
+        };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      const { player } = request.params;
+      const result = game.createPlayer(player);
+      reply.status(201).send(result);
+    },
+  );
+
   // Endpoint to get a player's score
   fastify.get(
     "/players/:player",
