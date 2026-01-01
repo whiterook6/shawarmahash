@@ -1,61 +1,17 @@
 import { Block } from "./block";
+import { Difficulty } from "./difficulty";
 
 export type Chain = Block[];
 
-export const MIN_DIFFICULTY = 5;
-export const DEFAULT_DIFFICULTY = Array(MIN_DIFFICULTY).fill("0").join("");
-export const TARGET_MINING_TIME_MS = 1000;
-export const BLOCKS_TO_CONSIDER = 10;
-
 export const Chain = {
-  countLeadingZeroes: (hash: string): number => {
-    let count = 0;
-    for (let i = 0; i < hash.length; i++) {
-      if (hash[i] === "0") {
-        count++;
-      } else {
-        break;
-      }
-    }
-    return count;
-  },
-
-  calculateAverageMiningTime: (blocks: Block[]): number => {
-    let totalMiningTime = 0;
-    for (let i = 1; i < blocks.length; i++) {
-      totalMiningTime += blocks[i].timestamp - blocks[i - 1].timestamp;
-    }
-    return totalMiningTime / (blocks.length - 1);
-  },
-
-  adjustDifficulty: (
-    currentDifficulty: number,
-    averageMiningTime: number,
-  ): number => {
-    // Proportional adjustment: new_difficulty = old_difficulty × (target_time / actual_time)
-    // This matches Bitcoin and Ethereum"s approach
-    const ratio = TARGET_MINING_TIME_MS / averageMiningTime;
-    const newDifficulty = currentDifficulty * ratio;
-
-    // Round to nearest integer and ensure minimum difficulty
-    return Math.max(MIN_DIFFICULTY, Math.round(newDifficulty));
-  },
-
-  calculateDifficulty: (chain: Chain): string => {
-    if (chain.length < BLOCKS_TO_CONSIDER) {
-      return DEFAULT_DIFFICULTY;
+  getAverageMiningInterval: (chain: Chain): number => {
+    const length = chain.length;
+    if (length < 2) {
+      return 0;
     }
 
-    const recentBlocks = chain.slice(-BLOCKS_TO_CONSIDER - 1);
-    const averageMiningTime = Chain.calculateAverageMiningTime(recentBlocks);
-    const lastBlock = chain[chain.length - 1];
-    const currentDifficulty = Chain.countLeadingZeroes(lastBlock.hash);
-    const adjustedDifficulty = Chain.adjustDifficulty(
-      currentDifficulty,
-      averageMiningTime,
-    );
-
-    return "0".repeat(adjustedDifficulty);
+    const elapsedSeconds = chain[length - 1].timestamp - chain[0].timestamp;
+    return elapsedSeconds / length;
   },
 
   verifyChain: (chain: Chain): boolean => {
@@ -70,13 +26,11 @@ export const Chain = {
       return false;
     }
 
-    // Verify genesis block has the correct hash value
-    if (genesisBlock.hash !== "0000000000000000000000000000000000000000000000000000000000000000") {
-      return false;
-    }
-
     // Verify genesis block has the correct previousHash
-    if (genesisBlock.previousHash !== "0000000000000000000000000000000000000000000000000000000000000000") {
+    if (
+      genesisBlock.previousHash !==
+      "0000000000000000000000000000000000000000000000000000000000000000"
+    ) {
       return false;
     }
 
@@ -116,10 +70,9 @@ export const Chain = {
 
       // Verify hash meets difficulty requirement
       // Calculate difficulty that would have been used when mining this block
-      const chainUpToThisBlock = chain.slice(0, i);
-      const requiredDifficulty = Chain.calculateDifficulty(chainUpToThisBlock);
+      const requiredDifficulty = Difficulty.getDifficultyTargetFromChain(chain);
 
-      if (!currentBlock.hash.startsWith(requiredDifficulty)) {
+      if (!Difficulty.isDifficultyMet(currentBlock.hash, requiredDifficulty)) {
         return false;
       }
     }

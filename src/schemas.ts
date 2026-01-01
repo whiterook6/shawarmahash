@@ -164,7 +164,8 @@ export const schemas = {
           player: {
             type: "string",
             pattern: "^[A-Z]{3}$",
-            description: "Three uppercase letters (AAA-ZZZ) - optional, uses param if not provided",
+            description:
+              "Three uppercase letters (AAA-ZZZ) - optional, uses param if not provided",
           },
           team: {
             type: "string",

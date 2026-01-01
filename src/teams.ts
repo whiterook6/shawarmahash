@@ -23,7 +23,12 @@ export const Teams = {
   getAllTeams: (chain: Chain): TeamWithScore[] => {
     const teams = new Set<string>(
       chain
-        .filter((block) => block.hash !== "0000000000000000000000000000000000000000000000000000000000000000" && block.team)
+        .filter(
+          (block) =>
+            block.hash !==
+              "0000000000000000000000000000000000000000000000000000000000000000" &&
+            block.team,
+        )
         .map((block) => block.team!),
     );
     return Array.from(teams)

@@ -1,10 +1,13 @@
 import { AddressInfo } from "net";
 import { Game } from "./game";
 import { createServer } from "./server";
+import { Data } from "./data";
 
 // Start server
 const start = async () => {
-  const game = new Game();
+  // Load player chains from data directory
+  const chains = await Data.loadAllChains("data");
+  const game = new Game(chains);
   const fastify = createServer(game);
 
   const shutdown = async () => {

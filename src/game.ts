@@ -1,10 +1,11 @@
-import { Chain, DEFAULT_DIFFICULTY } from "./chain";
+import { Chain } from "./chain";
 import { Block } from "./block";
 import { Players } from "./players";
 import { Teams } from "./teams";
 import { Chat } from "./chat";
 import { ValidationError } from "./errors";
 import { Data } from "./data";
+import { Difficulty } from "./difficulty";
 
 export type ChainState = {
   recent: Block[];
@@ -12,7 +13,7 @@ export type ChainState = {
 };
 
 export class Game {
-  private chains: Map<string, Chain> = new Map();
+  constructor(private readonly chains: Map<string, Chain>) {}
 
   /**
    * Creates a genesis block for a player.
@@ -20,7 +21,6 @@ export class Game {
    * making it easy to add callbacks or other logic later.
    */
   createGenesisBlock(player: string, message?: string): Block {
-    // TODO: Add callbacks here if needed (e.g., onGenesisBlockCreated callback)
     return Block.createGenesisBlock(player, message);
   }
 
@@ -29,17 +29,20 @@ export class Game {
    * This is the single point where player creation happens,
    * making it easy to add callbacks or other logic later.
    */
-  private async initializePlayerChain(player: string, message?: string): Promise<Chain> {
+  private async initializePlayerChain(
+    player: string,
+    message?: string,
+  ): Promise<Chain> {
     // Create new chain with genesis block using the consolidated method
     const genesisBlock: Block = this.createGenesisBlock(player, message);
     const chain: Chain = [genesisBlock];
     this.chains.set(player, chain);
-    
+
     // Save genesis block to file
     await Data.appendBlocks(player, [genesisBlock]);
-    
+
     // TODO: Add callbacks here if needed (e.g., onPlayerCreated callback)
-    
+
     return chain;
   }
 
@@ -53,44 +56,30 @@ export class Game {
       const newChain: Chain = [genesisBlock];
       this.chains.set(player, newChain);
       const recentChain = newChain.slice(-5);
-      const difficulty = Chain.calculateDifficulty(newChain);
+      const difficulty = Difficulty.DEFAULT_DIFFICULTY_HASH;
       return {
         recent: recentChain.slice(),
         difficulty: difficulty,
       };
     }
-    const recentChain = chain.slice(-5);
-    const difficulty = Chain.calculateDifficulty(chain);
+
+    const difficulty = Difficulty.getDifficultyTargetFromChain(chain);
     return {
-      recent: recentChain.slice(),
+      recent: chain.slice(-5),
       difficulty: difficulty,
     };
   }
 
-  getChainStateOrEmpty(player: string): ChainState {
-    const chain = this.chains.get(player);
-    if (!chain) {
-      return {
-        recent: [],
-        difficulty: DEFAULT_DIFFICULTY,
-      };
-    }
-    const recentChain = chain.slice(-5);
-    const difficulty = Chain.calculateDifficulty(chain);
-    return {
-      recent: recentChain.slice(),
-      difficulty: difficulty,
-    };
-  }
-
-  async createPlayer(player: string): Promise<{ recent: Block[]; difficulty: string }> {
+  async createPlayer(
+    player: string,
+  ): Promise<{ recent: Block[]; difficulty: string }> {
     // Check if chain already exists
     if (!this.chains.has(player)) {
       // Initialize new player chain with welcome message
       const message = `Are you ready for a story?`;
       await this.initializePlayerChain(player, message);
     }
-    
+
     // Return the recent chain state
     return this.getChainState(player);
   }
@@ -100,12 +89,16 @@ export class Game {
    * This is the single point where blocks are appended,
    * making it easy to add callbacks or other logic later.
    */
-  private async appendBlock(newBlock: Block, chain: Chain, player: string): Promise<void> {
+  private async appendBlock(
+    newBlock: Block,
+    chain: Chain,
+    player: string,
+  ): Promise<void> {
     chain.push(newBlock);
-    
+
     // Persist block to file
     await Data.appendBlocks(player, [newBlock]);
-    
+
     // TODO: Add callbacks here if needed (e.g., onBlockAppended callback)
   }
 
@@ -233,11 +226,11 @@ export class Game {
     }
 
     // Verify the hash meets difficulty requirement
-    const difficulty = Chain.calculateDifficulty(chain);
-    if (!newBlockhash.startsWith(difficulty)) {
+    const difficultyTarget = Difficulty.getDifficultyTargetFromChain(chain);
+    if (!Difficulty.isDifficultyMet(newBlockhash, difficultyTarget)) {
       throw new ValidationError({
         blockHash: [
-          `Block does not meet difficulty requirement: ${newBlockhash} does not start with ${difficulty}`,
+          `Block does not meet difficulty requirement: ${newBlockhash} does not start with ${difficultyTarget}`,
         ],
       });
     }

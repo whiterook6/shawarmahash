@@ -1,5 +1,6 @@
 import { Block } from "./block";
 import { Chain } from "./chain";
+import { Difficulty } from "./difficulty";
 
 export const Miner = {
   mineBlock: (
@@ -12,7 +13,7 @@ export const Miner = {
     const previousBlock = recentChain[recentChain.length - 1];
     const previousHash = previousBlock?.hash ?? "0";
     const previousTimestamp = previousBlock?.timestamp ?? Date.now();
-    const difficulty = Chain.calculateDifficulty(recentChain);
+    const difficulty = Difficulty.getDifficultyTargetFromChain(recentChain);
     while (true) {
       const currentHash = Block.calculateHash(
         previousHash,
@@ -21,7 +22,7 @@ export const Miner = {
         team,
         nonce,
       );
-      if (currentHash.startsWith(difficulty)) {
+      if (Difficulty.isDifficultyMet(currentHash, difficulty)) {
         const block: Block = {
           hash: currentHash,
           previousHash: previousHash,

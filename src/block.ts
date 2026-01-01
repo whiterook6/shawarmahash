@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { DEFAULT_DIFFICULTY } from "./chain";
+import { Difficulty } from "./difficulty";
 
 export type Block = {
   index: number;
@@ -22,20 +22,28 @@ export const Block = {
   ) => {
     return crypto
       .createHash("sha256")
-      .update(`${previousHash}${previousTimestamp}${player}${team ?? ""}${nonce}`)
+      .update(
+        `${previousHash}${previousTimestamp}${player}${team ?? ""}${nonce}`,
+      )
       .digest("hex");
   },
 
-  verifyBlockHash: (
-    block: Block,
-    previousHash: string,
-  ) => {
+  verifyBlockHash: (block: Block, previousHash: string) => {
     // Verify that the stored previousHash matches the provided one
     if (block.previousHash !== previousHash) {
       return false;
     }
     // Verify that the block's hash is correctly calculated
-    return block.hash === Block.calculateHash(previousHash, block.timestamp, block.player, block.team, block.nonce);
+    return (
+      block.hash ===
+      Block.calculateHash(
+        previousHash,
+        block.timestamp,
+        block.player,
+        block.team,
+        block.nonce,
+      )
+    );
   },
 
   /** Only the Game.createGenesisBlock() should call this function. */
@@ -52,23 +60,26 @@ export const Block = {
         undefined,
         nonce,
       );
-      if (hash.startsWith(DEFAULT_DIFFICULTY)) {
+      if (
+        Difficulty.isDifficultyMet(hash, Difficulty.DEFAULT_DIFFICULTY_HASH)
+      ) {
         break;
       }
       nonce++;
     }
     return {
-      index: 0,
       hash: hash,
-      previousHash: "0000000000000000000000000000000000000000000000000000000000000000",
+      previousHash:
+        "0000000000000000000000000000000000000000000000000000000000000000",
       player: player,
-      timestamp: timestamp, 
+      timestamp: timestamp,
       nonce: nonce,
+      index: 0,
       message: message,
     };
   },
 
-  mint: (previousBlock: Block, nonce: number, hash: string ): Block => {
+  mint: (previousBlock: Block, nonce: number, hash: string): Block => {
     return {
       index: previousBlock.index + 1,
       hash: hash,
@@ -77,5 +88,5 @@ export const Block = {
       timestamp: Date.now(),
       nonce: nonce,
     };
-  }
+  },
 };

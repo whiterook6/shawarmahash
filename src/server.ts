@@ -1,9 +1,8 @@
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
-import { schemas } from "./schemas";
-import { Game } from "./game";
 import { errorHandler } from "./errors";
-import { DEFAULT_DIFFICULTY } from "./chain";
+import { Game } from "./game";
 import { Miner } from "./miner";
+import { schemas } from "./schemas";
 
 export function createServer(game: Game) {
   const fastify = Fastify({
@@ -26,12 +25,6 @@ export function createServer(game: Game) {
     ) => {
       const { player } = request.params;
       const chainState = game.getChainState(player);
-      // If there's no chain, return an empty array
-      if (chainState.recent.length === 0) {
-        return reply
-          .status(200)
-          .send({ recent: [], difficulty: DEFAULT_DIFFICULTY });
-      }
       return reply.status(200).send(chainState);
     },
   );
@@ -124,7 +117,7 @@ export function createServer(game: Game) {
       }>,
       reply: FastifyReply,
     ) => {
-      const result = game.getChainStateOrEmpty(request.params.player);
+      const result = game.getChainState(request.params.player);
       reply.status(200).send(result);
     },
   );

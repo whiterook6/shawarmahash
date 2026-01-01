@@ -14,7 +14,7 @@ export const Data = {
         input: fileStream,
         crlfDelay: Infinity,
       });
-  
+
       rl.on("line", (line) => {
         const trimmed = line.trim();
         if (trimmed !== "") {
@@ -24,21 +24,29 @@ export const Data = {
           } catch (error) {
             rl.close();
             fileStream.close();
-            reject(new Error(`Failed to parse line in file: ${filePath}`));
+            reject(
+              new Error(
+                `Failed to parse line in file: ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+              ),
+            );
           }
         }
       });
-  
+
       rl.on("close", () => {
         resolve(chain);
       });
-  
+
       rl.on("error", (error) => {
-        reject(new Error(`Failed to read file: ${filePath} - ${error.message}`));
+        reject(
+          new Error(`Failed to read file: ${filePath} - ${error.message}`),
+        );
       });
-  
+
       fileStream.on("error", (error) => {
-        reject(new Error(`Failed to open file: ${filePath} - ${error.message}`));
+        reject(
+          new Error(`Failed to open file: ${filePath} - ${error.message}`),
+        );
       });
     });
   },
@@ -48,26 +56,40 @@ export const Data = {
     try {
       files = await readdir(directoryName);
     } catch (error) {
-      throw new Error(`Failed to read data directory: ${directoryName}`);
+      throw new Error(
+        `Failed to read data directory: ${directoryName}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
 
     const chains: Map<string, Chain> = new Map();
 
     // Load all chains in parallel using Promise.all
-    await Promise.all(files.map(async (file) => {
-      const filePath = join(directoryName, file);
-      try {
-        const chain = await Data.loadChain(filePath);
+    await Promise.all(
+      files.map(async (file) => {
+        const filePath = join(directoryName, file);
+        let chain: Chain;
+        try {
+          chain = await Data.loadChain(filePath);
+        } catch (error) {
+          throw new Error(
+            `Failed to load chain for ${file}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+
+        if (!Chain.verifyChain(chain)) {
+          throw new Error(`Chain verification failed for ${file}`);
+        }
         chains.set(file, chain);
-      } catch (error) {
-        throw new Error(`Failed to load chain for ${file}: ${error instanceof Error ? error.message : String(error)}`);
-      }
-    }));
+      }),
+    );
 
     return chains;
   },
 
-  createChainFile: async (directoryName: string, player: string): Promise<void> => {
+  createChainFile: async (
+    directoryName: string,
+    player: string,
+  ): Promise<void> => {
     const dataDir = join(directoryName, "data");
     const filePath = join(dataDir, player);
 
@@ -75,14 +97,18 @@ export const Data = {
     try {
       await mkdir(dataDir, { recursive: true });
     } catch (error) {
-      throw new Error(`Failed to create data directory: ${dataDir}`);
+      throw new Error(
+        `Failed to create data directory: ${dataDir}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
 
     // Create empty file
     try {
       await writeFile(filePath, "", "utf-8");
     } catch (error) {
-      throw new Error(`Failed to create chain file: ${filePath}`);
+      throw new Error(
+        `Failed to create chain file: ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   },
 
@@ -94,7 +120,9 @@ export const Data = {
     try {
       await mkdir(dataDir, { recursive: true });
     } catch (error) {
-      throw new Error(`Failed to create data directory: ${dataDir}`);
+      throw new Error(
+        `Failed to create data directory: ${dataDir}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
 
     // Append each block as a JSON string on a new line
@@ -102,7 +130,9 @@ export const Data = {
       try {
         await appendFile(filePath, JSON.stringify(block) + "\n", "utf-8");
       } catch (error) {
-        throw new Error(`Failed to append blocks to chain file: ${filePath}`);
+        throw new Error(
+          `Failed to append blocks to chain file: ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
     }
   },
