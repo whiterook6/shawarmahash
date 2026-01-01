@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { DEFAULT_DIFFICULTY } from "./chain";
 
 export type Block = {
   index: number;
@@ -38,9 +39,25 @@ export const Block = {
   },
 
   createGenesisBlock: (player: string): Block => {
+    // I think the genesis block for a player has to be mined manually
+    let nonce = 0;
+    let hash = "";
+    while (true) {
+      hash = Block.calculateHash(
+        "0000000000000000000000000000000000000000000000000000000000000000",
+        Date.now(),
+        player,
+        undefined,
+        nonce,
+      );
+      if (hash.startsWith(DEFAULT_DIFFICULTY)) {
+        break;
+      }
+      nonce++;
+    }
     return {
       index: 0,
-      hash: "0", // need to calculate the actual first hash, or mine the first legitimate block in the new format without type support
+      hash,
       previousHash: "0000000000000000000000000000000000000000000000000000000000000000",
       player: player,
       timestamp: Date.now(),
