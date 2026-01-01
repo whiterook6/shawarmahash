@@ -10,15 +10,17 @@ export type Block = {
   message?: string;
 };
 
-export const calculateHash = (
-  previousHash: string,
-  previousTimestamp: number,
-  player: string,
-  team: string,
-  nonce: number,
-) => {
-  return crypto
-    .createHash("sha256")
-    .update(`${previousHash}${previousTimestamp}${player}${team}${nonce}`)
-    .digest("hex");
+export const Block = {
+  calculateHash: (
+    previousHash: string,
+    previousTimestamp: number,
+    player: string,
+    team: string,
+    nonce: number,
+  ) => {
+    return crypto
+      .createHash("sha256")
+      .update(`${previousHash}${previousTimestamp}${player}${team}${nonce}`)
+      .digest("hex");
+  },
 };

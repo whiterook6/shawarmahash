@@ -1,12 +1,8 @@
-import { Chain, DEFAULT_DIFFICULTY, calculateDifficulty } from "./chain";
-import { Block, calculateHash } from "./block";
-import { getPlayerScore, getAllPlayers } from "./players";
-import { getTeamScore, getAllTeams } from "./teams";
-import {
-  getRecentChatMessages,
-  getRecentPlayerMentions,
-  getRecentTeamMentions,
-} from "./chat";
+import { Chain, DEFAULT_DIFFICULTY } from "./chain";
+import { Block } from "./block";
+import { Players } from "./players";
+import { Teams } from "./teams";
+import { Chat } from "./chat";
 import { ValidationError } from "./errors";
 
 export class Game {
@@ -41,7 +37,7 @@ export class Game {
       };
     }
     const recentChain = chain.slice(-5);
-    const difficulty = calculateDifficulty(chain);
+    const difficulty = Chain.calculateDifficulty(chain);
     return {
       recent: recentChain.slice().reverse(),
       difficulty: difficulty,
@@ -63,7 +59,7 @@ export class Game {
   getPlayer(player: string): number {
     let totalScore = 0;
     for (const chain of this.chains.values()) {
-      totalScore += getPlayerScore(chain, player);
+      totalScore += Players.getPlayerScore(chain, player);
     }
     return totalScore;
   }
@@ -71,7 +67,7 @@ export class Game {
   getTeam(team: string): number {
     let totalScore = 0;
     for (const chain of this.chains.values()) {
-      totalScore += getTeamScore(chain, team);
+      totalScore += Teams.getTeamScore(chain, team);
     }
     return totalScore;
   }
@@ -80,7 +76,7 @@ export class Game {
     // Aggregate teams across all chains
     const allTeams = new Map<string, number>();
     for (const chain of this.chains.values()) {
-      const teams = getAllTeams(chain);
+      const teams = Teams.getAllTeams(chain);
       for (const team of teams) {
         const current = allTeams.get(team.team) || 0;
         allTeams.set(team.team, current + team.score);
@@ -95,7 +91,7 @@ export class Game {
     // Aggregate players across all chains
     const allPlayers = new Map<string, number>();
     for (const chain of this.chains.values()) {
-      const players = getAllPlayers(chain);
+      const players = Players.getAllPlayers(chain);
       for (const player of players) {
         const current = allPlayers.get(player.player) || 0;
         allPlayers.set(player.player, current + player.score);
@@ -108,7 +104,9 @@ export class Game {
 
   getChat() {
     // Aggregate chat messages from all chains
-    const allMessages = this.aggregateChains(getRecentChatMessages);
+    const allMessages = this.aggregateChains((chain) =>
+      Chat.getRecentChatMessages(chain),
+    );
     // Sort by timestamp descending (newest first) since indices overlap across chains
     return allMessages.sort((a, b) => b.timestamp - a.timestamp);
   }
@@ -116,7 +114,7 @@ export class Game {
   getChatPlayer(player: string) {
     // Aggregate chat messages from all chains
     const allMessages = this.aggregateChains((chain) =>
-      getRecentPlayerMentions(chain, player),
+      Chat.getRecentPlayerMentions(chain, player),
     );
     // Sort by timestamp descending (newest first) since indices overlap across chains
     return allMessages.sort((a, b) => b.timestamp - a.timestamp);
@@ -125,7 +123,7 @@ export class Game {
   getChatTeam(team: string) {
     // Aggregate chat messages from all chains
     const allMessages = this.aggregateChains((chain) =>
-      getRecentTeamMentions(chain, team),
+      Chat.getRecentTeamMentions(chain, team),
     );
     // Sort by timestamp descending (newest first) since indices overlap across chains
     return allMessages.sort((a, b) => b.timestamp - a.timestamp);
@@ -153,7 +151,7 @@ export class Game {
     }
 
     // verify the provided hash is correct
-    const newBlockhash = calculateHash(
+    const newBlockhash = Block.calculateHash(
       previousBlock.hash,
       previousBlock.timestamp,
       player,
@@ -167,7 +165,7 @@ export class Game {
     }
 
     // Verify the hash meets difficulty requirement
-    const difficulty = calculateDifficulty(chain);
+    const difficulty = Chain.calculateDifficulty(chain);
     if (!newBlockhash.startsWith(difficulty)) {
       throw new ValidationError({
         blockHash: [
