@@ -4,7 +4,7 @@ import { Chain } from "./chain";
 export const Miner = {
   mineBlock: (
     player: string,
-    team: string,
+    team: string | undefined,
     recentChain: Chain,
     message?: string,
   ): Block => {
@@ -24,12 +24,15 @@ export const Miner = {
       if (currentHash.startsWith(difficulty)) {
         const block: Block = {
           hash: currentHash,
+          previousHash: previousHash,
           player,
-          team,
           timestamp: Date.now(),
           nonce,
           index: previousBlock ? previousBlock.index + 1 : 0,
         };
+        if (team) {
+          block.team = team;
+        }
         if (message) {
           block.message = message;
         }

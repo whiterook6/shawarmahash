@@ -131,7 +131,7 @@ export function createServer(game: Game) {
         Body: {
           previousHash: string;
           player: string;
-          team: string;
+          team?: string;
           nonce: number;
           hash: string;
           message?: string;
@@ -157,13 +157,14 @@ export function createServer(game: Game) {
     schemas.mineBlock,
     (
       request: FastifyRequest<{
-        Body: { team: string; player: string; message?: string };
+        Body: { team?: string; player: string; message?: string };
       }>,
       reply: FastifyReply,
     ) => {
       const { team, player, message } = request.body;
-      console.log(`Mining block for player ${player} and team ${team}`);
       const playerChain = game.getChainState(player);
+      console.log(playerChain);
+
       const newBlock = Miner.mineBlock(
         player,
         team,
@@ -171,7 +172,7 @@ export function createServer(game: Game) {
         message,
       );
       const result = game.submitBlock(
-        newBlock.hash,
+        playerChain.recent[playerChain.recent.length - 1].hash,
         player,
         team,
         newBlock.nonce,

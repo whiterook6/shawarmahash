@@ -71,7 +71,12 @@ export const Chain = {
     }
 
     // Verify genesis block has the correct hash value
-    if (genesisBlock.hash !== "0") {
+    if (genesisBlock.hash !== "0000000000000000000000000000000000000000000000000000000000000000") {
+      return false;
+    }
+
+    // Verify genesis block has the correct previousHash
+    if (genesisBlock.previousHash !== "0000000000000000000000000000000000000000000000000000000000000000") {
       return false;
     }
 
@@ -87,6 +92,11 @@ export const Chain = {
 
       // Check timestamp is valid (current >= previous)
       if (currentBlock.timestamp < previousBlock.timestamp) {
+        return false;
+      }
+
+      // Verify previousHash matches the actual previous block's hash
+      if (currentBlock.previousHash !== previousBlock.hash) {
         return false;
       }
 

@@ -63,7 +63,7 @@ export const schemas = {
     schema: {
       body: {
         type: "object",
-        required: ["previousHash", "player", "team", "nonce", "hash"],
+        required: ["previousHash", "player", "nonce", "hash"],
         properties: {
           previousHash: {
             type: "string",
@@ -78,7 +78,7 @@ export const schemas = {
           team: {
             type: "string",
             pattern: "^[A-Z]{3}$",
-            description: "Three uppercase letters (AAA-ZZZ)",
+            description: "Optional three uppercase letters (AAA-ZZZ)",
           },
           nonce: {
             type: "string",
@@ -103,12 +103,12 @@ export const schemas = {
     schema: {
       body: {
         type: "object",
-        required: ["team", "player"],
+        required: ["player"],
         properties: {
           team: {
             type: "string",
             pattern: "^[A-Z]{3}$",
-            description: "Three uppercase letters (AAA-ZZZ)",
+            description: "Optional three uppercase letters (AAA-ZZZ)",
           },
           player: {
             type: "string",

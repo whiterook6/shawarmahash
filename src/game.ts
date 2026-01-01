@@ -15,31 +15,18 @@ export class Game {
     }
 
     // Create new chain with genesis block containing player's initials
-    const genesisBlock: Block = {
-      index: 0,
-      hash: "0",
-      player: player,
-      team: "",
-      timestamp: Date.now(),
-      nonce: 0,
-    };
+    const genesisBlock: Block = Block.createGenesisBlock(player);
     const chain: Chain = [genesisBlock];
     this.chains.set(player, chain);
     return chain;
   }
 
   getChainState(player: string) {
-    const chain = this.chains.get(player);
-    if (!chain) {
-      return {
-        recent: [],
-        difficulty: DEFAULT_DIFFICULTY,
-      };
-    }
+    const chain = this.chains.get(player) || this.getOrCreatePlayerChain(player);
     const recentChain = chain.slice(-5);
     const difficulty = Chain.calculateDifficulty(chain);
     return {
-      recent: recentChain.slice().reverse(),
+      recent: recentChain.slice(),
       difficulty: difficulty,
     };
   }
@@ -132,7 +119,7 @@ export class Game {
   submitBlock(
     previousHash: string,
     player: string,
-    team: string,
+    team: string | undefined,
     nonce: number,
     providedHash: string,
     message?: string,
@@ -178,11 +165,14 @@ export class Game {
     const newBlock: Block = {
       index: chain.length,
       hash: newBlockhash,
+      previousHash: previousBlock.hash,
       player: player,
-      team: team,
       timestamp: Date.now(),
       nonce: nonce,
     };
+    if (team) {
+      newBlock.team = team;
+    }
     if (message) {
       newBlock.message = message;
     }
