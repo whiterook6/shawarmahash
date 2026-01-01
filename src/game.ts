@@ -15,33 +15,50 @@ export class Game {
   private chains: Map<string, Chain> = new Map();
 
   /**
+   * Creates a genesis block for a player.
+   * This is the single point where genesis blocks are created,
+   * making it easy to add callbacks or other logic later.
+   */
+  createGenesisBlock(player: string, message?: string): Block {
+    // TODO: Add callbacks here if needed (e.g., onGenesisBlockCreated callback)
+    return Block.createGenesisBlock(player, message);
+  }
+
+  /**
    * Initializes a new player chain with a genesis block.
    * This is the single point where player creation happens,
    * making it easy to add callbacks or other logic later.
    */
-  private initializePlayerChain(player: string, message?: string): Chain {
-    // Create new chain with genesis block
-    const genesisBlock: Block = Block.createGenesisBlock(player, message);
+  private async initializePlayerChain(player: string, message?: string): Promise<Chain> {
+    // Create new chain with genesis block using the consolidated method
+    const genesisBlock: Block = this.createGenesisBlock(player, message);
     const chain: Chain = [genesisBlock];
     this.chains.set(player, chain);
+    
+    // Save genesis block to file
+    await Data.appendBlocks(player, [genesisBlock]);
     
     // TODO: Add callbacks here if needed (e.g., onPlayerCreated callback)
     
     return chain;
   }
 
-  private getOrCreatePlayerChain(player: string): Chain {
-    // Check if chain exists in memory
-    if (this.chains.has(player)) {
-      return this.chains.get(player)!;
-    }
-
-    // Initialize new player chain (no message for auto-created chains)
-    return this.initializePlayerChain(player);
-  }
-
   getChainState(player: string): ChainState {
-    const chain = this.chains.get(player) || this.getOrCreatePlayerChain(player);
+    // Note: This auto-creates chains but doesn't persist them.
+    // Use createPlayer() for explicit player creation with persistence.
+    const chain = this.chains.get(player);
+    if (!chain) {
+      // Auto-create in memory only (for backward compatibility)
+      const genesisBlock: Block = this.createGenesisBlock(player);
+      const newChain: Chain = [genesisBlock];
+      this.chains.set(player, newChain);
+      const recentChain = newChain.slice(-5);
+      const difficulty = Chain.calculateDifficulty(newChain);
+      return {
+        recent: recentChain.slice(),
+        difficulty: difficulty,
+      };
+    }
     const recentChain = chain.slice(-5);
     const difficulty = Chain.calculateDifficulty(chain);
     return {
@@ -66,22 +83,30 @@ export class Game {
     };
   }
 
-  createPlayer(player: string): { recent: Block[]; difficulty: string } {
+  async createPlayer(player: string): Promise<{ recent: Block[]; difficulty: string }> {
     // Check if chain already exists
     if (!this.chains.has(player)) {
       // Initialize new player chain with welcome message
       const message = `Are you ready for a story?`;
-      this.initializePlayerChain(player, message);
+      await this.initializePlayerChain(player, message);
     }
     
     // Return the recent chain state
     return this.getChainState(player);
   }
 
-  private appendBlock(newBlock: Block, chain: Chain, player: string) {
+  /**
+   * Appends a block to the chain and persists it to the data layer.
+   * This is the single point where blocks are appended,
+   * making it easy to add callbacks or other logic later.
+   */
+  private async appendBlock(newBlock: Block, chain: Chain, player: string): Promise<void> {
     chain.push(newBlock);
-    // TODO: Implement Data.saveChain if needed
-    // await Data.saveChain(chain, player);
+    
+    // Persist block to file
+    await Data.appendBlocks(player, [newBlock]);
+    
+    // TODO: Add callbacks here if needed (e.g., onBlockAppended callback)
   }
 
   private aggregateChains<T>(fn: (chain: Chain) => T[]): T[] {
@@ -165,7 +190,7 @@ export class Game {
     return allMessages.sort((a, b) => b.timestamp - a.timestamp);
   }
 
-  submitBlock(
+  async submitBlock(
     previousHash: string,
     player: string,
     team: string | undefined,
@@ -233,8 +258,8 @@ export class Game {
       newBlock.message = message;
     }
 
-    // Append to chain
-    this.appendBlock(newBlock, chain, player);
+    // Append to chain and persist to data layer
+    await this.appendBlock(newBlock, chain, player);
     return this.getChainState(player);
   }
 }

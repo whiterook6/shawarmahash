@@ -46,7 +46,7 @@ export function createServer(game: Game) {
   fastify.post(
     "/players/:player",
     schemas.postPlayer,
-    (
+    async (
       request: FastifyRequest<{
         Params: {
           player: string;
@@ -95,7 +95,7 @@ export function createServer(game: Game) {
           });
         }
 
-        const result = game.submitBlock(
+        const result = await game.submitBlock(
           body.previousHash!,
           player,
           body.team,
@@ -106,7 +106,7 @@ export function createServer(game: Game) {
         return reply.status(200).send(result);
       } else {
         // Chain initialization
-        const result = game.createPlayer(player);
+        const result = await game.createPlayer(player);
         return reply.status(201).send(result);
       }
     },
@@ -196,7 +196,7 @@ export function createServer(game: Game) {
   fastify.post(
     "/submit",
     schemas.submitBlock,
-    (
+    async (
       request: FastifyRequest<{
         Body: {
           previousHash: string;
@@ -210,7 +210,7 @@ export function createServer(game: Game) {
       reply: FastifyReply,
     ) => {
       const { previousHash, player, team, nonce, hash, message } = request.body;
-      const result = game.submitBlock(
+      const result = await game.submitBlock(
         previousHash,
         player,
         team,
@@ -225,7 +225,7 @@ export function createServer(game: Game) {
   fastify.post(
     "/mine",
     schemas.mineBlock,
-    (
+    async (
       request: FastifyRequest<{
         Body: { team?: string; player: string; message?: string };
       }>,
@@ -241,7 +241,7 @@ export function createServer(game: Game) {
         playerChain.recent,
         message,
       );
-      const result = game.submitBlock(
+      const result = await game.submitBlock(
         playerChain.recent[playerChain.recent.length - 1].hash,
         player,
         team,

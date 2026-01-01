@@ -71,10 +71,6 @@ export const Data = {
     const dataDir = join(directoryName, "data");
     const filePath = join(dataDir, player);
 
-    // Create genesis block
-    const genesisBlock: Block = Block.createGenesisBlock(player);
-    const chain: Chain = [genesisBlock];
-
     // Ensure data directory exists
     try {
       await mkdir(dataDir, { recursive: true });
@@ -82,12 +78,11 @@ export const Data = {
       throw new Error(`Failed to create data directory: ${dataDir}`);
     }
 
-    // Write chain to file (one block per line)
+    // Create empty file
     try {
-      const content = chain.map((block) => JSON.stringify(block)).join("\n");
-      await writeFile(filePath, content, "utf-8");
+      await writeFile(filePath, "", "utf-8");
     } catch (error) {
-      throw new Error(`Failed to write chain file: ${filePath}`);
+      throw new Error(`Failed to create chain file: ${filePath}`);
     }
   },
 

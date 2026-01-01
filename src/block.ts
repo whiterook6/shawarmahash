@@ -38,6 +38,7 @@ export const Block = {
     return block.hash === Block.calculateHash(previousHash, block.timestamp, block.player, block.team, block.nonce);
   },
 
+  /** Only the Game.createGenesisBlock() should call this function. */
   createGenesisBlock: (player: string, message?: string): Block => {
     // I think the genesis block for a player has to be mined manually
     const timestamp = Date.now();
