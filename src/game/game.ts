@@ -74,7 +74,7 @@ export class Game {
     return totalScore;
   }
 
-  getAllPlayers(): PlayerScore[] {
+  getAllPlayerScores(): PlayerScore[] {
     return Array.from(this.chains.entries())
       .map(([player, chain]) => ({
         player,
