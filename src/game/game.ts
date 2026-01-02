@@ -1,7 +1,7 @@
 import { Chain } from "../chain/chain";
 import { Block } from "../block/block";
 import { Chat } from "../chat/chat";
-import { ValidationError } from "../error/errors";
+import { NotFoundError, ValidationError } from "../error/errors";
 import { Data } from "../data/data";
 import { Difficulty } from "../difficulty/difficulty";
 import { PlayerScore, Score, TeamScore } from "../score/score";
@@ -56,7 +56,7 @@ export class Game {
   getPlayerScore(player: string): number {
     const chain = this.chains.get(player);
     if (!chain) {
-      return 0;
+      throw new NotFoundError(`Player ${player} not found`);
     }
     return Score.getPlayerScore(chain);
   }

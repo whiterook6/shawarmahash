@@ -22,9 +22,29 @@ export class ValidationError extends Error {
   }
 }
 
+export class NotFoundError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "NotFoundError";
+  }
+
+  toJSON() {
+    return {
+      message: this.message,
+      error: "Not Found",
+      statusCode: 404,
+    };
+  }
+}
+
 // Type guard to check if error is a ValidationError
 function isValidationError(error: Error): error is ValidationError {
   return error instanceof ValidationError || error.name === "ValidationError";
+}
+
+// Type guard to check if error is a NotFoundError
+function isNotFoundError(error: Error): error is NotFoundError {
+  return error instanceof NotFoundError || error.name === "NotFoundError";
 }
 
 // Type guard to check if error is a FastifyError with validation
@@ -41,8 +61,12 @@ export const errorHandler = (
   _: FastifyRequest,
   reply: FastifyReply,
 ) => {
+  // Handle custom NotFoundError
+  if (isNotFoundError(error)) {
+    return reply.status(404).send(error.toJSON());
+  }
   // Handle custom ValidationError
-  if (isValidationError(error)) {
+  else if (isValidationError(error)) {
     return reply.status(400).send(error.toJSON());
   }
   // Handle Fastify validation errors
