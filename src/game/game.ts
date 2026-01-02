@@ -15,15 +15,6 @@ export type ChainState = {
 export class Game {
   constructor(private readonly chains: Map<string, Chain>) {}
 
-  /**
-   * Creates a genesis block for a player.
-   * This is the single point where genesis blocks are created,
-   * making it easy to add callbacks or other logic later.
-   */
-  createGenesisBlock(player: string, message?: string): Block {
-    return Block.createGenesisBlock(player, message);
-  }
-
   getChainState(player: string): ChainState {
     const chain = this.chains.get(player);
     if (!chain) {
@@ -42,13 +33,43 @@ export class Game {
 
   async createPlayer(
     player: string,
+    hash: string,
+    nonce: number,
   ): Promise<{ recent: Block[]; difficulty: string }> {
     // Check if chain already exists
-    if (!this.chains.has(player)) {
-      // Initialize new player chain with welcome message
-      const message = `Are you ready for a story?`;
-      await this.initializePlayerChain(player, message);
+    if (this.chains.has(player)) {
+      throw new ValidationError({
+        player: [`Player ${player} already exists`],
+      });
     }
+
+    // Validate genesis block hash
+    const expectedHash = Block.calculateHash(
+      "0000000000000000000000000000000000000000000000000000000000000000",
+      0, // previous timestamp is 0 for genesis block
+      player,
+      undefined, // no team for genesis block
+      nonce,
+    );
+
+    if (hash !== expectedHash) {
+      throw new ValidationError({
+        hash: [`Invalid genesis block hash: ${hash} !== ${expectedHash}`],
+      });
+    }
+
+    // Verify the hash meets difficulty requirement
+    if (!Difficulty.isDifficultyMet(hash, Difficulty.DEFAULT_DIFFICULTY_HASH)) {
+      throw new ValidationError({
+        hash: [
+          `Genesis block does not meet difficulty requirement: ${hash} does not start with ${Difficulty.DEFAULT_DIFFICULTY_HASH}`,
+        ],
+      });
+    }
+
+    // Initialize new player chain with welcome message
+    const message = `Are you ready for a story?`;
+    await this.initializePlayerChain(player, hash, nonce, message);
 
     // Return the recent chain state
     return this.getChainState(player);
@@ -221,10 +242,22 @@ export class Game {
    */
   private async initializePlayerChain(
     player: string,
+    hash: string,
+    nonce: number,
     message?: string,
   ): Promise<Chain> {
-    // Create new chain with genesis block using the consolidated method
-    const genesisBlock: Block = this.createGenesisBlock(player, message);
+    // Create genesis block using provided hash and nonce
+    const genesisBlock: Block = {
+      hash: hash,
+      previousHash:
+        "0000000000000000000000000000000000000000000000000000000000000000",
+      player: player,
+      timestamp: Timestamp.now(),
+      nonce: nonce,
+      index: 0,
+      message: message,
+    };
+
     const chain: Chain = [genesisBlock];
     this.chains.set(player, chain);
 

@@ -137,16 +137,24 @@ export async function createServer(game: Game) {
     },
   );
 
-  // POST /players/:player: create a genesis block for the player, if needed, then return the chain state
+  // POST /players/:player: create a genesis block for the player using user-provided hash/nonce
   fastify.post(
     "/players/:player",
     async (
       request: FastifyRequest<{
         Params: { player: string };
+        Body: {
+          hash: string;
+          nonce: number;
+        };
       }>,
       reply: FastifyReply,
     ) => {
-      const chainState = await game.createPlayer(request.params.player);
+      const chainState = await game.createPlayer(
+        request.params.player,
+        request.body.hash,
+        request.body.nonce,
+      );
       return reply.status(200).send(chainState);
     },
   );
