@@ -1,6 +1,7 @@
 import { faker } from "@faker-js/faker";
 import crypto from "crypto";
 import { Difficulty } from "../difficulty/difficulty";
+import { Timestamp } from "../timestamp/timestamp";
 
 export type Block = {
   /** The index of the block in the chain. Genesis block is index 0.*/
@@ -47,7 +48,7 @@ export const Block = {
   /** Only the Game.createGenesisBlock() should call this function. */
   createGenesisBlock: (player: string, message?: string): Block => {
     // I think the genesis block for a player has to be mined manually
-    const timestamp = Math.floor(Date.now() / 1000);
+    const timestamp = Timestamp.now();
     let nonce = 0;
     let hash = "";
     while (true) {

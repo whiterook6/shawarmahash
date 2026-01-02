@@ -5,6 +5,7 @@ import { NotFoundError, ValidationError } from "../error/errors";
 import { Data } from "../data/data";
 import { Difficulty } from "../difficulty/difficulty";
 import { PlayerScore, Score, TeamScore } from "../score/score";
+import { Timestamp } from "../timestamp/timestamp";
 
 export type ChainState = {
   recent: Block[];
@@ -197,7 +198,7 @@ export class Game {
       hash: newBlockhash,
       previousHash: previousBlock.hash,
       player: player,
-      timestamp: Math.floor(Date.now() / 1000),
+      timestamp: Timestamp.now(),
       nonce: nonce,
       index: previousBlock.index + 1,
     };

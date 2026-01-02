@@ -2,6 +2,7 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { Block } from "../block/block";
 import { Difficulty } from "../difficulty/difficulty";
+import { Timestamp } from "../timestamp/timestamp";
 
 const run = async () => {
   // Parse command line arguments
@@ -86,7 +87,7 @@ const run = async () => {
     hash: hash,
     previousHash: previousHash,
     player: player,
-    timestamp: Math.floor(Date.now() / 1000),
+    timestamp: Timestamp.now(),
     nonce: nonce,
   };
 

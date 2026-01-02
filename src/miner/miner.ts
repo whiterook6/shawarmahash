@@ -1,6 +1,7 @@
 import { Block } from "../block/block";
 import { Chain } from "../chain/chain";
 import { Difficulty } from "../difficulty/difficulty";
+import { Timestamp } from "../timestamp/timestamp";
 
 export const Miner = {
   mineBlock: (
@@ -9,16 +10,16 @@ export const Miner = {
     recentChain: Chain,
     message?: string,
   ): Block => {
+    if (recentChain.length === 0) {
+      throw new Error("Cannot mine block on empty chain");
+    }
     let nonce = 0;
     const previousBlock = recentChain[recentChain.length - 1];
-    const previousHash = previousBlock?.hash ?? "0";
-    const previousTimestamp =
-      previousBlock?.timestamp ?? Math.floor(Date.now() / 1000);
+    const previousHash = previousBlock.hash;
+    const previousTimestamp = previousBlock.timestamp;
     const difficulty = Difficulty.getDifficultyTargetFromChain(recentChain);
     while (true) {
-      const currentHash = Block.calculateHash(
-        previousHash,
-        previousTimestamp,
+      const currentHash = Block.calculateHash(previousHash, previousTimestamp,
         player,
         team,
         nonce,
@@ -28,7 +29,7 @@ export const Miner = {
           hash: currentHash,
           previousHash: previousHash,
           player,
-          timestamp: Math.floor(Date.now() / 1000),
+          timestamp: Timestamp.now(),
           nonce,
           index: previousBlock ? previousBlock.index + 1 : 0,
         };
