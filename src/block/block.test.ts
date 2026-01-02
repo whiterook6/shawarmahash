@@ -4,7 +4,7 @@ import { Block } from "./block";
 
 describe("Block", () => {
   describe("calculateHash", () => {
-    it("Can calculate a hash", () => {
+    it("It can calculate a hash", () => {
       const expectedHash =
         "000008840290f0cef37278c9df927ed079d61820435eaefdaaec56becf0d4ac5";
       const previousHash =
@@ -19,7 +19,7 @@ describe("Block", () => {
       expect(actualHash).toEqual(expectedHash);
     });
 
-    it("Can calculate a hash with a team", () => {
+    it("It can calculate a hash with a team", () => {
       const expectedHash =
         "00000f67bbe633a07efb5c2fccd8983fad091d39c903ee36b008dc7fba089d95";
       const previousHash =
@@ -36,7 +36,7 @@ describe("Block", () => {
   });
 
   describe("createGenesisBlock", () => {
-    it("can create a genesis block", () => {
+    it("It can create a genesis block", () => {
       const genesisBlock = Block.createGenesisBlock("AAA");
       expect(genesisBlock).toEqual(
         expect.objectContaining({

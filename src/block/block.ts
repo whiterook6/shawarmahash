@@ -45,9 +45,8 @@ export const Block = {
       .digest("hex");
   },
 
-  /** Only the Game.createGenesisBlock() should call this function. */
+  /** Only the generate chain script should call this function. */
   createGenesisBlock: (player: string, message?: string): Block => {
-    // I think the genesis block for a player has to be mined manually
     const timestamp = Timestamp.now();
     let nonce = 0;
     let hash = "";

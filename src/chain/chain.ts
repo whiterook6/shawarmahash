@@ -38,6 +38,17 @@ export const Chain = {
       return "Genesis block must have correct previousHash";
     }
 
+    const expectedGenesisHash = Block.calculateHash(
+      "0000000000000000000000000000000000000000000000000000000000000000",
+      0,
+      genesisBlock.player,
+      undefined,
+      genesisBlock.nonce,
+    );
+    if (genesisBlock.hash !== expectedGenesisHash) {
+      return "Genesis block must have correct hash";
+    }
+
     // Verify each subsequent block
     for (let i = 1; i < chain.length; i++) {
       const currentBlock = chain[i];
@@ -48,14 +59,9 @@ export const Chain = {
         return `Block ${i} has incorrect index: ${currentBlock.index}`;
       }
 
-      // Check timestamp is valid (current >= previous)
-      if (currentBlock.timestamp < previousBlock.timestamp) {
-        return `Block ${i} has incorrect timestamp: ${currentBlock.timestamp} < ${previousBlock.timestamp}`;
-      }
-
       // Verify previousHash matches the actual previous block's hash
       if (currentBlock.previousHash !== previousBlock.hash) {
-        return `Block ${i} has incorrect previousHash: ${currentBlock.previousHash} !== ${previousBlock.hash}`;
+        return `Block ${i} has incorrect previous hash: ${currentBlock.previousHash} !== ${previousBlock.hash}`;
       }
 
       // Calculate expected hash
