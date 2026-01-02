@@ -1,5 +1,5 @@
-import { Block } from "./block";
-import { Difficulty } from "./difficulty";
+import { Block } from "../block/block";
+import { Difficulty } from "../difficulty/difficulty";
 
 export type Chain = Block[];
 

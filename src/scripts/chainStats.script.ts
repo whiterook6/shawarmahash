@@ -1,9 +1,9 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { join } from "path";
-import { Data } from "../data";
-import { Chain } from "../chain";
-import { Difficulty } from "../difficulty";
+import { Data } from "../data/data";
+import { Chain } from "../chain/chain";
+import { Difficulty } from "../difficulty/difficulty";
 
 const run = async () => {
   // Parse command line arguments

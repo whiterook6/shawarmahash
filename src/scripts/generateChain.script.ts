@@ -2,9 +2,9 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
-import { Block } from "../block";
-import { Chain } from "../chain";
-import { Miner } from "../miner";
+import { Block } from "../block/block";
+import { Chain } from "../chain/chain";
+import { Miner } from "../miner/miner";
 
 const run = async () => {
   // Parse command line arguments

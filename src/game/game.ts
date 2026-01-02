@@ -1,11 +1,11 @@
-import { Chain } from "./chain";
-import { Block } from "./block";
-import { Players } from "./players";
-import { Teams } from "./teams";
-import { Chat } from "./chat";
-import { ValidationError } from "./errors";
-import { Data } from "./data";
-import { Difficulty } from "./difficulty";
+import { Chain } from "../chain/chain";
+import { Block } from "../block/block";
+import { Players } from "../player/players";
+import { Teams } from "../team/teams";
+import { Chat } from "../chat/chat";
+import { ValidationError } from "../error/errors";
+import { Data } from "../data/data";
+import { Difficulty } from "../difficulty/difficulty";
 
 export type ChainState = {
   recent: Block[];

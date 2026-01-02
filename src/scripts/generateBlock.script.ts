@@ -1,7 +1,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { Block } from "../block";
-import { Difficulty } from "../difficulty";
+import { Block } from "../block/block";
+import { Difficulty } from "../difficulty/difficulty";
 
 const run = async () => {
   // Parse command line arguments

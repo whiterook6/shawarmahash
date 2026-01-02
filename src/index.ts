@@ -1,7 +1,7 @@
 import { AddressInfo } from "net";
-import { Game } from "./game";
+import { Game } from "./game/game";
 import { createServer } from "./server";
-import { Data } from "./data";
+import { Data } from "./data/data";
 
 // Start server
 const start = async () => {

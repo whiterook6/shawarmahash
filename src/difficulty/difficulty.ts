@@ -1,5 +1,5 @@
-import { Block } from "./block";
-import { Chain } from "./chain";
+import { Block } from "../block/block";
+import { Chain } from "../chain/chain";
 
 export const Difficulty = {
   DEFAULT_DIFFICULTY_HASH:

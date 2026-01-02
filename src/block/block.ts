@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { Difficulty } from "./difficulty";
+import { Difficulty } from "../difficulty/difficulty";
 
 export type Block = {
   /** The index of the block in the chain. Genesis block is index 0.*/

@@ -2,8 +2,8 @@ import { readdir, writeFile, mkdir, appendFile } from "fs/promises";
 import { createReadStream } from "fs";
 import { createInterface } from "readline";
 import { join } from "path";
-import { Chain } from "./chain";
-import { Block } from "./block";
+import { Chain } from "../chain/chain";
+import { Block } from "../block/block";
 
 export const Data = {
   loadChain: async (filePath: string): Promise<Chain> => {
@@ -129,7 +129,21 @@ export const Data = {
     // Append each block as a JSON string on a new line
     for (const block of blocks) {
       try {
-        await appendFile(filePath, JSON.stringify(block) + "\n", "utf-8");
+        const blockData: Block = {
+          hash: block.hash,
+          previousHash: block.previousHash,
+          timestamp: block.timestamp,
+          nonce: block.nonce,
+          index: block.index,
+          player: block.player,
+        };
+        if (block.team) {
+          blockData.team = block.team;
+        }
+        if (block.message) {
+          blockData.message = block.message;
+        }
+        await appendFile(filePath, JSON.stringify(blockData) + "\n", "utf-8");
       } catch (error) {
         throw new Error(
           `Failed to append blocks to chain file: ${filePath}: ${error instanceof Error ? error.message : String(error)}`,

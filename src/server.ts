@@ -1,7 +1,7 @@
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
-import { errorHandler } from "./errors";
-import { Game } from "./game";
-import { Miner } from "./miner";
+import { errorHandler } from "./error/errors";
+import { Game } from "./game/game";
+import { Miner } from "./miner/miner";
 import { schemas } from "./schemas";
 
 export function createServer(game: Game) {

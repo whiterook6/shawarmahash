@@ -1,5 +1,5 @@
-import { Chain } from "./chain";
-import { Block } from "./block";
+import { Chain } from "../chain/chain";
+import { Block } from "../block/block";
 
 export const Chat = {
   /**

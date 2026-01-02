@@ -1,6 +1,6 @@
-import { Block } from "./block";
-import { Chain } from "./chain";
-import { Difficulty } from "./difficulty";
+import { Block } from "../block/block";
+import { Chain } from "../chain/chain";
+import { Difficulty } from "../difficulty/difficulty";
 
 export const Miner = {
   mineBlock: (
