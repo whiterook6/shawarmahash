@@ -30,4 +30,15 @@ describe("Difficulty", () => {
     const difficulty = Difficulty.getDifficultyFromHash(hash);
     expect(difficulty).toBe(5);
   });
+
+  it("can check if the hash meets the difficulty target", () => {
+    const targetHash = "000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff";
+    const hash = "000000000000abcfdeffffffffffffffffffffffffffffffffffffffffffffff";
+    const meetsDifficulty = Difficulty.isDifficultyMet(hash, targetHash);
+    expect(meetsDifficulty).toBe(true);
+
+    const badHash = "00000000000abcfdefffffffffffffffffffffffffffffffffffffffffffffff";
+    const meetsDifficultyBad = Difficulty.isDifficultyMet(badHash, targetHash);
+    expect(meetsDifficultyBad).toBe(false);
+  });
 });
