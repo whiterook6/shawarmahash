@@ -13,7 +13,7 @@ lerna-debug.log*
 build/
 
 # Runtime data
-./data/
+/data/
 
 
 # OS
