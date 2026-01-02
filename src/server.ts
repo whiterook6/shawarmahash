@@ -78,13 +78,17 @@ export async function createServer(game: Game) {
       }>,
       reply: FastifyReply,
     ) => {
-      return reply.status(200).send({});
+      const team = game.getPlayerTeam(request.params.player);
+      return reply.status(200).send({
+        player: request.params.player,
+        team,
+      });
     },
   );
 
   // GET /teams: get the list of teams and their scores (TeamScore[])
   fastify.get("/teams", (_: FastifyRequest, reply: FastifyReply) => {
-    const teamScores = game.getAllTeams();
+    const teamScores = game.getAllTeamScores();
     return reply.status(200).send(teamScores);
   });
 
@@ -114,7 +118,8 @@ export async function createServer(game: Game) {
       }>,
       reply: FastifyReply,
     ) => {
-      return reply.status(200).send({});
+      const messages = game.getTeamMessages(request.params.team);
+      return reply.status(200).send(messages);
     },
   );
 
@@ -127,7 +132,8 @@ export async function createServer(game: Game) {
       }>,
       reply: FastifyReply,
     ) => {
-      return reply.status(200).send({});
+      const players = game.getTeamPlayers(request.params.team);
+      return reply.status(200).send(players);
     },
   );
 

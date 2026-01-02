@@ -53,6 +53,14 @@ export class Game {
     return this.getChainState(player);
   }
 
+  getPlayerTeam(player: string): string | undefined {
+    const chain = this.chains.get(player);
+    if (!chain) {
+      throw new NotFoundError(`Player ${player} not found`);
+    }
+    return chain[chain.length - 1].team;
+  }
+
   getPlayerScore(player: string): number {
     const chain = this.chains.get(player);
     if (!chain) {
@@ -78,7 +86,7 @@ export class Game {
       .sort((a, b) => a.player.localeCompare(b.player));
   }
 
-  getAllTeams(): TeamScore[] {
+  getAllTeamScores(): TeamScore[] {
     const allTeams = new Map<string, number>();
     for (const chain of this.chains.values()) {
       const teamScores = Score.getAllTeamScores(chain);
@@ -111,13 +119,25 @@ export class Game {
     return allMessages.sort((a, b) => b.timestamp - a.timestamp);
   }
 
-  getChatTeam(team: string): Block[] {
+  getTeamMessages(team: string): Block[] {
     // Aggregate chat messages from all chains
     const allMessages = this.aggregateChains((chain) =>
       Chat.getTeamMentions(chain, team),
     );
     // Sort by timestamp descending (newest first) since indices overlap across chains
     return allMessages.sort((a, b) => b.timestamp - a.timestamp);
+  }
+
+  getTeamPlayers(team: string): string[] {
+    const playerNames = new Set<string>();
+    for (const chain of this.chains.values()) {
+      for (const block of chain) {
+        if (block.team === team) {
+          playerNames.add(block.player);
+        }
+      }
+    }
+    return Array.from(playerNames).sort((a, b) => a.localeCompare(b));
   }
 
   async submitBlock(
