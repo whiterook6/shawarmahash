@@ -1,3 +1,4 @@
+import { faker } from "@faker-js/faker";
 import crypto from "crypto";
 import { Difficulty } from "../difficulty/difficulty";
 
@@ -43,24 +44,6 @@ export const Block = {
       .digest("hex");
   },
 
-  verifyBlockHash: (block: Block, previousHash: string) => {
-    // Verify that the stored previousHash matches the provided one
-    if (block.previousHash !== previousHash) {
-      return false;
-    }
-    // Verify that the block's hash is correctly calculated
-    return (
-      block.hash ===
-      Block.calculateHash(
-        previousHash,
-        block.timestamp,
-        block.player,
-        block.team,
-        block.nonce,
-      )
-    );
-  },
-
   /** Only the Game.createGenesisBlock() should call this function. */
   createGenesisBlock: (player: string, message?: string): Block => {
     // I think the genesis block for a player has to be mined manually
@@ -93,4 +76,23 @@ export const Block = {
       message: message,
     };
   },
+
+  Faker: {
+    one: (overrides: Partial<Block> = {}): Block => {
+      return {
+        index: 0,
+        player: faker.string.alpha(3).toUpperCase(),
+        timestamp: faker.date.past().getTime() / 1000,
+        nonce: faker.number.int({ min: 0, max: 1000000 }),
+        hash: faker.string.hexadecimal({ length: 64 }),
+        previousHash: faker.string.hexadecimal({ length: 64 }),
+        team: faker.string.alpha(3).toUpperCase(),
+        message: faker.lorem.sentence(),
+        ...overrides,
+      }
+    },
+    many: (count: number, overrides: (index: number) => Partial<Block> = () => ({})): Block[] => {
+      return Array.from({ length: count }, (_, index) => Block.Faker.one(overrides(index)));
+    },
+  }
 };

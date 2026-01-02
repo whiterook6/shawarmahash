@@ -3,34 +3,30 @@ import { Block } from "../block/block";
 
 export const Chat = {
   /**
-   * Returns the most recent chat messages in descending block order (newest first).
-   * Only includes blocks that have a message field.
+   * Returns blocks that have a message field.
    */
-  getRecentChatMessages: (chain: Chain): Block[] => {
+  getChatMessages: (chain: Chain): Block[] => {
     return chain
-      .filter((block) => block.message !== undefined)
-      .sort((a, b) => b.index - a.index);
+      .filter((block) => block.message !== undefined && block.message.length > 0);
   },
 
   /**
-   * Returns the most recent chat messages that start with a player name (e.g., "@ASD" or "@TIM").
+   * Returns chat messages that start with a player name (e.g., "@ASD" or "@TIM").
    * Player names are 3 uppercase letters following the @ symbol.
-   * Messages are returned in descending block order (newest first).
    */
-  getRecentPlayerMentions: (chain: Chain, playerName: string): Block[] => {
-    return Chat.getRecentChatMessages(chain).filter((block) =>
-      block.message?.startsWith(`@${playerName}`),
+  getPlayerMentions: (chain: Chain, playerName: string): Block[] => {
+    return Chat.getChatMessages(chain).filter((block) =>
+      block.message!.startsWith(`@${playerName}`),
     );
   },
 
   /**
-   * Returns the most recent chat messages that start with a team name (e.g., "#ASD" or "#TIM").
+   * Returns chat messages that start with a team name (e.g., "#ASD" or "#TIM").
    * Team names are 3 uppercase letters following the # symbol.
-   * Messages are returned in descending block order (newest first).
    */
-  getRecentTeamMentions: (chain: Chain, playerName: string): Block[] => {
-    return Chat.getRecentChatMessages(chain).filter((block) =>
-      block.message?.startsWith(`#${playerName}`),
+  getTeamMentions: (chain: Chain, teamName: string): Block[] => {
+    return Chat.getChatMessages(chain).filter((block) =>
+      block.message!.startsWith(`#${teamName}`),
     );
   },
 };

@@ -11,7 +11,7 @@ export const Chain = {
     }
 
     // Timestamps are in seconds
-    const elapsedSeconds = chain[length - 1].timestamp - chain[0].timestamp;
+    const elapsedSeconds = Math.max(0, chain[length - 1].timestamp - chain[0].timestamp);
     return elapsedSeconds / length;
   },
 

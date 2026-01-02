@@ -1,11 +1,10 @@
 import { Chain } from "../chain/chain";
 import { Block } from "../block/block";
-import { Players } from "../player/players";
-import { Teams } from "../team/teams";
 import { Chat } from "../chat/chat";
 import { ValidationError } from "../error/errors";
 import { Data } from "../data/data";
 import { Difficulty } from "../difficulty/difficulty";
+import { PlayerScore, Score, TeamScore } from "../score/score";
 
 export type ChainState = {
   recent: Block[];
@@ -24,31 +23,7 @@ export class Game {
     return Block.createGenesisBlock(player, message);
   }
 
-  /**
-   * Initializes a new player chain with a genesis block.
-   * This is the single point where player creation happens,
-   * making it easy to add callbacks or other logic later.
-   */
-  private async initializePlayerChain(
-    player: string,
-    message?: string,
-  ): Promise<Chain> {
-    // Create new chain with genesis block using the consolidated method
-    const genesisBlock: Block = this.createGenesisBlock(player, message);
-    const chain: Chain = [genesisBlock];
-    this.chains.set(player, chain);
-
-    // Save genesis block to file
-    await Data.appendBlocks(player, [genesisBlock]);
-
-    // TODO: Add callbacks here if needed (e.g., onPlayerCreated callback)
-
-    return chain;
-  }
-
   async getChainState(player: string): Promise<ChainState> {
-    // Note: This auto-creates chains but doesn't persist them.
-    // Use createPlayer() for explicit player creation with persistence.
     const chain = this.chains.get(player);
     if (!chain) {
       // Auto-create in memory only (for backward compatibility)
@@ -83,100 +58,66 @@ export class Game {
     return this.getChainState(player);
   }
 
-  /**
-   * Appends a block to the chain and persists it to the data layer.
-   * This is the single point where blocks are appended,
-   * making it easy to add callbacks or other logic later.
-   */
-  private async appendBlock(
-    newBlock: Block,
-    chain: Chain,
-    player: string,
-  ): Promise<void> {
-    chain.push(newBlock);
-
-    // Persist block to file
-    await Data.appendBlocks(player, [newBlock]);
-
-    // TODO: Add callbacks here if needed (e.g., onBlockAppended callback)
-  }
-
-  private aggregateChains<T>(fn: (chain: Chain) => T[]): T[] {
-    const allResults: T[] = [];
-    for (const chain of this.chains.values()) {
-      allResults.push(...fn(chain));
+  getPlayerScore(player: string): number {
+    const chain = this.chains.get(player);
+    if (!chain) {
+      return 0;
     }
-    return allResults;
+    return Score.getPlayerScore(chain, player);
   }
 
-  getPlayer(player: string): number {
+  getTeamScore(team: string): number {
     let totalScore = 0;
     for (const chain of this.chains.values()) {
-      totalScore += Players.getPlayerScore(chain, player);
+      totalScore += Score.getTeamScore(chain, team);
     }
     return totalScore;
   }
 
-  getTeam(team: string): number {
-    let totalScore = 0;
-    for (const chain of this.chains.values()) {
-      totalScore += Teams.getTeamScore(chain, team);
-    }
-    return totalScore;
-  }
-
-  getAllTeams() {
-    // Aggregate teams across all chains
-    const allTeams = new Map<string, number>();
-    for (const chain of this.chains.values()) {
-      const teams = Teams.getAllTeams(chain);
-      for (const team of teams) {
-        const current = allTeams.get(team.team) || 0;
-        allTeams.set(team.team, current + team.score);
-      }
-    }
-    return Array.from(allTeams.entries())
-      .map(([team, score]) => ({ team, score }))
-      .sort((a, b) => a.team.localeCompare(b.team));
-  }
-
-  getAllPlayers() {
-    // Aggregate players across all chains
-    const allPlayers = new Map<string, number>();
-    for (const chain of this.chains.values()) {
-      const players = Players.getAllPlayers(chain);
-      for (const player of players) {
-        const current = allPlayers.get(player.player) || 0;
-        allPlayers.set(player.player, current + player.score);
-      }
-    }
-    return Array.from(allPlayers.entries())
-      .map(([player, score]) => ({ player, score }))
+  getAllPlayers(): PlayerScore[] {
+    return Array.from(this.chains.entries())
+      .map(([player, chain]) => ({ player, score: Score.getPlayerScore(chain, player) }))
       .sort((a, b) => a.player.localeCompare(b.player));
   }
 
-  getChat() {
+
+  getAllTeams(): TeamScore[] {
+    const allTeams = new Map<string, number>();
+    for (const chain of this.chains.values()){
+      const teamScores = Score.getAllTeamScores(chain);
+      for (const teamScore of teamScores) {
+        const current = allTeams.get(teamScore.team) || 0;
+        allTeams.set(teamScore.team, current + teamScore.score);
+      }
+    }
+    
+    return Array.from(allTeams.entries())
+      .sort(([teamA], [teamB]) => teamA.localeCompare(teamB))
+      .map(([team, score]) => ({ team, score }));
+  }
+
+  getChat(): Block[] {
     // Aggregate chat messages from all chains
     const allMessages = this.aggregateChains((chain) =>
-      Chat.getRecentChatMessages(chain),
+      Chat.getChatMessages(chain),
     );
     // Sort by timestamp descending (newest first) since indices overlap across chains
     return allMessages.sort((a, b) => b.timestamp - a.timestamp);
   }
 
-  getChatPlayer(player: string) {
+  getChatPlayer(player: string): Block[] {
     // Aggregate chat messages from all chains
     const allMessages = this.aggregateChains((chain) =>
-      Chat.getRecentPlayerMentions(chain, player),
+      Chat.getPlayerMentions(chain, player),
     );
     // Sort by timestamp descending (newest first) since indices overlap across chains
     return allMessages.sort((a, b) => b.timestamp - a.timestamp);
   }
 
-  getChatTeam(team: string) {
+  getChatTeam(team: string): Block[] {
     // Aggregate chat messages from all chains
     const allMessages = this.aggregateChains((chain) =>
-      Chat.getRecentTeamMentions(chain, team),
+      Chat.getTeamMentions(chain, team),
     );
     // Sort by timestamp descending (newest first) since indices overlap across chains
     return allMessages.sort((a, b) => b.timestamp - a.timestamp);
@@ -253,5 +194,53 @@ export class Game {
     // Append to chain and persist to data layer
     await this.appendBlock(newBlock, chain, player);
     return this.getChainState(player);
+  }
+
+  /**
+   * Initializes a new player chain with a genesis block.
+   * This is the single point where player creation happens,
+   * making it easy to add callbacks or other logic later.
+   */
+  private async initializePlayerChain(
+    player: string,
+    message?: string,
+  ): Promise<Chain> {
+    // Create new chain with genesis block using the consolidated method
+    const genesisBlock: Block = this.createGenesisBlock(player, message);
+    const chain: Chain = [genesisBlock];
+    this.chains.set(player, chain);
+
+    // Save genesis block to file
+    await Data.appendBlocks(player, [genesisBlock]);
+
+    // TODO: Add callbacks here if needed (e.g., onPlayerCreated callback)
+
+    return chain;
+  }
+
+  /**
+   * Appends a block to the chain and persists it to the data layer.
+   * This is the single point where blocks are appended,
+   * making it easy to add callbacks or other logic later.
+   */
+  private async appendBlock(
+    newBlock: Block,
+    chain: Chain,
+    player: string,
+  ): Promise<void> {
+    chain.push(newBlock);
+
+    // Persist block to file
+    await Data.appendBlocks(player, [newBlock]);
+
+    // TODO: Add callbacks here if needed (e.g., onBlockAppended callback)
+  }
+
+  private aggregateChains<T>(fn: (chain: Chain) => T[]): T[] {
+    const allResults: T[] = [];
+    for (const chain of this.chains.values()) {
+      allResults.push(...fn(chain));
+    }
+    return allResults;
   }
 }

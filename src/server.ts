@@ -148,7 +148,7 @@ export async function createServer(game: Game) {
       }>,
       reply: FastifyReply,
     ) => {
-      const result = game.getTeam(request.params.team);
+      const result = game.getTeamScore(request.params.team);
       reply.status(200).send(result);
     },
   );
