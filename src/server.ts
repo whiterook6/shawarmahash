@@ -50,7 +50,8 @@ export async function createServer(game: Game) {
       }>,
       reply: FastifyReply,
     ) => {
-      return reply.status(200).send({});
+      const messages = game.getPlayerMessages(request.params.player);
+      return reply.status(200).send(messages);
     },
   );
 

@@ -5,6 +5,7 @@ import { join } from "path";
 import { Block } from "../block/block";
 import { Chain } from "../chain/chain";
 import { Miner } from "../miner/miner";
+import { faker } from "@faker-js/faker";
 
 const run = async () => {
   // Parse command line arguments
@@ -27,6 +28,12 @@ const run = async () => {
       alias: "t",
       type: "string",
       describe: "Optional team name",
+    })
+    .option("message", {
+      alias: "m",
+      type: "boolean",
+      default: false,
+      describe: "Generate messages in each block",
     })
     .check((argv) => {
       if (argv.numBlocks < 1 || !Number.isInteger(argv.numBlocks)) {
@@ -53,7 +60,8 @@ const run = async () => {
 
   // Mine remaining blocks
   for (let i = 1; i < numBlocks; i++) {
-    const newBlock = Miner.mineBlock(playerName, team, chain);
+    const message = argv.message ? faker.lorem.sentence() : undefined;
+    const newBlock = Miner.mineBlock(playerName, team, chain, message);
     chain.push(newBlock);
     console.log(`Mined block ${i + 1}/${numBlocks} (hash: ${newBlock.hash})`);
   }

@@ -102,7 +102,7 @@ export class Game {
     return allMessages.sort((a, b) => b.timestamp - a.timestamp);
   }
 
-  getChatPlayer(player: string): Block[] {
+  getPlayerMessages(player: string): Block[] {
     // Aggregate chat messages from all chains
     const allMessages = this.aggregateChains((chain) =>
       Chat.getPlayerMentions(chain, player),
