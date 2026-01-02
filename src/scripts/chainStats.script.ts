@@ -45,7 +45,8 @@ const run = async () => {
 
   // Calculate statistics
   const chainLength = chain.length;
-  const currentDifficultyTarget = Difficulty.getDifficultyTargetFromChain(chain);
+  const currentDifficultyTarget =
+    Difficulty.getDifficultyTargetFromChain(chain);
   const currentDifficulty = Difficulty.getDifficultyFromHash(
     currentDifficultyTarget,
   );
@@ -54,7 +55,8 @@ const run = async () => {
   // Calculate total mining time (timestamps are in seconds)
   let totalMiningTimeSeconds = 0;
   if (chain.length > 1) {
-    totalMiningTimeSeconds = chain[chain.length - 1].timestamp - chain[0].timestamp;
+    totalMiningTimeSeconds =
+      chain[chain.length - 1].timestamp - chain[0].timestamp;
   }
 
   // Calculate average mining interval (returns seconds)
@@ -96,4 +98,3 @@ run()
     console.error(error);
     process.exit(1);
   });
-

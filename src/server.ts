@@ -1,12 +1,20 @@
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
+import helmet from "@fastify/helmet";
+import rateLimit from "@fastify/rate-limit";
 import { errorHandler } from "./error/errors";
 import { Game } from "./game/game";
 import { Miner } from "./miner/miner";
 import { schemas } from "./schemas";
 
-export function createServer(game: Game) {
+export async function createServer(game: Game) {
   const fastify = Fastify({
     logger: true,
+  });
+
+  await fastify.register(helmet);
+  await fastify.register(rateLimit, {
+    max: 100,
+    timeWindow: "1m",
   });
 
   fastify.setErrorHandler(errorHandler);

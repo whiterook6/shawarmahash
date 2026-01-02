@@ -12,7 +12,8 @@ export const Miner = {
     let nonce = 0;
     const previousBlock = recentChain[recentChain.length - 1];
     const previousHash = previousBlock?.hash ?? "0";
-    const previousTimestamp = previousBlock?.timestamp ?? Math.floor(Date.now() / 1000);
+    const previousTimestamp =
+      previousBlock?.timestamp ?? Math.floor(Date.now() / 1000);
     const difficulty = Difficulty.getDifficultyTargetFromChain(recentChain);
     while (true) {
       const currentHash = Block.calculateHash(

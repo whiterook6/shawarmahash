@@ -8,7 +8,7 @@ const start = async () => {
   // Load player chains from data directory
   const chains = await Data.loadAllChains("data");
   const game = new Game(chains);
-  const fastify = createServer(game);
+  const fastify = await createServer(game);
 
   const shutdown = async () => {
     try {
@@ -27,6 +27,18 @@ const start = async () => {
   process.on("SIGINT", () => {
     shutdown().finally(() => {
       process.exit(0);
+    });
+  });
+  process.on("uncaughtException", (err) => {
+    fastify.log.error(err, "Uncaught exception");
+    shutdown().finally(() => {
+      process.exit(1);
+    });
+  });
+  process.on("unhandledRejection", (err) => {
+    fastify.log.error(err, "Unhandled rejection");
+    shutdown().finally(() => {
+      process.exit(1);
     });
   });
 
