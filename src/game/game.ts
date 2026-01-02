@@ -23,17 +23,12 @@ export class Game {
     return Block.createGenesisBlock(player, message);
   }
 
-  async getChainState(player: string): Promise<ChainState> {
+  getChainState(player: string): ChainState {
     const chain = this.chains.get(player);
     if (!chain) {
-      // Auto-create in memory only (for backward compatibility)
-      const chain = await this.initializePlayerChain(player);
-      this.chains.set(player, chain);
-      const recentChain = chain.slice(-5);
-      const difficulty = Difficulty.DEFAULT_DIFFICULTY_HASH;
       return {
-        recent: recentChain.slice(),
-        difficulty: difficulty,
+        recent: [],
+        difficulty: Difficulty.DEFAULT_DIFFICULTY_HASH,
       };
     }
 

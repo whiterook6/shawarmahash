@@ -25,7 +25,9 @@ export async function createServer(game: Game) {
   });
 
   // GET /players/:player/score: get the player's score (PlayerScore)
-  fastify.get("/players/:player/score", (
+  fastify.get(
+    "/players/:player/score",
+    (
       request: FastifyRequest<{
         Params: { player: string };
       }>,
@@ -40,35 +42,44 @@ export async function createServer(game: Game) {
   );
 
   // GET /players/:player/messages: get the player's messages (PlayerMessages)
-  fastify.get("/players/:player/messages", (
-    request: FastifyRequest<{
-      Params: { player: string };
-    }>,
-    reply: FastifyReply,
-  ) => {
-    return reply.status(200).send({});
-  });
+  fastify.get(
+    "/players/:player/messages",
+    (
+      request: FastifyRequest<{
+        Params: { player: string };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      return reply.status(200).send({});
+    },
+  );
 
   // GET /players/:player/chain: get the player's recent blocks and difficulty (ChainState)
-  fastify.get("/players/:player/chain", (
-    request: FastifyRequest<{
-      Params: { player: string };
-    }>,
-    reply: FastifyReply,
-  ) => {
-    const playerChainState = game.getChainState(request.params.player);
-    return reply.status(200).send(playerChainState);
-  });
+  fastify.get(
+    "/players/:player/chain",
+    (
+      request: FastifyRequest<{
+        Params: { player: string };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      const playerChainState = game.getChainState(request.params.player);
+      return reply.status(200).send(playerChainState);
+    },
+  );
 
   // GET /players/:player/team: get the player's most recent block's team, or undefined
-  fastify.get("/players/:player/team",(
-    request: FastifyRequest<{
-    Params: { player: string };
-  }>,
-    reply: FastifyReply,
-  ) => {
-    return reply.status(200).send({});
-  });
+  fastify.get(
+    "/players/:player/team",
+    (
+      request: FastifyRequest<{
+        Params: { player: string };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      return reply.status(200).send({});
+    },
+  );
 
   // GET /teams: get the list of teams and their scores (TeamScore[])
   fastify.get("/teams", (_: FastifyRequest, reply: FastifyReply) => {
