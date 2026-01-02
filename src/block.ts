@@ -2,13 +2,28 @@ import crypto from "crypto";
 import { Difficulty } from "./difficulty";
 
 export type Block = {
+  /** The index of the block in the chain. Genesis block is index 0.*/
   index: number;
+
+  /** The player who mined the block. Format: AAA-ZZZ */
   player: string;
+
+  /** The team that the player is on. Format: AAA-ZZZ */
   team?: string;
+
+  /** The timestamp of the block in seconds. */
   timestamp: number;
+
+  /** The nonce of the block. A number that is incremented until the hash meets the difficulty target. */
   nonce: number;
+
+  /** The hash of the block. A SHA-256 hash of the block's data. */
   hash: string;
+
+  /** The previous hash of the block. A SHA-256 hash of the previous block's data. */
   previousHash: string;
+
+  /** A message associated with the block. */
   message?: string;
 };
 
@@ -49,7 +64,7 @@ export const Block = {
   /** Only the Game.createGenesisBlock() should call this function. */
   createGenesisBlock: (player: string, message?: string): Block => {
     // I think the genesis block for a player has to be mined manually
-    const timestamp = Date.now();
+    const timestamp = Math.floor(Date.now() / 1000);
     let nonce = 0;
     let hash = "";
     while (true) {
@@ -85,7 +100,7 @@ export const Block = {
       hash: hash,
       previousHash: previousBlock.hash,
       player: previousBlock.player,
-      timestamp: Date.now(),
+      timestamp: Math.floor(Date.now() / 1000),
       nonce: nonce,
     };
   },

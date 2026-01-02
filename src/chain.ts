@@ -10,20 +10,21 @@ export const Chain = {
       return 0;
     }
 
+    // Timestamps are in seconds
     const elapsedSeconds = chain[length - 1].timestamp - chain[0].timestamp;
     return elapsedSeconds / length;
   },
 
-  verifyChain: (chain: Chain): boolean => {
+  verifyChain: (chain: Chain): string | undefined => {
     // Empty chain is invalid
     if (chain.length === 0) {
-      return false;
+      return "Empty chain is invalid";
     }
 
     // Verify genesis block (index 0)
     const genesisBlock = chain[0];
     if (genesisBlock.index !== 0) {
-      return false;
+      return "Genesis block must have index 0";
     }
 
     // Verify genesis block has the correct previousHash
@@ -31,7 +32,7 @@ export const Chain = {
       genesisBlock.previousHash !==
       "0000000000000000000000000000000000000000000000000000000000000000"
     ) {
-      return false;
+      return "Genesis block must have correct previousHash";
     }
 
     // Verify each subsequent block
@@ -41,17 +42,17 @@ export const Chain = {
 
       // Check index is sequential
       if (currentBlock.index !== i) {
-        return false;
+        return `Block ${i} has incorrect index: ${currentBlock.index}`;
       }
 
       // Check timestamp is valid (current >= previous)
       if (currentBlock.timestamp < previousBlock.timestamp) {
-        return false;
+        return `Block ${i} has incorrect timestamp: ${currentBlock.timestamp} < ${previousBlock.timestamp}`;
       }
 
       // Verify previousHash matches the actual previous block's hash
       if (currentBlock.previousHash !== previousBlock.hash) {
-        return false;
+        return `Block ${i} has incorrect previousHash: ${currentBlock.previousHash} !== ${previousBlock.hash}`;
       }
 
       // Calculate expected hash
@@ -65,7 +66,7 @@ export const Chain = {
 
       // Verify hash matches
       if (currentBlock.hash !== expectedHash) {
-        return false;
+        return `Block ${i} has incorrect hash: ${currentBlock.hash} !== ${expectedHash}`;
       }
 
       // Verify hash meets difficulty requirement
@@ -73,10 +74,8 @@ export const Chain = {
       const requiredDifficulty = Difficulty.getDifficultyTargetFromChain(chain);
 
       if (!Difficulty.isDifficultyMet(currentBlock.hash, requiredDifficulty)) {
-        return false;
+        return `Block ${i} does not meet difficulty requirement: ${currentBlock.hash} does not start with ${requiredDifficulty}`;
       }
     }
-
-    return true;
   },
 };

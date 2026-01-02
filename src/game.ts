@@ -241,7 +241,7 @@ export class Game {
       hash: newBlockhash,
       previousHash: previousBlock.hash,
       player: player,
-      timestamp: Date.now(),
+      timestamp: Math.floor(Date.now() / 1000),
       nonce: nonce,
     };
     if (team) {
