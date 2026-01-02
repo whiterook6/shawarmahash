@@ -225,16 +225,16 @@ export function createServer(game: Game) {
       reply: FastifyReply,
     ) => {
       const { team, player, message } = request.body;
-      const playerChain = game.getChainState(player);
+      const playerChainState = await game.getChainState(player);
 
       const newBlock = Miner.mineBlock(
         player,
         team,
-        playerChain.recent,
+        playerChainState.recent,
         message,
       );
       const result = await game.submitBlock(
-        playerChain.recent[playerChain.recent.length - 1].hash,
+        playerChainState.recent[playerChainState.recent.length - 1].hash,
         player,
         team,
         newBlock.nonce,

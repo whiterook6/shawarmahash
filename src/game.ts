@@ -46,16 +46,15 @@ export class Game {
     return chain;
   }
 
-  getChainState(player: string): ChainState {
+  async getChainState(player: string): Promise<ChainState> {
     // Note: This auto-creates chains but doesn't persist them.
     // Use createPlayer() for explicit player creation with persistence.
     const chain = this.chains.get(player);
     if (!chain) {
       // Auto-create in memory only (for backward compatibility)
-      const genesisBlock: Block = this.createGenesisBlock(player);
-      const newChain: Chain = [genesisBlock];
-      this.chains.set(player, newChain);
-      const recentChain = newChain.slice(-5);
+      const chain = await this.initializePlayerChain(player);
+      this.chains.set(player, chain);
+      const recentChain = chain.slice(-5);
       const difficulty = Difficulty.DEFAULT_DIFFICULTY_HASH;
       return {
         recent: recentChain.slice(),
@@ -237,12 +236,12 @@ export class Game {
 
     // Create the new block
     const newBlock: Block = {
-      index: chain.length,
       hash: newBlockhash,
       previousHash: previousBlock.hash,
       player: player,
       timestamp: Math.floor(Date.now() / 1000),
       nonce: nonce,
+      index: previousBlock.index + 1,
     };
     if (team) {
       newBlock.team = team;

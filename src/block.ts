@@ -93,15 +93,4 @@ export const Block = {
       message: message,
     };
   },
-
-  mint: (previousBlock: Block, nonce: number, hash: string): Block => {
-    return {
-      index: previousBlock.index + 1,
-      hash: hash,
-      previousHash: previousBlock.hash,
-      player: previousBlock.player,
-      timestamp: Math.floor(Date.now() / 1000),
-      nonce: nonce,
-    };
-  },
 };
