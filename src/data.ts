@@ -76,8 +76,9 @@ export const Data = {
           );
         }
 
-        if (!Chain.verifyChain(chain)) {
-          throw new Error(`Chain verification failed for ${file}`);
+        const verificationError = Chain.verifyChain(chain);
+        if (verificationError) {
+          throw new Error(`Chain verification failed for ${file}: ${verificationError}`);
         }
         chains.set(file, chain);
       }),

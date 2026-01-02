@@ -226,7 +226,6 @@ export function createServer(game: Game) {
     ) => {
       const { team, player, message } = request.body;
       const playerChain = game.getChainState(player);
-      console.log(playerChain);
 
       const newBlock = Miner.mineBlock(
         player,

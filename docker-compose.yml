@@ -1,0 +1,32 @@
+name: shawarmahash
+
+volumes:
+  node_modules:
+
+x-server-base: &server-base
+  image: node:24-alpine
+  ports:
+    - 8080:3000
+  working_dir: /usr/src/app
+  volumes:
+    - node_modules:/usr/src/app/node_modules
+    - ./tsconfig.json:/usr/src/app/tsconfig.json
+    - ./eslint.config.js:/usr/src/app/eslint.config.js
+    - ./src:/usr/src/app/src
+    - ./build:/usr/src/app/build
+    - ./data:/usr/src/app/data
+    - ./package.json:/usr/src/app/package.json
+    - ./yarn.lock:/usr/src/app/yarn.lock
+
+services:
+  server-install:
+    <<: *server-base
+    command: yarn install --frozen-lockfile
+
+  server-serve:
+    <<: *server-base
+    command: sh -c "yarn build && node build/index.js"
+
+  server-test:
+    <<: *server-base
+    command: yarn test
