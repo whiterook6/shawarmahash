@@ -1,4 +1,3 @@
-import { AddressInfo } from "net";
 import { Game } from "./game/game";
 import { createServer } from "./server";
 import { Data } from "./data/data";
@@ -44,8 +43,6 @@ const start = async () => {
 
   try {
     await fastify.listen({ port: 3000, host: "0.0.0.0" });
-    const address = fastify.server.address() as AddressInfo;
-    console.log(`Server listening on ${address.address}:${address.port}`);
   } catch (err) {
     fastify.log.error(err, "Failed to start Fastify");
     await shutdown();
