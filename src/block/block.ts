@@ -89,10 +89,15 @@ export const Block = {
         team: faker.string.alpha(3).toUpperCase(),
         message: faker.lorem.sentence(),
         ...overrides,
-      }
+      };
     },
-    many: (count: number, overrides: (index: number) => Partial<Block> = () => ({})): Block[] => {
-      return Array.from({ length: count }, (_, index) => Block.Faker.one(overrides(index)));
+    many: (
+      count: number,
+      overrides: (index: number) => Partial<Block> = () => ({}),
+    ): Block[] => {
+      return Array.from({ length: count }, (_, index) =>
+        Block.Faker.one(overrides(index)),
+      );
     },
-  }
+  },
 };

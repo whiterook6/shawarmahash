@@ -224,7 +224,7 @@ export async function createServer(game: Game) {
   );
 
   fastify.post(
-    "/mine",
+    "/test/mine",
     schemas.mineBlock,
     async (
       request: FastifyRequest<{

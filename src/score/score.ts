@@ -14,7 +14,7 @@ export const Score = {
   /**
    * Currently, a chain only has one player.
    */
-  getPlayerScore: (chain: Chain, player: string): number => {
+  getPlayerScore: (chain: Chain): number => {
     return chain.length;
   },
 
@@ -32,10 +32,12 @@ export const Score = {
     if (chain.length === 0) {
       return [];
     }
-    return [{
-      player: chain[0].player,
-      score: chain.length
-    }];
+    return [
+      {
+        player: chain[0].player,
+        score: chain.length,
+      },
+    ];
   },
 
   /**
@@ -56,5 +58,5 @@ export const Score = {
     return Array.from(teamScores.entries())
       .map(([team, score]) => ({ team, score }))
       .sort((a, b) => a.team.localeCompare(b.team));
-  }
-}
+  },
+};

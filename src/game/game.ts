@@ -63,7 +63,7 @@ export class Game {
     if (!chain) {
       return 0;
     }
-    return Score.getPlayerScore(chain, player);
+    return Score.getPlayerScore(chain);
   }
 
   getTeamScore(team: string): number {
@@ -76,21 +76,23 @@ export class Game {
 
   getAllPlayers(): PlayerScore[] {
     return Array.from(this.chains.entries())
-      .map(([player, chain]) => ({ player, score: Score.getPlayerScore(chain, player) }))
+      .map(([player, chain]) => ({
+        player,
+        score: Score.getPlayerScore(chain),
+      }))
       .sort((a, b) => a.player.localeCompare(b.player));
   }
 
-
   getAllTeams(): TeamScore[] {
     const allTeams = new Map<string, number>();
-    for (const chain of this.chains.values()){
+    for (const chain of this.chains.values()) {
       const teamScores = Score.getAllTeamScores(chain);
       for (const teamScore of teamScores) {
         const current = allTeams.get(teamScore.team) || 0;
         allTeams.set(teamScore.team, current + teamScore.score);
       }
     }
-    
+
     return Array.from(allTeams.entries())
       .sort(([teamA], [teamB]) => teamA.localeCompare(teamB))
       .map(([team, score]) => ({ team, score }));
