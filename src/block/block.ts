@@ -54,7 +54,7 @@ export const Block = {
     while (true) {
       hash = Block.calculateHash(
         "0000000000000000000000000000000000000000000000000000000000000000",
-        timestamp,
+        0, // previous timestamp is 0 for genesis block
         player,
         undefined,
         nonce,

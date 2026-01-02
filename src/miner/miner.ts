@@ -19,7 +19,9 @@ export const Miner = {
     const previousTimestamp = previousBlock.timestamp;
     const difficulty = Difficulty.getDifficultyTargetFromChain(recentChain);
     while (true) {
-      const currentHash = Block.calculateHash(previousHash, previousTimestamp,
+      const currentHash = Block.calculateHash(
+        previousHash,
+        previousTimestamp,
         player,
         team,
         nonce,

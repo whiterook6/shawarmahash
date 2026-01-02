@@ -74,7 +74,9 @@ export const Chain = {
 
       // Verify hash meets difficulty requirement
       // Calculate difficulty that would have been used when mining this block
-      const requiredDifficulty = Difficulty.getDifficultyTargetFromChain(chain);
+      const requiredDifficulty = Difficulty.getDifficultyTargetFromChain(
+        chain.slice(0, i),
+      );
 
       if (!Difficulty.isDifficultyMet(currentBlock.hash, requiredDifficulty)) {
         return `Block ${i} does not meet difficulty requirement: ${currentBlock.hash} does not start with ${requiredDifficulty}`;
