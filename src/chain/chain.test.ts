@@ -32,93 +32,93 @@ describe("Chain", () => {
   describe("verifyChain", () => {
     const validChain = [
       {
-        hash: "000006b6f3920d11d28c05f5f17ab79d45dc88ceef8c05b5a841405e731ae050",
+        hash: "fffff6057cdebbbdb6c9b714fc04521ddd77f21b2aa883df89df058aa3a4a015",
         previousHash:
-          "0000000000000000000000000000000000000000000000000000000000000000",
+          "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         player: "TIM",
-        timestamp: 1767381331,
-        nonce: 80555,
+        timestamp: 1767554271,
+        nonce: 1658287,
         index: 0,
       },
       {
-        hash: "00000afbdff0754f7a3b8ce9c0e3479d7086001b315a2807157e29bc96eb86e8",
+        hash: "fffff8168c771242c496c6c76fe53c7c862631c9e86d7b54a4c57764b2409a16",
         previousHash:
-          "000006b6f3920d11d28c05f5f17ab79d45dc88ceef8c05b5a841405e731ae050",
+          "fffff6057cdebbbdb6c9b714fc04521ddd77f21b2aa883df89df058aa3a4a015",
         player: "TIM",
-        timestamp: 1767381332,
-        nonce: 992347,
+        timestamp: 1767554274,
+        nonce: 1814830,
         index: 1,
       },
       {
-        hash: "000003cd4afff6faa5dee3d2c1fad67b6286a4eac9c4d66f03e02e5967b316da",
+        hash: "fffff697c72271811dfce8c27d8e8fc191ac7c5da236faf79f8b592aebb9bc0d",
         previousHash:
-          "00000afbdff0754f7a3b8ce9c0e3479d7086001b315a2807157e29bc96eb86e8",
+          "fffff8168c771242c496c6c76fe53c7c862631c9e86d7b54a4c57764b2409a16",
         player: "TIM",
-        timestamp: 1767381333,
-        nonce: 829449,
+        timestamp: 1767554274,
+        nonce: 80305,
         index: 2,
       },
       {
-        hash: "000000fa66fae8b055b32c3dec542d48bf696601dd5e4400ddeac27b86977e30",
+        hash: "fffff49e6b4a99b5d670b06ed15125a4d137a946ae51d5115017e0725234d63f",
         previousHash:
-          "000003cd4afff6faa5dee3d2c1fad67b6286a4eac9c4d66f03e02e5967b316da",
+          "fffff697c72271811dfce8c27d8e8fc191ac7c5da236faf79f8b592aebb9bc0d",
         player: "TIM",
-        timestamp: 1767381334,
-        nonce: 769620,
+        timestamp: 1767554274,
+        nonce: 416540,
         index: 3,
       },
       {
-        hash: "00000b5e80a58d4dff837101b141eb2af4ba9d3d92ce6e957f6f5b1a1bc5b5c0",
+        hash: "fffffc8d820a3776f641514430c778ad20986033be683366b15c9aa414817020",
         previousHash:
-          "000000fa66fae8b055b32c3dec542d48bf696601dd5e4400ddeac27b86977e30",
+          "fffff49e6b4a99b5d670b06ed15125a4d137a946ae51d5115017e0725234d63f",
         player: "TIM",
-        timestamp: 1767381335,
-        nonce: 1148930,
+        timestamp: 1767554274,
+        nonce: 88539,
         index: 4,
       },
       {
-        hash: "00000030bf1e86e01952fa40d9b80759eed3232f35e743952678f0f997a627d5",
+        hash: "fffff579ca4833042ef4a50d23100361472442aece3c48c276398f52ec5758d4",
         previousHash:
-          "00000b5e80a58d4dff837101b141eb2af4ba9d3d92ce6e957f6f5b1a1bc5b5c0",
+          "fffffc8d820a3776f641514430c778ad20986033be683366b15c9aa414817020",
         player: "TIM",
-        timestamp: 1767381335,
-        nonce: 1006137,
+        timestamp: 1767554275,
+        nonce: 519887,
         index: 5,
       },
       {
-        hash: "000002f4cb68ff82c5e1a3e63903d6018905cea137bf5a45455fb3395077edbb",
+        hash: "fffff6c76c6ec1d3e46fd725cb559a0dab44377d00f819a9583c1abdbba1ea11",
         previousHash:
-          "00000030bf1e86e01952fa40d9b80759eed3232f35e743952678f0f997a627d5",
+          "fffff579ca4833042ef4a50d23100361472442aece3c48c276398f52ec5758d4",
         player: "TIM",
-        timestamp: 1767381336,
-        nonce: 662000,
+        timestamp: 1767554275,
+        nonce: 655080,
         index: 6,
       },
       {
-        hash: "00000b205c2dfc3ae2b4ddfd80d8e06c3ddc6b2a7346812b6bd693c989862fbe",
+        hash: "fffff9d16b97ae4ed83508e02ce0225cf098e07a745357fa397070cb61a389cd",
         previousHash:
-          "000002f4cb68ff82c5e1a3e63903d6018905cea137bf5a45455fb3395077edbb",
+          "fffff6c76c6ec1d3e46fd725cb559a0dab44377d00f819a9583c1abdbba1ea11",
         player: "TIM",
-        timestamp: 1767381336,
-        nonce: 97810,
+        timestamp: 1767554280,
+        nonce: 4934882,
         index: 7,
       },
       {
-        hash: "00000164fce67ad6b81718943f17c5ebdf214f9cc8c927220fa45426948b76bd",
+        hash: "fffffd5a8646a86cc48cd8f87c11057d418dce8d4e51fea713740ae0b49636b5",
         previousHash:
-          "00000b205c2dfc3ae2b4ddfd80d8e06c3ddc6b2a7346812b6bd693c989862fbe",
+          "fffff9d16b97ae4ed83508e02ce0225cf098e07a745357fa397070cb61a389cd",
         player: "TIM",
-        timestamp: 1767381337,
-        nonce: 852429,
+        timestamp: 1767554280,
+        nonce: 648951,
         index: 8,
       },
       {
-        hash: "000007c4a9be2e3f25d0c09e9fed1fd0cce883d0ce610b47cc06e56cd14f572a",
+        hash: "fffffeabb12835297af258de66fa10ee64af6a3e0c631c4d44ee14c50bb03a3e",
         previousHash:
-          "00000164fce67ad6b81718943f17c5ebdf214f9cc8c927220fa45426948b76bd",
+          "fffffd5a8646a86cc48cd8f87c11057d418dce8d4e51fea713740ae0b49636b5",
         player: "TIM",
-        timestamp: 1767381337,
-        nonce: 820168,
+        timestamp: 1767554280,
+        nonce: 149543,
         index: 9,
       },
     ];
@@ -143,14 +143,8 @@ describe("Chain", () => {
     it("It returns a verification error if the genesis block has an incorrect index", () => {
       const chain = [
         {
-          hash: "000006b6f3920d11d28c05f5f17ab79d45dc88ceef8c05b5a841405e731ae050",
-          previousHash:
-            "0000000000000000000000000000000000000000000000000000000000000000",
-          timestamp: 1767380413,
-          nonce: 80555,
+          ...validChain[0],
           index: 1,
-          player: "TIM",
-          message: "Are you ready for a story?",
         },
       ];
       const verificationError = Chain.verifyChain(chain);
@@ -160,14 +154,9 @@ describe("Chain", () => {
     it("It returns a verification error if the genesis block has an incorrect previousHash", () => {
       const chain = [
         {
-          hash: "000006b6f3920d11d28c05f5f17ab79d45dc88ceef8c05b5a841405e731ae050",
+          ...validChain[0],
           previousHash:
-            "0000000000000000000000000000000000000000000000000000000000000001",
-          timestamp: 1767380413,
-          nonce: 80555,
-          index: 0,
-          player: "TIM",
-          message: "Are you ready for a story?",
+            "000006b6f3920d11d28c05f5f17ab79d45dc88ceef8c05b5a841405e731ae051",
         },
       ];
       const verificationError = Chain.verifyChain(chain);
@@ -179,35 +168,19 @@ describe("Chain", () => {
     it("It returns a verification error if the genesis block has an incorrect hash", () => {
       const chain = [
         {
-          hash: "000006b6f3920d11d28c05f5f17ab79d45dc88ceef8c05b5a841405e731ae051",
-          previousHash:
-            "0000000000000000000000000000000000000000000000000000000000000000",
-          timestamp: 1767380413,
-          nonce: 80555,
-          index: 0,
-          player: "TIM",
-          message: "Are you ready for a story?",
+          ...validChain[0],
+          hash: "fffff9d16b97ae4ed83508e02ce0225cf098e07a745357fa397070cb61a389cd",
         },
       ];
       const verificationError = Chain.verifyChain(chain);
       expect(verificationError).toBe("Genesis block must have correct hash");
     });
 
-    it("It returns a verification error if the block has an incorrect index", () => {
-      const chain = [
-        {
-          hash: "000006b6f3920d11d28c05f5f17ab79d45dc88ceef8c05b5a841405e731ae050",
-          previousHash:
-            "0000000000000000000000000000000000000000000000000000000000000000",
-          timestamp: 1767380413,
-          nonce: 80555,
-          index: 1,
-          player: "TIM",
-          message: "Are you ready for a story?",
-        },
-      ];
+    it("It returns a verification error if one of the blocks has an incorrect index", () => {
+      const chain = validChain.map((block) => ({ ...block }));
+      chain[3].index = 5;
       const verificationError = Chain.verifyChain(chain);
-      expect(verificationError).toBe("Genesis block must have index 0");
+      expect(verificationError).toBe("Block 3 has incorrect index: 5");
     });
 
     it("It returns a verification error if one of the blocks has an incorrect previous hash", () => {
@@ -240,19 +213,6 @@ describe("Chain", () => {
       expect(verificationError).toBe(
         `Block 5 has incorrect hash: 0000000000000000000000000000000000000000000000000000000000000001 !== ${validChain[5].hash}`,
       );
-    });
-
-    it("It returns a verification error if one of the blocks has an incorrect index", () => {
-      const chain = [
-        ...validChain.map((block) => {
-          return {
-            ...block,
-          };
-        }),
-      ];
-      chain[5].index = 10;
-      const verificationError = Chain.verifyChain(chain);
-      expect(verificationError).toBe(`Block 5 has incorrect index: 10`);
     });
   });
 });

@@ -2,37 +2,60 @@ import { Block } from "../block/block";
 import { Chain } from "../chain/chain";
 
 export const Difficulty = {
+  MAX_DIFFICULTY_HASH:
+    "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  MIN_DIFFICULTY_HASH:
+    "0000000000000000000000000000000000000000000000000000000000000000",
   DEFAULT_DIFFICULTY_HASH:
-    "00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+    "fffff0000000000000000000000000000000000000000000000000000000000",
+  MAX_DIFFICULTY: 64,
+  MIN_DIFFICULTY: 0,
+  DEFAULT_DIFFICULTY: 5,
 
   /**
-   * Given a difficulty level, like 6.25, build a target string like "0...08f...f"
+   * Given a difficulty level, like 5.0625, build a target string like "fffff10000..."
    * @param difficulty
-   * @returns A 64-character hash that can be compared with a block hash using less-than comparison.
+   * @returns A 64-character hash that can be compared with a block hash using greater-than-or-equal comparison.
    */
   buildDifficultyTarget: (difficulty: number): string => {
-    const decimal = difficulty % 1; // 32.456 => .456
-    const middleChar = (15 - Math.floor(decimal * 16)).toString(16); // (0.456 => "8")
-    return middleChar.padStart(difficulty + 1, "0").padEnd(64, "f"); // 0...08f...f, 64 chars long
+    if (difficulty <= Difficulty.MIN_DIFFICULTY) {
+      return Difficulty.MIN_DIFFICULTY_HASH;
+    } else if (difficulty >= Difficulty.MAX_DIFFICULTY) {
+      return Difficulty.MAX_DIFFICULTY_HASH;
+    }
+
+    const integerPart = Math.floor(difficulty); // 5.0625 => 5
+    const fractionalPart = difficulty % 1; // 5.0625 => 0.0625
+
+    // Build the leading F's
+    const leadingFs = "f".repeat(integerPart); // "fffff"
+
+    // Convert fractional part to hex digit (0-15)
+    // 0.0 => 0, 0.0625 => 1, 0.125 => 2, ..., 0.9375 => 15
+    const hexDigit = Math.floor(fractionalPart * 16).toString(16);
+
+    // Combine: "fffff" + hexDigit + zeros to make 64 chars
+    const prefix = leadingFs + hexDigit;
+    return prefix.padEnd(64, "0");
   },
 
   getDifficultyFromHash: (hash: string): number => {
-    // count leading zeroes
+    // count leading F's
     let count = 0;
     for (let i = 0; i < hash.length; i++) {
-      if (hash[i] === "0") {
+      if (hash[i] === "f") {
         count++;
       } else {
         break;
       }
     }
 
-    // if the next character is less than f, add a fraction (X / 16)
-    if (count < hash.length) {
+    // if we have leading F's and the next character is a hex digit, add a fraction
+    if (count < hash.length - 1) {
       const nextChar = hash[count];
-      if (nextChar < "f") {
-        return count + 1 - parseInt(nextChar, 16) / 16;
-      }
+      const hexValue = parseInt(nextChar, 16);
+      // Fractional part: 0 => 0.0, 1 => 0.0625, 2 => 0.125, ..., 15 => 0.9375
+      return count + hexValue / 16;
     }
 
     return count;
@@ -55,7 +78,7 @@ export const Difficulty = {
 
   getDifficultyTargetFromChain: (previousBlocks: Chain = []): string => {
     if (previousBlocks.length < 100) {
-      return "00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+      return Difficulty.DEFAULT_DIFFICULTY_HASH;
     }
 
     const oneHundredBlocks = previousBlocks.slice(-100);
@@ -71,6 +94,6 @@ export const Difficulty = {
   },
 
   isDifficultyMet: (hash: string, difficultyTarget: string): boolean => {
-    return hash < difficultyTarget;
+    return hash >= difficultyTarget;
   },
 };

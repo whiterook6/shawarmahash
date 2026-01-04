@@ -449,7 +449,8 @@ export const schemas = {
             description: "The hash of the previous block",
             pattern: "^[0-9a-f]{64}$",
             errorMessage: {
-              pattern: "Previous hash must be a 64-character hexadecimal string",
+              pattern:
+                "Previous hash must be a 64-character hexadecimal string",
             },
           },
           team: {

@@ -18,10 +18,11 @@
     "typecheck": "tsc --noEmit",
     "build": "esbuild src/index.ts --bundle --platform=node --target=node18 --format=esm --outfile=build/index.js --packages=external",
     "dev": "esbuild src/index.ts --bundle --platform=node --target=node18 --format=esm --outfile=build/index.js --sourcemap --packages=external",
-    "test": "node --import tsx --test src/**/*.test.ts",
+    "test": "node --import tsx --test",
     "chain:stats": "tsx src/scripts/chainStats.script.ts",
     "chain:generate": "tsx src/scripts/generateChain.script.ts",
-    "block:generate": "tsx src/scripts/generateBlock.script.ts"
+    "block:generate": "tsx src/scripts/generateBlock.script.ts",
+    "difficulty:calculate": "tsx src/scripts/calculateDifficulties.script.ts"
   },
   "private": true,
   "dependencies": {

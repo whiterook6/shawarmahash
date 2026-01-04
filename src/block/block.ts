@@ -30,6 +30,8 @@ export type Block = {
 };
 
 export const Block = {
+  GENESIS_PREVIOUS_HASH:
+    "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
   calculateHash: (
     previousHash: string,
     previousTimestamp: number,
@@ -52,7 +54,7 @@ export const Block = {
     let hash = "";
     while (true) {
       hash = Block.calculateHash(
-        "0000000000000000000000000000000000000000000000000000000000000000",
+        Block.GENESIS_PREVIOUS_HASH,
         0, // previous timestamp is 0 for genesis block
         player,
         undefined,
@@ -67,8 +69,7 @@ export const Block = {
     }
     return {
       hash: hash,
-      previousHash:
-        "0000000000000000000000000000000000000000000000000000000000000000",
+      previousHash: Block.GENESIS_PREVIOUS_HASH,
       player: player,
       timestamp: timestamp,
       nonce: nonce,

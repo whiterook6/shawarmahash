@@ -42,8 +42,7 @@ describe("Block", () => {
         expect.objectContaining({
           player: "AAA",
           hash: expect.any(String),
-          previousHash:
-            "0000000000000000000000000000000000000000000000000000000000000000",
+          previousHash: Block.GENESIS_PREVIOUS_HASH,
           index: 0,
           timestamp: expect.any(Number),
           nonce: expect.any(Number),
@@ -52,7 +51,7 @@ describe("Block", () => {
 
       const expectedHash = genesisBlock.hash;
       const toEqualHash = Block.calculateHash(
-        "0000000000000000000000000000000000000000000000000000000000000000",
+        Block.GENESIS_PREVIOUS_HASH,
         0,
         "AAA",
         undefined,

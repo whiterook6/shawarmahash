@@ -31,15 +31,12 @@ export const Chain = {
     }
 
     // Verify genesis block has the correct previousHash
-    if (
-      genesisBlock.previousHash !==
-      "0000000000000000000000000000000000000000000000000000000000000000"
-    ) {
+    if (genesisBlock.previousHash !== Block.GENESIS_PREVIOUS_HASH) {
       return "Genesis block must have correct previousHash";
     }
 
     const expectedGenesisHash = Block.calculateHash(
-      "0000000000000000000000000000000000000000000000000000000000000000",
+      Block.GENESIS_PREVIOUS_HASH,
       0,
       genesisBlock.player,
       undefined,

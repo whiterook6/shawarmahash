@@ -45,7 +45,7 @@ export class Game {
 
     // Validate genesis block hash
     const expectedHash = Block.calculateHash(
-      "0000000000000000000000000000000000000000000000000000000000000000",
+      Block.GENESIS_PREVIOUS_HASH,
       0, // previous timestamp is 0 for genesis block
       player,
       undefined, // no team for genesis block
@@ -249,8 +249,7 @@ export class Game {
     // Create genesis block using provided hash and nonce
     const genesisBlock: Block = {
       hash: hash,
-      previousHash:
-        "0000000000000000000000000000000000000000000000000000000000000000",
+      previousHash: Block.GENESIS_PREVIOUS_HASH,
       player: player,
       timestamp: Timestamp.now(),
       nonce: nonce,

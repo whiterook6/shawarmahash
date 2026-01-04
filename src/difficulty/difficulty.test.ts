@@ -3,45 +3,54 @@ import { Difficulty } from "./difficulty";
 import expect from "expect";
 
 describe("Difficulty", () => {
-  it("can calculate the difficulty from a hash", () => {
-    const hash =
-      "0000000000000000000000000000000000000000000000000000000000000000";
-    const difficulty = Difficulty.getDifficultyFromHash(hash);
-    expect(difficulty).toBe(64);
+  describe("buildDifficultyTarget", () => {
+    it("Builds difficulty targets in order", () => {
+      let previousDifficultyTarget =
+        "0000000000000000000000000000000000000000000000000000000000000000";
+      for (let i = 0; i <= 64; i += 0.05) {
+        const difficultyTarget = Difficulty.buildDifficultyTarget(i);
+        expect(difficultyTarget >= previousDifficultyTarget).toBe(true);
+        previousDifficultyTarget = difficultyTarget;
+      }
+
+      const allTargets = Array.from({ length: 64 }, (_, i) =>
+        Difficulty.buildDifficultyTarget(i),
+      );
+      const sortedTargets = allTargets.sort((a, b) => a.localeCompare(b));
+      expect(sortedTargets).toEqual(allTargets);
+    });
   });
 
-  it("can calculate the difficulty from a hash with a fraction", () => {
-    const hash =
-      "000004ffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-    const difficulty = Difficulty.getDifficultyFromHash(hash);
-    expect(difficulty).toBe(5.75);
+  describe("getDifficultyFromHash", () => {
+    it("Can get the difficulty from a hash", () => {
+      for (let i = 0; i <= 32; i += 0.05) {
+        const difficultyTarget = Difficulty.buildDifficultyTarget(i);
+        const difficulty = Difficulty.getDifficultyFromHash(difficultyTarget);
+        const difference = Math.abs(difficulty - i);
+        expect(difference).toBeLessThanOrEqual(0.1);
+      }
+    });
   });
 
-  it("can calculate the difficulty from a hash with a different fraction", () => {
-    const hash =
-      "00000cffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-    const difficulty = Difficulty.getDifficultyFromHash(hash);
-    expect(difficulty).toBe(5.25);
-  });
+  describe("getDifficultyTargetFromChain", () => {});
 
-  it("can calculate the difficulty from a hash without a fraction", () => {
-    const hash =
-      "00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-    const difficulty = Difficulty.getDifficultyFromHash(hash);
-    expect(difficulty).toBe(5);
-  });
+  describe("isDifficultyMet", () => {
+    it("Can check if a hash meets a difficulty target", () => {
+      const difficultyTarget =
+        "fffffffff1000000000000000000000000000000000000000000000000000000";
+      const hash =
+        "fffffffffce67ad6b81718943f17c5ebdf214f9cc8c927220fa45426948b76bd";
+      const isMet = Difficulty.isDifficultyMet(hash, difficultyTarget);
+      expect(isMet).toBe(true);
+    });
 
-  it("can check if the hash meets the difficulty target", () => {
-    const targetHash =
-      "000000000000ffffffffffffffffffffffffffffffffffffffffffffffffffff";
-    const hash =
-      "000000000000abcfdeffffffffffffffffffffffffffffffffffffffffffffff";
-    const meetsDifficulty = Difficulty.isDifficultyMet(hash, targetHash);
-    expect(meetsDifficulty).toBe(true);
-
-    const badHash =
-      "00000000000abcfdefffffffffffffffffffffffffffffffffffffffffffffff";
-    const meetsDifficultyBad = Difficulty.isDifficultyMet(badHash, targetHash);
-    expect(meetsDifficultyBad).toBe(false);
+    it("Can check if a hash does not meet a difficulty target", () => {
+      const difficultyTarget =
+        "ffffffffff000000000000000000000000000000000000000000000000000000";
+      const hash =
+        "fffffffff1ce67ad6b81718943f17c5ebdf214f9cc8c927220fa45426948b76bd";
+      const isMet = Difficulty.isDifficultyMet(hash, difficultyTarget);
+      expect(isMet).toBe(false);
+    });
   });
 });
