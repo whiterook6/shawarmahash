@@ -10,7 +10,7 @@ lerna-debug.log*
 .env
 
 # Build outputs
-build/
+output/
 
 # Runtime data
 /data/

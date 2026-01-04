@@ -13,7 +13,7 @@ x-server-base: &server-base
     - ./tsconfig.json:/usr/src/app/tsconfig.json
     - ./eslint.config.js:/usr/src/app/eslint.config.js
     - ./src:/usr/src/app/src
-    - ./build:/usr/src/app/build
+    - ./output:/usr/src/app/output
     - ./data:/usr/src/app/data
     - ./package.json:/usr/src/app/package.json
     - ./yarn.lock:/usr/src/app/yarn.lock
@@ -25,7 +25,7 @@ services:
 
   server-serve:
     <<: *server-base
-    command: sh -c "yarn build && node build/index.js"
+    command: sh -c "yarn build && node output/index.js"
 
   server-test:
     <<: *server-base

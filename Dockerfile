@@ -18,5 +18,5 @@ RUN yarn build
 EXPOSE 3000
 
 # Start the server
-CMD ["node", "build/index.js"]
+CMD ["node", "output/index.js"]
 
