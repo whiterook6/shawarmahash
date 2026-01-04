@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import { Block } from "../block/block";
 import { Chain } from "./chain";
 import expect from "expect";
+import { Difficulty } from "../difficulty/difficulty";
 
 describe("Chain", () => {
   describe("getAverageMiningInterval", () => {
@@ -26,6 +27,52 @@ describe("Chain", () => {
       chain[9].timestamp = 767315426;
       const interval = Chain.getAverageMiningInterval(chain);
       expect(interval).toBe(0);
+    });
+  });
+
+  describe("verifyGenesisBlock", () => {
+    const validGenesisBlock: Block = {
+      hash: "fffff6057cdebbbdb6c9b714fc04521ddd77f21b2aa883df89df058aa3a4a015",
+      previousHash:
+        "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      player: "TIM",
+      timestamp: 1767554271,
+      nonce: 1658287,
+      index: 0,
+    };
+
+    it("It returns a verification error if the genesis block has an incorrect index", () => {
+      const genesisBlock = { ...validGenesisBlock, index: 1 };
+      const verificationError = Chain.verifyGenesisBlock(genesisBlock);
+      expect(verificationError).toBe("Genesis block must have index 0");
+    });
+
+    it("It returns a verification error if the genesis block has an incorrect previousHash", () => {
+      const genesisBlock = { ...validGenesisBlock, previousHash: "000006b6f3920d11d28c05f5f17ab79d45dc88ceef8c05b5a841405e731ae051" };
+      const verificationError = Chain.verifyGenesisBlock(genesisBlock);
+      expect(verificationError).toBe(
+        "Genesis block must have correct previousHash",
+      );
+    });
+
+    it("It returns a verification error if the genesis block has an incorrect hash", () => {
+      const genesisBlock = { ...validGenesisBlock, hash: "fffff9d16b97ae4ed83508e02ce0225cf098e07a745357fa397070cb61a389cd" };
+      const verificationError = Chain.verifyGenesisBlock(genesisBlock);
+      expect(verificationError).toBe("Genesis block must have correct hash");
+    });
+
+    it("it returns a verification error if the genesis block does not meet the difficulty requirement", () => {
+      const genesisBlock: Block = {
+        previousHash: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        timestamp: 0,
+        player: "TIM",
+        nonce: 191,
+        index: 0,
+        hash: "ffb9af400b75871ac805543a0b5f09c198e865770b637daa8a4c4e097f2a908b"
+      };
+      const chain = [genesisBlock];
+      const verificationError = Chain.verifyChain(chain);
+      expect(verificationError).toBe(`Genesis block does not meet difficulty requirement: ${genesisBlock.hash} does not start with ${Difficulty.DEFAULT_DIFFICULTY_HASH}`);
     });
   });
 
@@ -123,6 +170,11 @@ describe("Chain", () => {
       },
     ];
 
+    it("A empty chain is invalid", () => {
+      const verificationError = Chain.verifyChain([]);
+      expect(verificationError).toBe("Empty chain is invalid");
+    });
+
     it("can verify a chain with just a genesis block", () => {
       const chain = [validChain[0]];
       const result = Chain.verifyChain(chain);
@@ -140,42 +192,6 @@ describe("Chain", () => {
       expect(verificationError).toBe("Empty chain is invalid");
     });
 
-    it("It returns a verification error if the genesis block has an incorrect index", () => {
-      const chain = [
-        {
-          ...validChain[0],
-          index: 1,
-        },
-      ];
-      const verificationError = Chain.verifyChain(chain);
-      expect(verificationError).toBe("Genesis block must have index 0");
-    });
-
-    it("It returns a verification error if the genesis block has an incorrect previousHash", () => {
-      const chain = [
-        {
-          ...validChain[0],
-          previousHash:
-            "000006b6f3920d11d28c05f5f17ab79d45dc88ceef8c05b5a841405e731ae051",
-        },
-      ];
-      const verificationError = Chain.verifyChain(chain);
-      expect(verificationError).toBe(
-        "Genesis block must have correct previousHash",
-      );
-    });
-
-    it("It returns a verification error if the genesis block has an incorrect hash", () => {
-      const chain = [
-        {
-          ...validChain[0],
-          hash: "fffff9d16b97ae4ed83508e02ce0225cf098e07a745357fa397070cb61a389cd",
-        },
-      ];
-      const verificationError = Chain.verifyChain(chain);
-      expect(verificationError).toBe("Genesis block must have correct hash");
-    });
-
     it("It returns a verification error if one of the blocks has an incorrect index", () => {
       const chain = validChain.map((block) => ({ ...block }));
       chain[3].index = 5;
@@ -184,13 +200,7 @@ describe("Chain", () => {
     });
 
     it("It returns a verification error if one of the blocks has an incorrect previous hash", () => {
-      const chain = [
-        ...validChain.map((block) => {
-          return {
-            ...block,
-          };
-        }),
-      ];
+      const chain = validChain.map((block) => ({ ...block }));
       chain[5].previousHash =
         "0000000000000000000000000000000000000000000000000000000000000001";
       const verificationError = Chain.verifyChain(chain);
@@ -200,19 +210,29 @@ describe("Chain", () => {
     });
 
     it("It returns a verification error if one of the blocks has an incorrect hash", () => {
-      const chain = [
-        ...validChain.map((block) => {
-          return {
-            ...block,
-          };
-        }),
-      ];
+      const chain = validChain.map((block) => ({ ...block }));
       chain[5].hash =
         "0000000000000000000000000000000000000000000000000000000000000001";
       const verificationError = Chain.verifyChain(chain);
       expect(verificationError).toBe(
         `Block 5 has incorrect hash: 0000000000000000000000000000000000000000000000000000000000000001 !== ${validChain[5].hash}`,
       );
+    });
+
+    it("It returns a verification error if a block does not meet the difficulty requirement", () => {
+      const block = {
+        hash: "ffe63325e89c1e3e3dd6be60b6d5af12de8f737f445e7246e845f65099633d86",
+        previousHash: "fffff49e6b4a99b5d670b06ed15125a4d137a946ae51d5115017e0725234d63f",
+        player: "TIM",
+        timestamp: 1767554274,
+        nonce: 595,
+        index: 4
+      };
+
+      const chain = validChain.map((block) => ({ ...block }));
+      chain[4] = block;
+      const verificationError = Chain.verifyChain(chain);
+      expect(verificationError).toBe(`Block 4 does not meet difficulty requirement: ${block.hash} does not start with ${Difficulty.DEFAULT_DIFFICULTY_HASH}`);
     });
   });
 });

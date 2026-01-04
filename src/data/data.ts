@@ -107,7 +107,10 @@ export const Data = {
 
     // Create empty file
     try {
-      await writeFile(filePath, "", "utf-8");
+      await writeFile(filePath, "", {
+        encoding: "utf-8",
+        flag: "w",
+      });
     } catch (error) {
       throw new Error(
         `Failed to create chain file: ${filePath}: ${error instanceof Error ? error.message : String(error)}`,

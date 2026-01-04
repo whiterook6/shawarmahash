@@ -18,14 +18,7 @@ export const Chain = {
     return elapsedSeconds / length;
   },
 
-  verifyChain: (chain: Chain): string | undefined => {
-    // Empty chain is invalid
-    if (chain.length === 0) {
-      return "Empty chain is invalid";
-    }
-
-    // Verify genesis block (index 0)
-    const genesisBlock = chain[0];
+  verifyGenesisBlock: (genesisBlock: Block): string | undefined => {
     if (genesisBlock.index !== 0) {
       return "Genesis block must have index 0";
     }
@@ -35,6 +28,13 @@ export const Chain = {
       return "Genesis block must have correct previousHash";
     }
 
+
+    // verify the genesis block meets the starting difficulty
+    if (!Difficulty.isDifficultyMet(genesisBlock.hash, Difficulty.DEFAULT_DIFFICULTY_HASH)) {
+      return `Genesis block does not meet difficulty requirement: ${genesisBlock.hash} does not start with ${Difficulty.DEFAULT_DIFFICULTY_HASH}`;
+    }
+
+    // verify the genesis block has the correct hash
     const expectedGenesisHash = Block.calculateHash(
       Block.GENESIS_PREVIOUS_HASH,
       0,
@@ -44,6 +44,20 @@ export const Chain = {
     );
     if (genesisBlock.hash !== expectedGenesisHash) {
       return "Genesis block must have correct hash";
+    }
+  },
+
+  verifyChain: (chain: Chain): string | undefined => {
+    // Empty chain is invalid
+    if (chain.length === 0) {
+      return "Empty chain is invalid";
+    }
+
+    // Verify genesis block (index 0)
+    const genesisBlock = chain[0];
+    const genesisBlockVerificationError = Chain.verifyGenesisBlock(genesisBlock);
+    if (genesisBlockVerificationError) {
+      return genesisBlockVerificationError;
     }
 
     // Verify each subsequent block
