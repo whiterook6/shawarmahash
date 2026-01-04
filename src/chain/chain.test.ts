@@ -48,7 +48,11 @@ describe("Chain", () => {
     });
 
     it("It returns a verification error if the genesis block has an incorrect previousHash", () => {
-      const genesisBlock = { ...validGenesisBlock, previousHash: "000006b6f3920d11d28c05f5f17ab79d45dc88ceef8c05b5a841405e731ae051" };
+      const genesisBlock = {
+        ...validGenesisBlock,
+        previousHash:
+          "000006b6f3920d11d28c05f5f17ab79d45dc88ceef8c05b5a841405e731ae051",
+      };
       const verificationError = Chain.verifyGenesisBlock(genesisBlock);
       expect(verificationError).toBe(
         "Genesis block must have correct previousHash",
@@ -56,23 +60,29 @@ describe("Chain", () => {
     });
 
     it("It returns a verification error if the genesis block has an incorrect hash", () => {
-      const genesisBlock = { ...validGenesisBlock, hash: "fffff9d16b97ae4ed83508e02ce0225cf098e07a745357fa397070cb61a389cd" };
+      const genesisBlock = {
+        ...validGenesisBlock,
+        hash: "fffff9d16b97ae4ed83508e02ce0225cf098e07a745357fa397070cb61a389cd",
+      };
       const verificationError = Chain.verifyGenesisBlock(genesisBlock);
       expect(verificationError).toBe("Genesis block must have correct hash");
     });
 
     it("it returns a verification error if the genesis block does not meet the difficulty requirement", () => {
       const genesisBlock: Block = {
-        previousHash: "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+        previousHash:
+          "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
         timestamp: 0,
         player: "TIM",
         nonce: 191,
         index: 0,
-        hash: "ffb9af400b75871ac805543a0b5f09c198e865770b637daa8a4c4e097f2a908b"
+        hash: "ffb9af400b75871ac805543a0b5f09c198e865770b637daa8a4c4e097f2a908b",
       };
       const chain = [genesisBlock];
       const verificationError = Chain.verifyChain(chain);
-      expect(verificationError).toBe(`Genesis block does not meet difficulty requirement: ${genesisBlock.hash} does not start with ${Difficulty.DEFAULT_DIFFICULTY_HASH}`);
+      expect(verificationError).toBe(
+        `Genesis block does not meet difficulty requirement: ${genesisBlock.hash} does not start with ${Difficulty.DEFAULT_DIFFICULTY_HASH}`,
+      );
     });
   });
 
@@ -222,17 +232,20 @@ describe("Chain", () => {
     it("It returns a verification error if a block does not meet the difficulty requirement", () => {
       const block = {
         hash: "ffe63325e89c1e3e3dd6be60b6d5af12de8f737f445e7246e845f65099633d86",
-        previousHash: "fffff49e6b4a99b5d670b06ed15125a4d137a946ae51d5115017e0725234d63f",
+        previousHash:
+          "fffff49e6b4a99b5d670b06ed15125a4d137a946ae51d5115017e0725234d63f",
         player: "TIM",
         timestamp: 1767554274,
         nonce: 595,
-        index: 4
+        index: 4,
       };
 
       const chain = validChain.map((block) => ({ ...block }));
       chain[4] = block;
       const verificationError = Chain.verifyChain(chain);
-      expect(verificationError).toBe(`Block 4 does not meet difficulty requirement: ${block.hash} does not start with ${Difficulty.DEFAULT_DIFFICULTY_HASH}`);
+      expect(verificationError).toBe(
+        `Block 4 does not meet difficulty requirement: ${block.hash} does not start with ${Difficulty.DEFAULT_DIFFICULTY_HASH}`,
+      );
     });
   });
 });

@@ -1,23 +1,15 @@
 import * as esbuild from "esbuild";
-import fs from "fs";
-import path, { dirname } from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { getGitHash, ensureOutputDir, cleanOutputDir, getOutputDir } from "./build-utils.mjs";
 
 const run = async () => {
+  const gitHash = getGitHash() || "not set";
+  const outputDir = getOutputDir();
 
   // ensure output directory exists
-  const outputDir = path.join(__dirname, "/../output");
-  if (!fs.existsSync(outputDir)) {
-    fs.mkdirSync(outputDir);
-  }
+  ensureOutputDir(outputDir);
 
-  const files = fs.readdirSync(outputDir);
-  await Promise.all(files.map(file => {
-    return fs.promises.unlink(path.join(outputDir, file));
-  }));
+  // clean output directory
+  await cleanOutputDir(outputDir);
 
   return esbuild.build({
     entryPoints: ["src/index.ts"],
@@ -28,7 +20,10 @@ const run = async () => {
     outdir: "output",
     minify: true,
     sourcemap: false,
-    packages: "external"
+    packages: "external",
+    define: {
+      "process.env.GIT_HASH": JSON.stringify(gitHash)
+    }
   });
 };
 

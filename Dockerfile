@@ -2,6 +2,10 @@ FROM node:24-alpine
 
 WORKDIR /app
 
+# Accept git hash as build argument
+ARG GIT_HASH
+ENV GIT_HASH=${GIT_HASH}
+
 # Copy package files
 COPY package.json yarn.lock ./
 

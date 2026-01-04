@@ -5,7 +5,11 @@ import { errorHandler } from "./error/errors";
 import { Game } from "./game/game";
 import { Miner } from "./miner/miner";
 
-export async function createServer(game: Game) {
+export type Options = {
+  gitHash?: string;
+};
+
+export async function createServer(game: Game, options: Options = {}) {
   const fastify = Fastify({
     logger: true,
   });
@@ -17,6 +21,17 @@ export async function createServer(game: Game) {
   });
 
   fastify.setErrorHandler(errorHandler);
+
+  const serverStartTime = new Date();
+  fastify.get("/health", (_: FastifyRequest, reply: FastifyReply) => {
+    const now = new Date();
+    return reply.status(200).send({
+      gitHash: options.gitHash || "unknown",
+      startTime: serverStartTime,
+      now: now,
+      uptime: (now.getTime() - serverStartTime.getTime()) / 1000,
+    });
+  });
 
   // GET /players: get a list of players and their scores (PlayerScore[])
   fastify.get("/players", (_: FastifyRequest, reply: FastifyReply) => {

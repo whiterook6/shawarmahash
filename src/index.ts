@@ -7,7 +7,9 @@ const start = async () => {
   // Load player chains from data directory
   const chains = await Data.loadAllChains("data");
   const game = new Game(chains);
-  const fastify = await createServer(game);
+  const fastify = await createServer(game, {
+    gitHash: process.env.GIT_HASH,
+  });
 
   const shutdown = async () => {
     try {

@@ -28,9 +28,13 @@ export const Chain = {
       return "Genesis block must have correct previousHash";
     }
 
-
     // verify the genesis block meets the starting difficulty
-    if (!Difficulty.isDifficultyMet(genesisBlock.hash, Difficulty.DEFAULT_DIFFICULTY_HASH)) {
+    if (
+      !Difficulty.isDifficultyMet(
+        genesisBlock.hash,
+        Difficulty.DEFAULT_DIFFICULTY_HASH,
+      )
+    ) {
       return `Genesis block does not meet difficulty requirement: ${genesisBlock.hash} does not start with ${Difficulty.DEFAULT_DIFFICULTY_HASH}`;
     }
 
@@ -55,7 +59,8 @@ export const Chain = {
 
     // Verify genesis block (index 0)
     const genesisBlock = chain[0];
-    const genesisBlockVerificationError = Chain.verifyGenesisBlock(genesisBlock);
+    const genesisBlockVerificationError =
+      Chain.verifyGenesisBlock(genesisBlock);
     if (genesisBlockVerificationError) {
       return genesisBlockVerificationError;
     }
