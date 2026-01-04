@@ -5,31 +5,27 @@ import { Block } from "./block";
 describe("Block", () => {
   describe("calculateHash", () => {
     it("It can calculate a hash", () => {
-      const expectedHash =
-        "000008840290f0cef37278c9df927ed079d61820435eaefdaaec56becf0d4ac5";
-      const previousHash =
-        "00000fa57463d5688280378c5c60c9d025e2a34df0f5d3bcc607809d56ddb10e";
+      const expectedHash = "fffff6e886f39c1b3b013ba831fab7b0";
+      const previousHash = "fffff49f4553b0d3232ba598d4e36e8f";
       const actualHash = Block.calculateHash(
         previousHash,
-        1767378644,
-        "AAA",
+        1767569572,
+        "TIM",
         undefined,
-        65107,
+        1063469,
       );
       expect(actualHash).toEqual(expectedHash);
     });
 
     it("It can calculate a hash with a team", () => {
-      const expectedHash =
-        "00000f67bbe633a07efb5c2fccd8983fad091d39c903ee36b008dc7fba089d95";
-      const previousHash =
-        "00000c3a24a32feb68a8442c10d80e4877e24f518e757eace69cfa0a1ba42c48";
+      const expectedHash = "fffff86ec084f21ee3cc501d51068a39";
+      const previousHash = "fffff3bbda1760827f461c9b3eb39945";
       const actualHash = Block.calculateHash(
         previousHash,
-        1767378658,
-        "BBB",
-        "TTT",
-        177300,
+        1767569780,
+        "MIT",
+        "TIM",
+        48536,
       );
       expect(actualHash).toEqual(expectedHash);
     });

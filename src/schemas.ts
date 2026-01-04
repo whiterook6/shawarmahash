@@ -369,9 +369,9 @@ export const schemas = {
           hash: {
             type: "string",
             description: "The hash of the genesis block",
-            pattern: "^[0-9a-f]{64}$",
+            pattern: "^[0-9a-f]{32}$",
             errorMessage: {
-              pattern: "Hash must be a 64-character hexadecimal string",
+              pattern: "Hash must be a 32-character hexadecimal string",
             },
           },
           nonce: {
@@ -447,10 +447,10 @@ export const schemas = {
           previousHash: {
             type: "string",
             description: "The hash of the previous block",
-            pattern: "^[0-9a-f]{64}$",
+            pattern: "^[0-9a-f]{32}$",
             errorMessage: {
               pattern:
-                "Previous hash must be a 64-character hexadecimal string",
+                "Previous hash must be a 32-character hexadecimal string",
             },
           },
           team: {
@@ -469,9 +469,9 @@ export const schemas = {
           hash: {
             type: "string",
             description: "The hash of the block",
-            pattern: "^[0-9a-f]{64}$",
+            pattern: "^[0-9a-f]{32}$",
             errorMessage: {
-              pattern: "Hash must be a 64-character hexadecimal string",
+              pattern: "Hash must be a 32-character hexadecimal string",
             },
           },
           message: {

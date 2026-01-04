@@ -67,9 +67,7 @@ export class Game {
       });
     }
 
-    // Initialize new player chain with welcome message
-    const message = `Are you ready for a story?`;
-    await this.initializePlayerChain(player, hash, nonce, message);
+    await this.initializePlayerChain(player, hash, nonce);
 
     // Return the recent chain state
     return this.getChainState(player);
@@ -244,7 +242,6 @@ export class Game {
     player: string,
     hash: string,
     nonce: number,
-    message?: string,
   ): Promise<Chain> {
     // Create genesis block using provided hash and nonce
     const genesisBlock: Block = {
@@ -254,7 +251,7 @@ export class Game {
       timestamp: Timestamp.now(),
       nonce: nonce,
       index: 0,
-      message: message,
+      message: `Are you ready for a story?`,
     };
 
     const chain: Chain = [genesisBlock];

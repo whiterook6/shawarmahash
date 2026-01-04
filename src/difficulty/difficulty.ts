@@ -2,20 +2,17 @@ import { Block } from "../block/block";
 import { Chain } from "../chain/chain";
 
 export const Difficulty = {
-  MAX_DIFFICULTY_HASH:
-    "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
-  MIN_DIFFICULTY_HASH:
-    "0000000000000000000000000000000000000000000000000000000000000000",
-  DEFAULT_DIFFICULTY_HASH:
-    "fffff0000000000000000000000000000000000000000000000000000000000",
-  MAX_DIFFICULTY: 64,
+  MAX_DIFFICULTY_HASH: "ffffffffffffffffffffffffffffffff",
+  MIN_DIFFICULTY_HASH: "00000000000000000000000000000000",
+  DEFAULT_DIFFICULTY_HASH: "fffff000000000000000000000000000",
+  MAX_DIFFICULTY: 32,
   MIN_DIFFICULTY: 0,
   DEFAULT_DIFFICULTY: 5,
 
   /**
    * Given a difficulty level, like 5.0625, build a target string like "fffff10000..."
    * @param difficulty
-   * @returns A 64-character hash that can be compared with a block hash using greater-than-or-equal comparison.
+   * @returns A 32-character hash that can be compared with a block hash using greater-than-or-equal comparison.
    */
   buildDifficultyTarget: (difficulty: number): string => {
     if (difficulty <= Difficulty.MIN_DIFFICULTY) {
@@ -34,9 +31,9 @@ export const Difficulty = {
     // 0.0 => 0, 0.0625 => 1, 0.125 => 2, ..., 0.9375 => 15
     const hexDigit = Math.floor(fractionalPart * 16).toString(16);
 
-    // Combine: "fffff" + hexDigit + zeros to make 64 chars
+    // Combine: "fffff" + hexDigit + zeros to make 32 chars
     const prefix = leadingFs + hexDigit;
-    return prefix.padEnd(64, "0");
+    return prefix.padEnd(32, "0");
   },
 
   getDifficultyFromHash: (hash: string): number => {
@@ -51,7 +48,7 @@ export const Difficulty = {
     }
 
     // if we have leading F's and the next character is a hex digit, add a fraction
-    if (count < hash.length - 1) {
+    if (count < hash.length) {
       const nextChar = hash[count];
       const hexValue = parseInt(nextChar, 16);
       // Fractional part: 0 => 0.0, 1 => 0.0625, 2 => 0.125, ..., 15 => 0.9375

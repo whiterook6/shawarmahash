@@ -13,13 +13,14 @@
     "useTabs": false
   },
   "scripts": {
-    "block:generate": "tsx src/scripts/generateBlock.script.ts",
+    "block:mine": "tsx src/scripts/mineBlock.script.ts",
     "dev:build": "node build/dev-build.mjs",
     "prod:build": "node build/prod-build.mjs",
     "chain:generate": "tsx src/scripts/generateChain.script.ts",
     "chain.stats:get": "tsx src/scripts/chainStats.script.ts",
     "difficulty:calculate": "tsx src/scripts/calculateDifficulties.script.ts",
     "format": "prettier --write src",
+    "genesis:mine": "tsx src/scripts/mineGenesisBlock.script.ts",
     "lint": "eslint src --fix",
     "test": "node --import tsx --test",
     "typecheck": "tsc --noEmit"

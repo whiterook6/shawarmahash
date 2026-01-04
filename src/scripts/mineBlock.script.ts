@@ -31,7 +31,7 @@ const run = async () => {
       alias: "d",
       type: "string",
       demandOption: true,
-      describe: "Hexadecimal difficulty target (64 chars)",
+      describe: "Hexadecimal difficulty target (32 chars)",
     })
     .option("team", {
       alias: "T",
@@ -45,8 +45,8 @@ const run = async () => {
       describe: "Block index (default: 0)",
     })
     .check((argv) => {
-      if (argv.difficultyTarget.length !== 64) {
-        throw new Error("difficultyTarget must be 64 characters long");
+      if (argv.difficultyTarget.length !== 32) {
+        throw new Error("difficultyTarget must be 32 characters long");
       }
       return true;
     })

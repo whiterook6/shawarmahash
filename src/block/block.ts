@@ -30,8 +30,7 @@ export type Block = {
 };
 
 export const Block = {
-  GENESIS_PREVIOUS_HASH:
-    "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+  GENESIS_PREVIOUS_HASH: "ffffffffffffffffffffffffffffffff",
   calculateHash: (
     previousHash: string,
     previousTimestamp: number,
@@ -44,7 +43,8 @@ export const Block = {
       .update(
         `${previousHash}${previousTimestamp}${player}${team ?? ""}${nonce}`,
       )
-      .digest("hex");
+      .digest("hex")
+      .substring(0, 32);
   },
 
   /** Only the generate chain script should call this function. */
@@ -85,8 +85,8 @@ export const Block = {
         player: faker.string.alpha(3).toUpperCase(),
         timestamp: faker.date.past().getTime() / 1000,
         nonce: faker.number.int({ min: 0, max: 1000000 }),
-        hash: faker.string.hexadecimal({ length: 64 }),
-        previousHash: faker.string.hexadecimal({ length: 64 }),
+        hash: faker.string.hexadecimal({ length: 32 }),
+        previousHash: faker.string.hexadecimal({ length: 32 }),
         team: faker.string.alpha(3).toUpperCase(),
         message: faker.lorem.sentence(),
         ...overrides,
