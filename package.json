@@ -13,16 +13,16 @@
     "useTabs": false
   },
   "scripts": {
+    "block:generate": "tsx src/scripts/generateBlock.script.ts",
+    "dev:build": "node build/dev-build.mjs",
+    "prod:build": "node build/prod-build.mjs",
+    "chain:generate": "tsx src/scripts/generateChain.script.ts",
+    "chain.stats:get": "tsx src/scripts/chainStats.script.ts",
+    "difficulty:calculate": "tsx src/scripts/calculateDifficulties.script.ts",
     "format": "prettier --write src",
     "lint": "eslint src --fix",
-    "typecheck": "tsc --noEmit",
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node18 --format=esm --outfile=output/index.js --packages=external",
-    "dev": "esbuild src/index.ts --bundle --platform=node --target=node18 --format=esm --outfile=output/index.js --sourcemap --packages=external",
     "test": "node --import tsx --test",
-    "chain:stats": "tsx src/scripts/chainStats.script.ts",
-    "chain:generate": "tsx src/scripts/generateChain.script.ts",
-    "block:generate": "tsx src/scripts/generateBlock.script.ts",
-    "difficulty:calculate": "tsx src/scripts/calculateDifficulties.script.ts"
+    "typecheck": "tsc --noEmit"
   },
   "private": true,
   "dependencies": {

@@ -12,7 +12,7 @@ RUN yarn install --frozen-lockfile
 COPY . .
 
 # Build the application
-RUN yarn build
+RUN yarn prod:build
 
 # Expose the port the server runs on
 EXPOSE 3000
