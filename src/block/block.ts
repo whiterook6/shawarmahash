@@ -31,6 +31,7 @@ export type Block = {
 
 export const Block = {
   GENESIS_PREVIOUS_HASH: "ffffffffffffffffffffffffffffffff",
+
   calculateHash: (
     previousHash: string,
     previousTimestamp: number,
