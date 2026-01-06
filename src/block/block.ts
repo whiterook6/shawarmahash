@@ -79,6 +79,16 @@ export const Block = {
     };
   },
 
+  /**
+   * @returns a number between 0 and 1 based on the block hash. One
+   * means every event happens. Zero means no events happen.
+   */
+  getLikelihood: (block: Block): number => {
+    const last8Digits = block.hash.slice(-8);
+    const number = parseInt(last8Digits, 16);
+    return number / 0xffffffff;
+  },
+
   Faker: {
     one: (overrides: Partial<Block> = {}): Block => {
       return {
