@@ -1,0 +1,10 @@
+node_modules/
+
+# Environment variables
+.env
+
+# Build outputs
+output/
+
+# Runtime data
+/data/
