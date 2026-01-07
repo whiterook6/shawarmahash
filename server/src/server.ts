@@ -1,6 +1,9 @@
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
+import staticFiles from "@fastify/static";
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import { errorHandler } from "./error/errors";
 import { Game } from "./game/game";
 import { Miner } from "./miner/miner";
@@ -18,8 +21,14 @@ export function createServer(
   const fastify = Fastify({
     logger: true,
   });
-
-  fastify.register(helmet);
+  
+  fastify.register(helmet, {
+    contentSecurityPolicy: {
+      directives: {
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+      },
+    },
+  });
   fastify.register(rateLimit, {
     max: 100,
     timeWindow: "1m",
@@ -259,6 +268,15 @@ export function createServer(
     reply.raw.on("close", () => {
       unsubscribe();
     });
+  });
+
+  // Serve static files from webui directory (registered last so API routes take precedence)
+  const __filename = fileURLToPath(import.meta.url);
+  const __dirname = dirname(__filename);
+  const webuiPath = join(__dirname, "../../webui");
+  fastify.register(staticFiles, {
+    root: webuiPath,
+    prefix: "/",
   });
 
   return fastify;

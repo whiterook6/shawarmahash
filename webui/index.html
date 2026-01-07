@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SSE Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    #status {
+      padding: 10px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+    #status.connected {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    #status.disconnected {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    #events {
+      background-color: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+      padding: 15px;
+      max-height: 600px;
+      overflow-y: auto;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+    .event {
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: white;
+      border-left: 3px solid #007bff;
+      border-radius: 2px;
+    }
+    .event-time {
+      color: #6c757d;
+      font-size: 10px;
+      margin-bottom: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Server-Sent Events Test</h1>
+  <div id="status" class="disconnected">Disconnected</div>
+  <div id="events"></div>
+
+  <script>
+    const statusDiv = document.getElementById('status');
+    const eventsDiv = document.getElementById('events');
+    
+    // Determine the server URL - adjust if your server runs on a different port
+    const serverUrl = window.location.origin;
+    const eventSource = new EventSource(`${serverUrl}/events`);
+    
+    eventSource.onopen = () => {
+      statusDiv.textContent = 'Connected';
+      statusDiv.className = 'connected';
+      addEvent('Connection opened', { type: 'connection', status: 'open' });
+    };
+    
+    eventSource.onerror = (error) => {
+      statusDiv.textContent = 'Disconnected';
+      statusDiv.className = 'disconnected';
+      addEvent('Connection error', { type: 'error', error: error.type });
+    };
+    
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        addEvent('Event received', data);
+      } catch (e) {
+        addEvent('Event received (parse error)', { raw: event.data, error: e.message });
+      }
+    };
+    
+    function addEvent(label, data) {
+      const eventDiv = document.createElement('div');
+      eventDiv.className = 'event';
+      
+      const timeDiv = document.createElement('div');
+      timeDiv.className = 'event-time';
+      timeDiv.textContent = new Date().toLocaleTimeString();
+      
+      const labelDiv = document.createElement('div');
+      labelDiv.style.fontWeight = 'bold';
+      labelDiv.style.marginBottom = '5px';
+      labelDiv.textContent = label;
+      
+      const dataDiv = document.createElement('div');
+      dataDiv.textContent = JSON.stringify(data, null, 2);
+      
+      eventDiv.appendChild(timeDiv);
+      eventDiv.appendChild(labelDiv);
+      eventDiv.appendChild(dataDiv);
+      
+      eventsDiv.appendChild(eventDiv);
+      eventsDiv.scrollTop = eventsDiv.scrollHeight;
+    }
+  </script>
+</body>
+</html>
+
