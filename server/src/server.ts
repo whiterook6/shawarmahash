@@ -254,6 +254,7 @@ export function createServer(
     reply.raw.setHeader("Content-Type", "text/event-stream");
     reply.raw.setHeader("Cache-Control", "no-cache");
     reply.raw.setHeader("Connection", "keep-alive");
+    reply.raw.write(`data: ${JSON.stringify({ type: "connection", status: "open" })}\n\n`);
 
     const unsubscribe = broadcast.subscribe({
       send: (data: Message) => {
