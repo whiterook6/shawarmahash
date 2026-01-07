@@ -10,20 +10,20 @@ const run = async () => {
   const argv = await yargs(hideBin(process.argv))
     .scriptName("chainStats")
     .usage("$0 [options]")
-    .option("playerName", {
-      alias: "p",
+    .option("team", {
+      alias: "t",
       type: "string",
       demandOption: true,
-      describe: "Player name",
+      describe: "Team name",
     })
     .help()
     .parse();
 
-  const playerName = argv.playerName;
+  const team = argv.team;
 
   // Construct file path
   const dataDir = join(process.cwd(), "data");
-  const filePath = join(dataDir, playerName);
+  const filePath = join(dataDir, team);
 
   // Load chain from file
   let chain: Chain;
@@ -63,7 +63,7 @@ const run = async () => {
   const averageMiningIntervalSeconds = Chain.getAverageMiningInterval(chain);
 
   // Display statistics
-  console.log(`Chain Statistics for "${playerName}":`);
+  console.log(`Chain Statistics for "${team}":`);
   console.log(`  Chain Length: ${chainLength} blocks`);
   console.log(`  Current Difficulty: ${currentDifficulty.toFixed(2)}`);
   console.log(`  Current Difficulty Target: ${currentDifficultyTarget}`);

@@ -39,13 +39,13 @@ export const Chain = {
     }
 
     // verify the genesis block has the correct hash
-    const expectedGenesisHash = Block.calculateHash(
-      Block.GENESIS_PREVIOUS_HASH,
-      0,
-      genesisBlock.player,
-      undefined,
-      genesisBlock.nonce,
-    );
+    const expectedGenesisHash = Block.calculateHash({
+      previousHash: Block.GENESIS_PREVIOUS_HASH,
+      previousTimestamp: 0,
+      player: genesisBlock.player,
+      team: genesisBlock.team,
+      nonce: genesisBlock.nonce,
+    });
     if (genesisBlock.hash !== expectedGenesisHash) {
       return "Genesis block must have correct hash";
     }
@@ -81,13 +81,13 @@ export const Chain = {
       }
 
       // Calculate expected hash
-      const expectedHash = Block.calculateHash(
-        previousBlock.hash,
-        previousBlock.timestamp,
-        currentBlock.player,
-        currentBlock.team,
-        currentBlock.nonce,
-      );
+      const expectedHash = Block.calculateHash({
+        previousHash: previousBlock.hash,
+        previousTimestamp: previousBlock.timestamp,
+        player: currentBlock.player,
+        team: currentBlock.team,
+        nonce: currentBlock.nonce,
+      });
 
       // Verify hash matches
       if (currentBlock.hash !== expectedHash) {

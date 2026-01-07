@@ -11,7 +11,7 @@ export type Block = {
   player: string;
 
   /** The team that the player is on. Format: AAA-ZZZ */
-  team?: string;
+  team: string;
 
   /** The timestamp of the block in seconds. */
   timestamp: number;
@@ -32,13 +32,14 @@ export type Block = {
 export const Block = {
   GENESIS_PREVIOUS_HASH: "ffffffffffffffffffffffffffffffff",
 
-  calculateHash: (
-    previousHash: string,
-    previousTimestamp: number,
-    player: string,
-    team: string | undefined,
-    nonce: number,
-  ) => {
+  calculateHash: (args: {
+    previousHash: string;
+    previousTimestamp: number;
+    player: string;
+    team: string;
+    nonce: number;
+  }) => {
+    const { previousHash, previousTimestamp, player, team, nonce } = args;
     return crypto
       .createHash("sha256")
       .update(
@@ -49,18 +50,23 @@ export const Block = {
   },
 
   /** Only the generate chain script should call this function. */
-  createGenesisBlock: (player: string, message?: string): Block => {
+  createGenesisBlock: (args: {
+    player: string;
+    team: string;
+    message?: string;
+  }): Block => {
+    const { player, team, message } = args;
     const timestamp = Timestamp.now();
     let nonce = 0;
     let hash = "";
     while (true) {
-      hash = Block.calculateHash(
-        Block.GENESIS_PREVIOUS_HASH,
-        0, // previous timestamp is 0 for genesis block
+      hash = Block.calculateHash({
+        previousHash: Block.GENESIS_PREVIOUS_HASH,
+        previousTimestamp: 0, // previous timestamp is 0 for genesis block
         player,
-        undefined,
+        team,
         nonce,
-      );
+      });
       if (
         Difficulty.isDifficultyMet(hash, Difficulty.DEFAULT_DIFFICULTY_HASH)
       ) {
@@ -68,12 +74,14 @@ export const Block = {
       }
       nonce++;
     }
+
     return {
-      hash: hash,
+      hash,
       previousHash: Block.GENESIS_PREVIOUS_HASH,
-      player: player,
-      timestamp: timestamp,
-      nonce: nonce,
+      player,
+      team,
+      timestamp,
+      nonce,
       index: 0,
       message: message,
     };

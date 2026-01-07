@@ -21,7 +21,7 @@ export function createServer(
   const fastify = Fastify({
     logger: true,
   });
-  
+
   fastify.register(helmet, {
     contentSecurityPolicy: {
       directives: {
@@ -84,37 +84,6 @@ export function createServer(
     },
   );
 
-  // GET /players/:player/chain: get the player's recent blocks and difficulty (ChainState)
-  fastify.get(
-    "/players/:player/chain",
-    (
-      request: FastifyRequest<{
-        Params: { player: string };
-      }>,
-      reply: FastifyReply,
-    ) => {
-      const playerChainState = game.getChainState(request.params.player);
-      return reply.status(200).send(playerChainState);
-    },
-  );
-
-  // GET /players/:player/team: get the player's most recent block's team, or undefined
-  fastify.get(
-    "/players/:player/team",
-    (
-      request: FastifyRequest<{
-        Params: { player: string };
-      }>,
-      reply: FastifyReply,
-    ) => {
-      const team = game.getPlayerTeam(request.params.player);
-      return reply.status(200).send({
-        player: request.params.player,
-        team,
-      });
-    },
-  );
-
   // GET /teams: get the list of teams and their scores (TeamScore[])
   fastify.get("/teams", (_: FastifyRequest, reply: FastifyReply) => {
     const teamScores = game.getAllTeamScores();
@@ -166,37 +135,39 @@ export function createServer(
     },
   );
 
-  // POST /players/:player: create a genesis block for the player using user-provided hash/nonce
+  // POST /teams/:team: create a genesis block for the team using user-provided hash/nonce
   fastify.post(
-    "/players/:player",
+    "/teams/:team",
     async (
       request: FastifyRequest<{
-        Params: { player: string };
+        Params: { team: string };
         Body: {
+          player: string;
           hash: string;
           nonce: number;
         };
       }>,
       reply: FastifyReply,
     ) => {
-      const chainState = await game.createPlayer(
-        request.params.player,
-        request.body.hash,
-        request.body.nonce,
-      );
+      const chainState = await game.createTeam({
+        team: request.params.team,
+        player: request.body.player,
+        hash: request.body.hash,
+        nonce: request.body.nonce,
+      });
       return reply.status(200).send(chainState);
     },
   );
 
-  // POST /players/:player/chain: attempt to submit a block to the player's chain
+  // POST /teams/:team/chain: attempt to submit a block to the team's chain
   fastify.post(
-    "/players/:player/chain",
+    "/teams/:team/chain",
     async (
       request: FastifyRequest<{
-        Params: { player: string };
+        Params: { team: string };
         Body: {
           previousHash: string;
-          team: string;
+          player: string;
           nonce: number;
           hash: string;
           message?: string;
@@ -204,14 +175,14 @@ export function createServer(
       }>,
       reply: FastifyReply,
     ) => {
-      const block = await game.submitBlock(
-        request.body.previousHash,
-        request.params.player,
-        request.body.team,
-        request.body.nonce,
-        request.body.hash,
-        request.body.message,
-      );
+      const block = await game.submitBlock({
+        previousHash: request.body.previousHash,
+        player: request.body.player,
+        team: request.params.team,
+        nonce: request.body.nonce,
+        hash: request.body.hash,
+        message: request.body.message,
+      });
       return reply.status(200).send(block);
     },
   );
@@ -230,20 +201,12 @@ export function createServer(
       reply: FastifyReply,
     ) => {
       const chainState = await game.getChainState(request.body.player);
-      const block = Miner.mineBlock(
-        request.body.player,
-        request.body.team,
-        chainState.recent,
-        request.body.message,
-      );
-      await game.submitBlock(
-        block.previousHash,
-        request.body.player,
-        request.body.team,
-        block.nonce,
-        block.hash,
-        request.body.message,
-      );
+      const block = Miner.mineBlock(chainState.recent, {
+        player: request.body.player,
+        team: request.body.team,
+        message: request.body.message,
+      });
+      await game.submitBlock(block);
       return reply.status(200).send(block);
     },
   );
@@ -254,7 +217,9 @@ export function createServer(
     reply.raw.setHeader("Content-Type", "text/event-stream");
     reply.raw.setHeader("Cache-Control", "no-cache");
     reply.raw.setHeader("Connection", "keep-alive");
-    reply.raw.write(`data: ${JSON.stringify({ type: "connection", status: "open" })}\n\n`);
+    reply.raw.write(
+      `data: ${JSON.stringify({ type: "connection", status: "open" })}\n\n`,
+    );
 
     const unsubscribe = broadcast.subscribe({
       send: (data: Message) => {

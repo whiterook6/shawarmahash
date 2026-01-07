@@ -9,12 +9,6 @@ const run = async () => {
   const argv = await yargs(hideBin(process.argv))
     .scriptName("generateBlock")
     .usage("$0 [options]")
-    .option("player", {
-      alias: "p",
-      type: "string",
-      demandOption: true,
-      describe: "Three uppercase letters (e.g., ABC)",
-    })
     .option("previousHash", {
       alias: "h",
       type: "string",
@@ -22,7 +16,7 @@ const run = async () => {
       describe: "Hexadecimal hash string",
     })
     .option("previousTimestamp", {
-      alias: "t",
+      alias: "s",
       type: "number",
       demandOption: true,
       describe: "Unix timestamp in seconds",
@@ -33,10 +27,17 @@ const run = async () => {
       demandOption: true,
       describe: "Hexadecimal difficulty target (32 chars)",
     })
-    .option("team", {
-      alias: "T",
+    .option("player", {
+      alias: "p",
       type: "string",
-      describe: "Optional three uppercase letters",
+      demandOption: true,
+      describe: "Three uppercase letters (e.g., ABC)",
+    })
+    .option("team", {
+      alias: "t",
+      type: "string",
+      demandOption: true,
+      describe: "Three uppercase letters (e.g., ABC)",
     })
     .option("index", {
       alias: "i",
@@ -68,13 +69,13 @@ const run = async () => {
   let nonce = 0;
   let hash = "";
   while (true) {
-    hash = Block.calculateHash(
+    hash = Block.calculateHash({
       previousHash,
       previousTimestamp,
       player,
       team,
       nonce,
-    );
+    });
     if (Difficulty.isDifficultyMet(hash, difficultyTarget)) {
       break;
     }
@@ -87,13 +88,10 @@ const run = async () => {
     hash: hash,
     previousHash: previousHash,
     player: player,
+    team: team,
     timestamp: Timestamp.now(),
     nonce: nonce,
   };
-
-  if (team) {
-    block.team = team;
-  }
 
   // Print the JSON
   console.log(JSON.stringify(block, null, 2));
