@@ -1,13 +1,20 @@
 import { Game } from "./game/game";
 import { createServer } from "./server";
 import { Data } from "./data/data";
+import { Broadcast } from "./broadcast/broadcast";
 
 // Start server
 const start = async () => {
   // Load player chains from data directory
   const chains = await Data.loadAllChains("data");
-  const game = new Game(chains);
-  const fastify = await createServer(game, {
+
+  // start game and broadcast
+  const broadcast = new Broadcast();
+  const game = new Game();
+  game.setChains(chains);
+  game.setBroadcast(broadcast);
+
+  const fastify = createServer(game, broadcast, {
     gitHash: process.env.GIT_HASH,
   });
 

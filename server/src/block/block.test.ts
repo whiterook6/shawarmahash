@@ -61,7 +61,7 @@ describe("Block", () => {
     it("It can get a random number", () => {
       // The hash "fffffdbf53e2c47ca9d00e4603facdbd" has last 8 chars "03facdbd"
       const block = Block.Faker.one({
-        hash: "fffffdbf53e2c47ca9d00e4603facdbd"
+        hash: "fffffdbf53e2c47ca9d00e4603facdbd",
       });
       expect(Block.getLikelihood(block)).toBeCloseTo(0.0155, 4);
     });
@@ -69,7 +69,7 @@ describe("Block", () => {
     it("Handles hash with minimum normalized value (all zeros)", () => {
       // Hash ending in "00000000" normalizes to 0.0
       const block = Block.Faker.one({
-        hash: "1234567890abcdef12345678900000000"
+        hash: "1234567890abcdef12345678900000000",
       });
       const likelihood = Block.getLikelihood(block);
       expect(likelihood).toBe(0);
@@ -78,7 +78,7 @@ describe("Block", () => {
     it("Handles hash with maximum normalized value (all fs)", () => {
       // Hash ending in "ffffffff" normalizes to exactly 1.0
       const block = Block.Faker.one({
-        hash: "1234567890abcdef1234567890ffffffff"
+        hash: "1234567890abcdef1234567890ffffffff",
       });
       const likelihood = Block.getLikelihood(block);
       expect(likelihood).toBe(1);

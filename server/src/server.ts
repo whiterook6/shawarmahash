@@ -4,18 +4,23 @@ import Fastify, { FastifyReply, FastifyRequest } from "fastify";
 import { errorHandler } from "./error/errors";
 import { Game } from "./game/game";
 import { Miner } from "./miner/miner";
+import { Broadcast, Message } from "./broadcast/broadcast";
 
 export type Options = {
   gitHash?: string;
 };
 
-export async function createServer(game: Game, options: Options = {}) {
+export function createServer(
+  game: Game,
+  broadcast: Broadcast,
+  options: Options = {},
+) {
   const fastify = Fastify({
     logger: true,
   });
 
-  await fastify.register(helmet);
-  await fastify.register(rateLimit, {
+  fastify.register(helmet);
+  fastify.register(rateLimit, {
     max: 100,
     timeWindow: "1m",
   });
@@ -233,6 +238,28 @@ export async function createServer(game: Game, options: Options = {}) {
       return reply.status(200).send(block);
     },
   );
+
+  // GET /events: Server-Sent Events endpoint
+  fastify.get("/events", async (_: FastifyRequest, reply: FastifyReply) => {
+    // Set SSE headers
+    reply.raw.setHeader("Content-Type", "text/event-stream");
+    reply.raw.setHeader("Cache-Control", "no-cache");
+    reply.raw.setHeader("Connection", "keep-alive");
+
+    const unsubscribe = broadcast.subscribe({
+      send: (data: Message) => {
+        reply.raw.write(`data: ${JSON.stringify(data)}\n\n`);
+      },
+      close: () => {
+        reply.raw.end();
+      },
+    });
+
+    // Clean up on client disconnect
+    reply.raw.on("close", () => {
+      unsubscribe();
+    });
+  });
 
   return fastify;
 }

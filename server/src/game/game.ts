@@ -6,6 +6,7 @@ import { Data } from "../data/data";
 import { Difficulty } from "../difficulty/difficulty";
 import { PlayerScore, Score, TeamScore } from "../score/score";
 import { Timestamp } from "../timestamp/timestamp";
+import { Broadcast } from "../broadcast/broadcast";
 
 export type ChainState = {
   recent: Block[];
@@ -13,7 +14,16 @@ export type ChainState = {
 };
 
 export class Game {
-  constructor(private readonly chains: Map<string, Chain>) {}
+  private chains: Map<string, Chain> = new Map<string, Chain>();
+  private broadcast: Broadcast | undefined = undefined;
+
+  setBroadcast(broadcast: Broadcast): void {
+    this.broadcast = broadcast;
+  }
+
+  setChains(chains: Map<string, Chain>): void {
+    this.chains = chains;
+  }
 
   getChainState(player: string): ChainState {
     const chain = this.chains.get(player);

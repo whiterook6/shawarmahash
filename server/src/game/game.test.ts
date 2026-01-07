@@ -28,7 +28,8 @@ describe("Game", () => {
           };
         }),
       );
-      const game = new Game(chains);
+      const game = new Game();
+      game.setChains(chains);
       const chatBlocks = game.getChat();
       const expectedMessages = [
         "@TIM Hello 9",
@@ -81,7 +82,8 @@ describe("Game", () => {
           };
         }),
       );
-      const game = new Game(chains);
+      const game = new Game();
+      game.setChains(chains);
       expect(game.getPlayerScore("TIM")).toBe(10);
       expect(game.getPlayerScore("ASD")).toBe(5);
     });
