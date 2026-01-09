@@ -258,7 +258,7 @@ export class Game {
 
     // Append to chain and persist to data layer
     await this.appendBlock(newBlock, chain, team);
-    return this.getChainState(player);
+    return this.getChainState(team);
   }
 
   /**
