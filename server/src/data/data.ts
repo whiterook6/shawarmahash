@@ -5,8 +5,15 @@ import { join } from "path";
 import { Chain } from "../chain/chain";
 import { Block } from "../block/block";
 
-export const Data = {
-  loadChain: async (filePath: string): Promise<Chain> => {
+export class Data {
+  private dataDirectory: string;
+
+  constructor(dataDirectory: string) {
+    this.dataDirectory = dataDirectory;
+  }
+
+  async loadChain(filename: string): Promise<Chain> {
+    const filePath = join(this.dataDirectory, filename);
     return new Promise((resolve, reject) => {
       const chain: Chain = [];
       const fileStream = createReadStream(filePath, { encoding: "utf-8" });
@@ -49,15 +56,15 @@ export const Data = {
         );
       });
     });
-  },
+  }
 
-  loadAllChains: async (directoryName: string): Promise<Map<string, Chain>> => {
+  async loadAllChains(): Promise<Map<string, Chain>> {
     let files: string[] = [];
     try {
-      files = await readdir(directoryName);
+      files = await readdir(this.dataDirectory);
     } catch (error) {
       throw new Error(
-        `Failed to read data directory: ${directoryName}: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to read data directory: ${this.dataDirectory}: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
 
@@ -66,10 +73,9 @@ export const Data = {
     // Load all chains in parallel using Promise.all
     await Promise.all(
       files.map(async (file) => {
-        const filePath = join(directoryName, file);
         let chain: Chain;
         try {
-          chain = await Data.loadChain(filePath);
+          chain = await this.loadChain(file);
         } catch (error) {
           throw new Error(
             `Failed to load chain for ${file}: ${error instanceof Error ? error.message : String(error)}`,
@@ -87,13 +93,10 @@ export const Data = {
     );
 
     return chains;
-  },
+  }
 
-  createChainFile: async (
-    directoryName: string,
-    team: string,
-  ): Promise<void> => {
-    const dataDir = join(directoryName, "data");
+  async createChainFile(team: string): Promise<void> {
+    const dataDir = join(this.dataDirectory, "data");
     const filePath = join(dataDir, team);
 
     // Ensure data directory exists
@@ -116,18 +119,17 @@ export const Data = {
         `Failed to create chain file: ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
-  },
+  }
 
-  appendBlocks: async (team: string, blocks: Block[]): Promise<void> => {
-    const dataDir = join(process.cwd(), "data");
-    const filePath = join(dataDir, team);
+  async appendBlocks(team: string, blocks: Block[]): Promise<void> {
+    const filePath = join(this.dataDirectory, team);
 
     // Ensure data directory exists
     try {
-      await mkdir(dataDir, { recursive: true });
+      await mkdir(this.dataDirectory, { recursive: true });
     } catch (error) {
       throw new Error(
-        `Failed to create data directory: ${dataDir}: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to create data directory: ${this.dataDirectory}: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
 
@@ -154,5 +156,5 @@ export const Data = {
         );
       }
     }
-  },
-};
+  }
+}

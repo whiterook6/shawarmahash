@@ -21,14 +21,13 @@ const run = async () => {
 
   const team = argv.team;
 
-  // Construct file path
+  // Construct data directory path
   const dataDir = join(process.cwd(), "data");
-  const filePath = join(dataDir, team);
 
   // Load chain from file
   let chain: Chain;
   try {
-    chain = await Data.loadChain(filePath);
+    chain = await new Data(dataDir).loadChain(team);
   } catch (error) {
     console.error(
       `Error loading chain file: ${error instanceof Error ? error.message : String(error)}`,

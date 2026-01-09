@@ -17,9 +17,14 @@ export class Game {
   /** Map teams to chains */
   private chains: Map<string, Chain> = new Map<string, Chain>();
   private broadcast: Broadcast | undefined = undefined;
+  private data: Data | undefined = undefined;
 
   setBroadcast(broadcast: Broadcast): void {
     this.broadcast = broadcast;
+  }
+
+  setData(data: Data): void {
+    this.data = data;
   }
 
   setChains(chains: Map<string, Chain>): void {
@@ -289,7 +294,7 @@ export class Game {
     this.chains.set(team, chain);
 
     // Save genesis block to file
-    await Data.appendBlocks(team, [genesisBlock]);
+    await this.data!.appendBlocks(team, [genesisBlock]);
 
     // TODO: Add callbacks here if needed (e.g., onPlayerCreated callback)
 
@@ -309,7 +314,7 @@ export class Game {
     chain.push(newBlock);
 
     // Persist block to file
-    await Data.appendBlocks(team, [newBlock]);
+    await this.data!.appendBlocks(team, [newBlock]);
 
     // TODO: Add callbacks here if needed (e.g., onBlockAppended callback)
   }

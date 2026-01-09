@@ -2,15 +2,20 @@ import { Game } from "./game/game";
 import { createServer } from "./server";
 import { Data } from "./data/data";
 import { Broadcast } from "./broadcast/broadcast";
+import { join } from "path";
 
 // Start server
 const start = async () => {
   // Load player chains from data directory
-  const chains = await Data.loadAllChains("data");
+  const data = new Data(join(process.cwd(), "data"));
+  const chains = await data.loadAllChains();
 
   // start game and broadcast
   const broadcast = new Broadcast();
   const game = new Game();
+
+  // dependency injection
+  game.setData(data);
   game.setChains(chains);
   game.setBroadcast(broadcast);
 
