@@ -228,7 +228,7 @@ export class Game {
     });
     if (hash !== newBlockhash) {
       throw new ValidationError({
-        blockHash: [`Invalid block hash: ${hash} !== ${newBlockhash}`],
+        blockHash: [`Invalid block hash: ${hash}  !== ${newBlockhash}`],
       });
     }
 

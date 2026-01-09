@@ -6,6 +6,12 @@
   "author": "whiterook6",
   "type": "module",
   "main": "dist/index.js",
+  "lint-staged": {
+    "src/**/*.ts": [
+      "eslint src --fix",
+      "prettier --write src"
+    ]
+  },
   "prettier": {
     "semi": true,
     "singleQuote": false,

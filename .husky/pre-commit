@@ -1,0 +1,4 @@
+# Only run lint-staged if api-server files are staged
+if git diff --cached --name-only --diff-filter=ACM | grep -q "^server/"; then
+  cd server && npx lint-staged && npm run typecheck
+fi
