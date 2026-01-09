@@ -1,5 +1,6 @@
 import { faker } from "@faker-js/faker";
 import crypto from "crypto";
+import seedrandom from "seedrandom";
 import { Difficulty } from "../difficulty/difficulty";
 import { Timestamp } from "../timestamp/timestamp";
 
@@ -95,6 +96,10 @@ export const Block = {
     const last8Digits = block.hash.slice(-8);
     const number = parseInt(last8Digits, 16);
     return number / 0xffffffff;
+  },
+
+  getRNG: (block: Block): seedrandom.PRNG => {
+    return seedrandom.alea(block.hash);
   },
 
   Faker: {
