@@ -12,11 +12,11 @@ const run = async () => {
   const argv = await yargs(hideBin(process.argv))
     .scriptName("generateChain")
     .usage("$0 [options]")
-    .option("playerName", {
-      alias: "p",
+    .option("team", {
+      alias: "t",
       type: "string",
       demandOption: true,
-      describe: "Player name",
+      describe: "Team name",
     })
     .option("numBlocks", {
       alias: "n",
@@ -24,10 +24,11 @@ const run = async () => {
       demandOption: true,
       describe: "Number of blocks to generate",
     })
-    .option("team", {
-      alias: "t",
+    .option("player", {
+      alias: "p",
       type: "string",
-      describe: "Optional team name",
+      demandOption: true,
+      describe: "Player name",
     })
     .option("message", {
       alias: "m",
@@ -44,16 +45,19 @@ const run = async () => {
     .help()
     .parse();
 
-  const playerName = argv.playerName;
-  const numBlocks = argv.numBlocks;
+  const player = argv.player;
   const team = argv.team;
+  const numBlocks = argv.numBlocks;
 
   console.log(
-    `Generating chain for player "${playerName}" with ${numBlocks} blocks${team ? ` (team: ${team})` : ""}...`,
+    `Generating chain for player "${player}" in team "${team}" with ${numBlocks} blocks...`,
   );
 
   // Create genesis block
-  const genesisBlock = Block.createGenesisBlock(playerName);
+  const genesisBlock = Block.createGenesisBlock({
+    player,
+    team,
+  });
   const chain: Chain = [genesisBlock];
 
   console.log(`Created genesis block (hash: ${genesisBlock.hash})`);
@@ -61,7 +65,11 @@ const run = async () => {
   // Mine remaining blocks
   for (let i = 1; i < numBlocks; i++) {
     const message = argv.message ? faker.lorem.sentence() : undefined;
-    const newBlock = Miner.mineBlock(playerName, team, chain, message);
+    const newBlock = Miner.mineBlock(chain, {
+      player,
+      team,
+      message,
+    });
     chain.push(newBlock);
     console.log(`Mined block ${i + 1}/${numBlocks} (hash: ${newBlock.hash})`);
   }
@@ -74,7 +82,7 @@ const run = async () => {
 
   // Write chain to file
   const dataDir = join(process.cwd(), "data");
-  const filePath = join(dataDir, playerName);
+  const filePath = join(dataDir, team);
 
   // Ensure data directory exists
   try {

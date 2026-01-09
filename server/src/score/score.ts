@@ -12,51 +12,52 @@ export type TeamScore = {
 
 export const Score = {
   /**
-   * Currently, a chain only has one player.
+   * Currently, a chain only has one team.
    */
-  getPlayerScore: (chain: Chain): number => {
+  getTeamScore: (chain: Chain): number => {
     return chain.length;
   },
 
   /**
-   * A single chain may have multiple teams, so this filters the chain by team then counts the number of blocks.
+   * A single chain may have multiple players, so this filters the chain by player then counts the number of blocks.
    */
-  getTeamScore: (chain: Chain, team: string): number => {
-    return chain.filter((block) => block.team === team).length;
+  getPlayerScore: (chain: Chain, player: string): number => {
+    return chain.filter((block) => block.player === player).length;
   },
 
   /**
-   * Currently, a chain only has one player.
+   * Currently, a chain only has one team.
    */
-  getAllPlayerScores: (chain: Chain): PlayerScore[] => {
+  getAllTeamScores: (chain: Chain): TeamScore[] => {
     if (chain.length === 0) {
       return [];
     }
     return [
       {
-        player: chain[0].player,
+        team: chain[0].team,
         score: chain.length,
       },
     ];
   },
 
   /**
-   * Collects all the team names from this chain then counts their blocks.
+   * Collects all the player names from this chain then counts their blocks.
    */
-  getAllTeamScores: (chain: Chain): TeamScore[] => {
+  getAllPlayerScores: (chain: Chain): PlayerScore[] => {
     if (chain.length === 0) {
       return [];
     }
 
-    const teamScores = new Map<string, number>();
+    const playerScores = new Map<string, number>();
     for (const block of chain) {
-      if (block.team) {
-        const current = teamScores.get(block.team) || 0;
-        teamScores.set(block.team, current + 1);
+      if (block.player) {
+        const current = playerScores.get(block.player) || 0;
+        playerScores.set(block.player, current + 1);
       }
     }
-    return Array.from(teamScores.entries())
-      .map(([team, score]) => ({ team, score }))
-      .sort((a, b) => a.team.localeCompare(b.team));
+
+    return Array.from(playerScores.entries())
+      .map(([player, score]) => ({ player, score }))
+      .sort((a, b) => a.player.localeCompare(b.player));
   },
 };

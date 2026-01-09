@@ -3,6 +3,7 @@ import { Block } from "../block/block";
 import { Chain } from "./chain";
 import expect from "expect";
 import { Difficulty } from "../difficulty/difficulty";
+import { Miner } from "../miner/miner";
 
 describe("Chain", () => {
   describe("getAverageMiningInterval", () => {
@@ -32,11 +33,12 @@ describe("Chain", () => {
 
   describe("verifyGenesisBlock", () => {
     const validGenesisBlock: Block = {
-      hash: "fffffdbf53e2c47ca9d00e4603facdbd",
+      hash: "ffffff443df8467b46485551c714a9a8",
       previousHash: "ffffffffffffffffffffffffffffffff",
-      player: "MIT",
-      timestamp: 1767569774,
-      nonce: 1065274,
+      player: "TIM",
+      team: "VNC",
+      timestamp: 1767896467,
+      nonce: 693105,
       index: 0,
     };
 
@@ -67,19 +69,27 @@ describe("Chain", () => {
     });
 
     it("it returns a verification error if the genesis block does not meet the difficulty requirement", () => {
-      const genesisBlock: Block = {
+      const { hash, nonce } = Miner.findHash({
+        difficultyTarget: "ff000000000000000000000000000000",
+        previousHash: "ffffffffffffffffffffffffffffffff",
+        previousTimestamp: 0,
+        player: "TIM",
+        team: "VNC",
+      });
+      const easyGenesisBlock: Block = {
         previousHash: "ffffffffffffffffffffffffffffffff",
         timestamp: 0,
         player: "TIM",
-        nonce: 14,
+        team: "VNC",
+        nonce,
         index: 0,
-        hash: "ffa0670707e9bcedaf9b2a4089f79df5",
+        hash,
       };
 
-      const chain = [genesisBlock];
+      const chain = [easyGenesisBlock];
       const verificationError = Chain.verifyChain(chain);
       expect(verificationError).toBe(
-        `Genesis block does not meet difficulty requirement: ${genesisBlock.hash} does not start with ${Difficulty.DEFAULT_DIFFICULTY_HASH}`,
+        `Genesis block does not meet difficulty requirement: ${hash} does not start with ${Difficulty.DEFAULT_DIFFICULTY_HASH}`,
       );
     });
   });
@@ -87,93 +97,94 @@ describe("Chain", () => {
   describe("verifyChain", () => {
     const validChain = [
       {
-        hash: "fffffdbf53e2c47ca9d00e4603facdbd",
+        hash: "ffffff443df8467b46485551c714a9a8",
         previousHash: "ffffffffffffffffffffffffffffffff",
-        player: "MIT",
-        timestamp: 1767569774,
-        nonce: 1065274,
+        player: "TIM",
+        team: "VNC",
+        timestamp: 1767896467,
+        nonce: 693105,
         index: 0,
       },
       {
-        hash: "fffffcc784b6d995a1c0394312f1e701",
-        previousHash: "fffffdbf53e2c47ca9d00e4603facdbd",
-        player: "MIT",
-        timestamp: 1767569775,
-        nonce: 610524,
+        hash: "fffffe8520c6ed793c74512ab1510bb9",
+        previousHash: "ffffff443df8467b46485551c714a9a8",
+        player: "TIM",
+        team: "VNC",
+        timestamp: 1767896467,
+        nonce: 73031,
         index: 1,
-        team: "TIM",
       },
       {
-        hash: "fffffc3ecda1024865bf96c226eecd70",
-        previousHash: "fffffcc784b6d995a1c0394312f1e701",
-        player: "MIT",
-        timestamp: 1767569775,
-        nonce: 375830,
+        hash: "fffff7dea3b59e78c83949b73c33efca",
+        previousHash: "fffffe8520c6ed793c74512ab1510bb9",
+        player: "TIM",
+        team: "VNC",
+        timestamp: 1767896468,
+        nonce: 1214541,
         index: 2,
-        team: "TIM",
       },
       {
-        hash: "fffff0c90938e64739fe3aa964dfe887",
-        previousHash: "fffffc3ecda1024865bf96c226eecd70",
-        player: "MIT",
-        timestamp: 1767569779,
-        nonce: 4152779,
+        hash: "fffffe10c03a11b234b2618a9dfb789d",
+        previousHash: "fffff7dea3b59e78c83949b73c33efca",
+        player: "TIM",
+        team: "VNC",
+        timestamp: 1767896469,
+        nonce: 1037970,
         index: 3,
-        team: "TIM",
       },
       {
-        hash: "fffff3bbda1760827f461c9b3eb39945",
-        previousHash: "fffff0c90938e64739fe3aa964dfe887",
-        player: "MIT",
-        timestamp: 1767569780,
-        nonce: 950213,
+        hash: "fffff1164d054848aeb6b92e27ba0422",
+        previousHash: "fffffe10c03a11b234b2618a9dfb789d",
+        player: "TIM",
+        team: "VNC",
+        timestamp: 1767896470,
+        nonce: 355083,
         index: 4,
-        team: "TIM",
       },
       {
-        hash: "fffff86ec084f21ee3cc501d51068a39",
-        previousHash: "fffff3bbda1760827f461c9b3eb39945",
-        player: "MIT",
-        timestamp: 1767569780,
-        nonce: 48536,
+        hash: "fffff5fb19174607834e26425baebe80",
+        previousHash: "fffff1164d054848aeb6b92e27ba0422",
+        player: "TIM",
+        team: "VNC",
+        timestamp: 1767896470,
+        nonce: 285686,
         index: 5,
-        team: "TIM",
       },
       {
-        hash: "fffffea261ccda7947c2a1ea034ce6b8",
-        previousHash: "fffff86ec084f21ee3cc501d51068a39",
-        player: "MIT",
-        timestamp: 1767569780,
-        nonce: 29449,
+        hash: "fffff0a565e0cee2e197cda11f6455f2",
+        previousHash: "fffff5fb19174607834e26425baebe80",
+        player: "TIM",
+        team: "VNC",
+        timestamp: 1767896470,
+        nonce: 280008,
         index: 6,
-        team: "TIM",
       },
       {
-        hash: "fffff574d7ab5d00c98d76f2fb496be1",
-        previousHash: "fffffea261ccda7947c2a1ea034ce6b8",
-        player: "MIT",
-        timestamp: 1767569780,
-        nonce: 1057864,
+        hash: "fffffbd87ab840ac03ac86075c75334b",
+        previousHash: "fffff0a565e0cee2e197cda11f6455f2",
+        player: "TIM",
+        team: "VNC",
+        timestamp: 1767896472,
+        nonce: 2241809,
         index: 7,
-        team: "TIM",
       },
       {
-        hash: "fffffcf3cfb70ff519768e1a713a6e87",
-        previousHash: "fffff574d7ab5d00c98d76f2fb496be1",
-        player: "MIT",
-        timestamp: 1767569781,
-        nonce: 1156596,
+        hash: "fffff8cef8af439768ebd6fdda222c3f",
+        previousHash: "fffffbd87ab840ac03ac86075c75334b",
+        player: "TIM",
+        team: "VNC",
+        timestamp: 1767896474,
+        nonce: 2270105,
         index: 8,
-        team: "TIM",
       },
       {
-        hash: "fffff374897ef8847073ced021f52a67",
-        previousHash: "fffffcf3cfb70ff519768e1a713a6e87",
-        player: "MIT",
-        timestamp: 1767569782,
-        nonce: 381243,
+        hash: "fffff88e2c52890d1ec746f603c90e9c",
+        previousHash: "fffff8cef8af439768ebd6fdda222c3f",
+        player: "TIM",
+        team: "VNC",
+        timestamp: 1767896474,
+        nonce: 404051,
         index: 9,
-        team: "TIM",
       },
     ];
 
@@ -225,15 +236,16 @@ describe("Chain", () => {
     });
 
     it("It returns a verification error if a block does not meet the difficulty requirement", () => {
-      const block = {
-        index: 4,
-        hash: "ffeebc32413768b27ddedf457a1d4717", // difficulty too low
-        previousHash: "fffff0c90938e64739fe3aa964dfe887",
-        player: "MIT",
-        timestamp: 1767570822,
-        nonce: 86,
-        team: "TIM",
-      };
+      const block = { ...validChain[4] };
+      const { hash, nonce } = Miner.findHash({
+        difficultyTarget: "ff000000000000000000000000000000",
+        previousHash: block.previousHash,
+        previousTimestamp: validChain[3].timestamp,
+        player: block.player,
+        team: block.team,
+      });
+      block.hash = hash;
+      block.nonce = nonce;
 
       const chain = validChain.slice(0, 4).map((block) => ({ ...block }));
       chain.push(block);

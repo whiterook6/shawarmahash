@@ -4,39 +4,30 @@ import { Block } from "./block";
 
 describe("Block", () => {
   describe("calculateHash", () => {
-    it("It can calculate a hash", () => {
-      const expectedHash = "fffff6e886f39c1b3b013ba831fab7b0";
-      const previousHash = "fffff49f4553b0d3232ba598d4e36e8f";
-      const actualHash = Block.calculateHash(
-        previousHash,
-        1767569572,
-        "TIM",
-        undefined,
-        1063469,
-      );
-      expect(actualHash).toEqual(expectedHash);
-    });
-
     it("It can calculate a hash with a team", () => {
       const expectedHash = "fffff86ec084f21ee3cc501d51068a39";
       const previousHash = "fffff3bbda1760827f461c9b3eb39945";
-      const actualHash = Block.calculateHash(
+      const actualHash = Block.calculateHash({
         previousHash,
-        1767569780,
-        "MIT",
-        "TIM",
-        48536,
-      );
+        previousTimestamp: 1767569780,
+        player: "MIT",
+        team: "TIM",
+        nonce: 48536,
+      });
       expect(actualHash).toEqual(expectedHash);
     });
   });
 
   describe("createGenesisBlock", () => {
     it("It can create a genesis block", () => {
-      const genesisBlock = Block.createGenesisBlock("AAA");
+      const genesisBlock = Block.createGenesisBlock({
+        player: "AAA",
+        team: "BBB",
+      });
       expect(genesisBlock).toEqual(
         expect.objectContaining({
           player: "AAA",
+          team: "BBB",
           hash: expect.any(String),
           previousHash: Block.GENESIS_PREVIOUS_HASH,
           index: 0,
@@ -46,13 +37,13 @@ describe("Block", () => {
       );
 
       const expectedHash = genesisBlock.hash;
-      const toEqualHash = Block.calculateHash(
-        Block.GENESIS_PREVIOUS_HASH,
-        0,
-        "AAA",
-        undefined,
-        genesisBlock.nonce,
-      );
+      const toEqualHash = Block.calculateHash({
+        previousHash: Block.GENESIS_PREVIOUS_HASH,
+        previousTimestamp: 0,
+        player: "AAA",
+        team: "BBB",
+        nonce: genesisBlock.nonce,
+      });
       expect(expectedHash).toEqual(toEqualHash);
     });
   });

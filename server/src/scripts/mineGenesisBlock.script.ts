@@ -14,9 +14,10 @@ const run = async () => {
       describe: "Three uppercase letters (e.g., ABC)",
     })
     .option("team", {
-      alias: "T",
+      alias: "t",
       type: "string",
-      describe: "Optional three uppercase letters",
+      demandOption: true,
+      describe: "Three uppercase letters (e.g., ABC)",
     })
     .help()
     .parse();
@@ -28,7 +29,10 @@ const run = async () => {
     `Generating genesis block for player "${player}"${team ? ` (team: ${team})` : ""}...`,
   );
 
-  const genesisBlock = Block.createGenesisBlock(player, team);
+  const genesisBlock = Block.createGenesisBlock({
+    player,
+    team,
+  });
 
   // Print the JSON
   console.log(JSON.stringify(genesisBlock, null, 2));

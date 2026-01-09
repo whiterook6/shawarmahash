@@ -91,10 +91,10 @@ export const Data = {
 
   createChainFile: async (
     directoryName: string,
-    player: string,
+    team: string,
   ): Promise<void> => {
     const dataDir = join(directoryName, "data");
-    const filePath = join(dataDir, player);
+    const filePath = join(dataDir, team);
 
     // Ensure data directory exists
     try {
@@ -118,9 +118,9 @@ export const Data = {
     }
   },
 
-  appendBlocks: async (player: string, blocks: Block[]): Promise<void> => {
+  appendBlocks: async (team: string, blocks: Block[]): Promise<void> => {
     const dataDir = join(process.cwd(), "data");
-    const filePath = join(dataDir, player);
+    const filePath = join(dataDir, team);
 
     // Ensure data directory exists
     try {
@@ -137,14 +137,13 @@ export const Data = {
         const blockData: Block = {
           hash: block.hash,
           previousHash: block.previousHash,
+          player: block.player,
+          team: block.team,
           timestamp: block.timestamp,
           nonce: block.nonce,
           index: block.index,
-          player: block.player,
         };
-        if (block.team) {
-          blockData.team = block.team;
-        }
+
         if (block.message) {
           blockData.message = block.message;
         }

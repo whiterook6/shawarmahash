@@ -14,6 +14,7 @@ export type ChainState = {
 };
 
 export class Game {
+  /** Map teams to chains */
   private chains: Map<string, Chain> = new Map<string, Chain>();
   private broadcast: Broadcast | undefined = undefined;
 
@@ -25,8 +26,8 @@ export class Game {
     this.chains = chains;
   }
 
-  getChainState(player: string): ChainState {
-    const chain = this.chains.get(player);
+  getChainState(team: string): ChainState {
+    const chain = this.chains.get(team);
     if (!chain) {
       return {
         recent: [],
@@ -41,26 +42,32 @@ export class Game {
     };
   }
 
-  async createPlayer(
-    player: string,
-    hash: string,
-    nonce: number,
-  ): Promise<{ recent: Block[]; difficulty: string }> {
+  async createTeam({
+    team,
+    player,
+    hash,
+    nonce,
+  }: {
+    team: string;
+    player: string;
+    hash: string;
+    nonce: number;
+  }): Promise<{ recent: Block[]; difficulty: string }> {
     // Check if chain already exists
-    if (this.chains.has(player)) {
+    if (this.chains.has(team)) {
       throw new ValidationError({
-        player: [`Player ${player} already exists`],
+        team: [`Team ${team} already exists`],
       });
     }
 
     // Validate genesis block hash
-    const expectedHash = Block.calculateHash(
-      Block.GENESIS_PREVIOUS_HASH,
-      0, // previous timestamp is 0 for genesis block
+    const expectedHash = Block.calculateHash({
+      previousHash: Block.GENESIS_PREVIOUS_HASH,
+      previousTimestamp: 0,
       player,
-      undefined, // no team for genesis block
+      team,
       nonce,
-    );
+    });
 
     if (hash !== expectedHash) {
       throw new ValidationError({
@@ -77,58 +84,55 @@ export class Game {
       });
     }
 
-    await this.initializePlayerChain(player, hash, nonce);
+    await this.initializeTeamChain({
+      player,
+      team,
+      hash,
+      nonce,
+    });
 
     // Return the recent chain state
-    return this.getChainState(player);
-  }
-
-  getPlayerTeam(player: string): string | undefined {
-    const chain = this.chains.get(player);
-    if (!chain) {
-      throw new NotFoundError(`Player ${player} not found`);
-    }
-    return chain[chain.length - 1].team;
-  }
-
-  getPlayerScore(player: string): number {
-    const chain = this.chains.get(player);
-    if (!chain) {
-      throw new NotFoundError(`Player ${player} not found`);
-    }
-    return Score.getPlayerScore(chain);
+    return this.getChainState(team);
   }
 
   getTeamScore(team: string): number {
+    const chain = this.chains.get(team);
+    if (!chain) {
+      throw new NotFoundError(`Team ${team} not found`);
+    }
+    return Score.getTeamScore(chain);
+  }
+
+  getPlayerScore(player: string): number {
     let totalScore = 0;
     for (const chain of this.chains.values()) {
-      totalScore += Score.getTeamScore(chain, team);
+      totalScore += Score.getPlayerScore(chain, player);
     }
     return totalScore;
   }
 
-  getAllPlayerScores(): PlayerScore[] {
+  getAllTeamScores(): TeamScore[] {
     return Array.from(this.chains.entries())
-      .map(([player, chain]) => ({
-        player,
-        score: Score.getPlayerScore(chain),
+      .map(([team, chain]) => ({
+        team,
+        score: Score.getTeamScore(chain),
       }))
-      .sort((a, b) => a.player.localeCompare(b.player));
+      .sort((a, b) => a.team.localeCompare(b.team));
   }
 
-  getAllTeamScores(): TeamScore[] {
-    const allTeams = new Map<string, number>();
+  getAllPlayerScores(): PlayerScore[] {
+    const allPlayers = new Map<string, number>();
     for (const chain of this.chains.values()) {
-      const teamScores = Score.getAllTeamScores(chain);
-      for (const teamScore of teamScores) {
-        const current = allTeams.get(teamScore.team) || 0;
-        allTeams.set(teamScore.team, current + teamScore.score);
+      const playerScores = Score.getAllPlayerScores(chain);
+      for (const playerScore of playerScores) {
+        const current = allPlayers.get(playerScore.player) || 0;
+        allPlayers.set(playerScore.player, current + playerScore.score);
       }
     }
 
-    return Array.from(allTeams.entries())
-      .sort(([teamA], [teamB]) => teamA.localeCompare(teamB))
-      .map(([team, score]) => ({ team, score }));
+    return Array.from(allPlayers.entries())
+      .sort(([playerA], [playerB]) => playerA.localeCompare(playerB))
+      .map(([player, score]) => ({ player, score }));
   }
 
   getChat(): Block[] {
@@ -158,35 +162,51 @@ export class Game {
     return allMessages.sort((a, b) => b.timestamp - a.timestamp);
   }
 
-  getTeamPlayers(team: string): string[] {
-    const playerNames = new Set<string>();
-    for (const chain of this.chains.values()) {
-      for (const block of chain) {
-        if (block.team === team) {
-          playerNames.add(block.player);
-        }
+  getPlayerTeam(player: string): string | undefined {
+    const mostRecentPlayerBlock = this.aggregateChains((chain) =>
+      chain.filter((block) => block.player === player),
+    ).reduce((acc: Block | undefined, val: Block) => {
+      if (!acc) {
+        return val;
+      } else if (val.timestamp > acc.timestamp) {
+        return val;
+      } else {
+        return acc;
       }
-    }
-    return Array.from(playerNames).sort((a, b) => a.localeCompare(b));
+    }, undefined);
+
+    return mostRecentPlayerBlock?.team;
   }
 
-  async submitBlock(
-    previousHash: string,
-    player: string,
-    team: string | undefined,
-    nonce: number,
-    providedHash: string,
-    message?: string,
-  ) {
+  getTeamPlayers(team: string): string[] {
+    const chain = this.chains.get(team);
+    if (!chain) {
+      throw new NotFoundError(`Team ${team} not found`);
+    }
+
+    return [...new Set(chain.map((block) => block.player))].sort(
+      (playerA, playerB) => playerA.localeCompare(playerB),
+    );
+  }
+
+  async submitBlock(args: {
+    previousHash: string;
+    player: string;
+    team: string;
+    nonce: number;
+    hash: string;
+    message?: string;
+  }) {
     // Check if chain exists - don't auto-create
-    if (!this.chains.has(player)) {
+    const { previousHash, player, team, nonce, hash, message } = args;
+    if (!this.chains.has(team)) {
       throw new ValidationError({
-        player: [
-          `Player ${player} must initialize their chain before submitting blocks`,
+        team: [
+          `Team ${team} must initialize their chain before submitting blocks`,
         ],
       });
     }
-    const chain = this.chains.get(player)!;
+    const chain = this.chains.get(team)!;
 
     // verify the previous hash is correct
     const previousBlock = chain[chain.length - 1];
@@ -199,16 +219,16 @@ export class Game {
     }
 
     // verify the provided hash is correct
-    const newBlockhash = Block.calculateHash(
-      previousBlock.hash,
-      previousBlock.timestamp,
-      player,
+    const newBlockhash = Block.calculateHash({
       team,
+      player,
+      previousHash: previousBlock.hash,
+      previousTimestamp: previousBlock.timestamp,
       nonce,
-    );
-    if (providedHash !== newBlockhash) {
+    });
+    if (hash !== newBlockhash) {
       throw new ValidationError({
-        blockHash: [`Invalid block hash: ${providedHash} !== ${newBlockhash}`],
+        blockHash: [`Invalid block hash: ${hash} !== ${newBlockhash}`],
       });
     }
 
@@ -226,49 +246,50 @@ export class Game {
     const newBlock: Block = {
       hash: newBlockhash,
       previousHash: previousBlock.hash,
-      player: player,
+      player,
+      team,
       timestamp: Timestamp.now(),
-      nonce: nonce,
+      nonce,
       index: previousBlock.index + 1,
     };
-    if (team) {
-      newBlock.team = team;
-    }
     if (message) {
       newBlock.message = message;
     }
 
     // Append to chain and persist to data layer
-    await this.appendBlock(newBlock, chain, player);
-    return this.getChainState(player);
+    await this.appendBlock(newBlock, chain, team);
+    return this.getChainState(team);
   }
 
   /**
-   * Initializes a new player chain with a genesis block.
-   * This is the single point where player creation happens,
+   * Initializes a new team chain with a genesis block.
+   * This is the single point where team creation happens,
    * making it easy to add callbacks or other logic later.
    */
-  private async initializePlayerChain(
-    player: string,
-    hash: string,
-    nonce: number,
-  ): Promise<Chain> {
+  private async initializeTeamChain(args: {
+    team: string;
+    player: string;
+    hash: string;
+    nonce: number;
+  }): Promise<Chain> {
+    const { player, hash, team, nonce } = args;
     // Create genesis block using provided hash and nonce
     const genesisBlock: Block = {
-      hash: hash,
+      hash,
       previousHash: Block.GENESIS_PREVIOUS_HASH,
-      player: player,
+      player,
+      team,
       timestamp: Timestamp.now(),
-      nonce: nonce,
+      nonce,
       index: 0,
       message: `Are you ready for a story?`,
     };
 
     const chain: Chain = [genesisBlock];
-    this.chains.set(player, chain);
+    this.chains.set(team, chain);
 
     // Save genesis block to file
-    await Data.appendBlocks(player, [genesisBlock]);
+    await Data.appendBlocks(team, [genesisBlock]);
 
     // TODO: Add callbacks here if needed (e.g., onPlayerCreated callback)
 
@@ -283,12 +304,12 @@ export class Game {
   private async appendBlock(
     newBlock: Block,
     chain: Chain,
-    player: string,
+    team: string,
   ): Promise<void> {
     chain.push(newBlock);
 
     // Persist block to file
-    await Data.appendBlocks(player, [newBlock]);
+    await Data.appendBlocks(team, [newBlock]);
 
     // TODO: Add callbacks here if needed (e.g., onBlockAppended callback)
   }
