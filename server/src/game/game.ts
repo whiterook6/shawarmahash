@@ -97,7 +97,12 @@ export class Game {
     });
 
     // Return the recent chain state
-    return this.getChainState(team);
+    const chainState = this.getChainState(team);
+    this.broadcast!.cast({
+      type: "team_created",
+      payload: chainState,
+    });
+    return chainState;
   }
 
   getTeamScore(team: string): number {
@@ -263,7 +268,12 @@ export class Game {
 
     // Append to chain and persist to data layer
     await this.appendBlock(newBlock, chain, team);
-    return this.getChainState(team);
+    const chainState = this.getChainState(team);
+    await this.broadcast!.cast({
+      type: "block_submitted",
+      payload: chainState,
+    });
+    return chainState;
   }
 
   /**
