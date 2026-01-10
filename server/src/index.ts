@@ -1,5 +1,5 @@
 import { Game } from "./game/game";
-import { createServer } from "./server";
+import { createServer } from "./server/server";
 import { Data } from "./data/data";
 import { Broadcast } from "./broadcast/broadcast";
 import { join } from "path";

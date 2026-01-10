@@ -4,10 +4,11 @@ import staticFiles from "@fastify/static";
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
-import { errorHandler } from "./error/errors";
-import { Game } from "./game/game";
-import { Miner } from "./miner/miner";
-import { Broadcast, Message } from "./broadcast/broadcast";
+import { errorHandler } from "../error/errors";
+import { Game } from "../game/game";
+import { Miner } from "../miner/miner";
+import { Broadcast, Message } from "../broadcast/broadcast";
+import { schemas } from "../schemas";
 
 export type Options = {
   gitHash?: string;
@@ -19,7 +20,7 @@ export function createServer(
   options: Options = {},
 ) {
   const fastify = Fastify({
-    logger: true,
+    logger: process.env.NODE_ENV === "production",
   });
 
   fastify.register(helmet, {
@@ -37,25 +38,34 @@ export function createServer(
   fastify.setErrorHandler(errorHandler);
 
   const serverStartTime = new Date();
-  fastify.get("/health", (_: FastifyRequest, reply: FastifyReply) => {
-    const now = new Date();
-    return reply.status(200).send({
-      gitHash: options.gitHash || "unknown",
-      startTime: serverStartTime,
-      now: now,
-      uptime: (now.getTime() - serverStartTime.getTime()) / 1000,
-    });
-  });
+  fastify.get(
+    "/health",
+    schemas.getHealth,
+    (_: FastifyRequest, reply: FastifyReply) => {
+      const now = new Date();
+      return reply.status(200).send({
+        gitHash: options.gitHash || "unknown",
+        startTime: serverStartTime,
+        now: now,
+        uptime: (now.getTime() - serverStartTime.getTime()) / 1000,
+      });
+    },
+  );
 
   // GET /players: get a list of players and their scores (PlayerScore[])
-  fastify.get("/players", (_: FastifyRequest, reply: FastifyReply) => {
-    const playerScores = game.getAllPlayerScores();
-    return reply.status(200).send(playerScores);
-  });
+  fastify.get(
+    "/players",
+    schemas.getPlayers,
+    (_: FastifyRequest, reply: FastifyReply) => {
+      const playerScores = game.getAllPlayerScores();
+      return reply.status(200).send(playerScores);
+    },
+  );
 
   // GET /players/:player/score: get the player's score (PlayerScore)
   fastify.get(
     "/players/:player/score",
+    schemas.getPlayerScore,
     (
       request: FastifyRequest<{
         Params: { player: string };
@@ -73,6 +83,7 @@ export function createServer(
   // GET /players/:player/messages: get the player's messages (PlayerMessages)
   fastify.get(
     "/players/:player/messages",
+    schemas.getPlayerMessages,
     (
       request: FastifyRequest<{
         Params: { player: string };
@@ -85,14 +96,19 @@ export function createServer(
   );
 
   // GET /teams: get the list of teams and their scores (TeamScore[])
-  fastify.get("/teams", (_: FastifyRequest, reply: FastifyReply) => {
-    const teamScores = game.getAllTeamScores();
-    return reply.status(200).send(teamScores);
-  });
+  fastify.get(
+    "/teams",
+    schemas.getTeams,
+    (_: FastifyRequest, reply: FastifyReply) => {
+      const teamScores = game.getAllTeamScores();
+      return reply.status(200).send(teamScores);
+    },
+  );
 
   // GET /teams/:team/score: get the score across all player's chains for the team (TeamScore)
   fastify.get(
     "/teams/:team/score",
+    schemas.getTeamScore,
     (
       request: FastifyRequest<{
         Params: { team: string };
@@ -110,6 +126,7 @@ export function createServer(
   // GET /teams/:team/messages: get the messages in blocks owned by the team (TeamMessages)
   fastify.get(
     "/teams/:team/messages",
+    schemas.getTeamMessages,
     (
       request: FastifyRequest<{
         Params: { team: string };
@@ -124,6 +141,7 @@ export function createServer(
   // GET /teams/:team/players: get the players whose most recent block is owned by the team
   fastify.get(
     "/teams/:team/players",
+    schemas.getTeamPlayers,
     (
       request: FastifyRequest<{
         Params: { team: string };
@@ -138,6 +156,7 @@ export function createServer(
   // POST /teams/:team: create a genesis block for the team using user-provided hash/nonce
   fastify.post(
     "/teams/:team",
+    schemas.createTeam,
     async (
       request: FastifyRequest<{
         Params: { team: string };
@@ -162,6 +181,7 @@ export function createServer(
   // POST /teams/:team/chain: attempt to submit a block to the team's chain
   fastify.post(
     "/teams/:team/chain",
+    schemas.submitBlock,
     async (
       request: FastifyRequest<{
         Params: { team: string };
@@ -200,7 +220,7 @@ export function createServer(
       }>,
       reply: FastifyReply,
     ) => {
-      const chainState = await game.getChainState(request.body.player);
+      const chainState = await game.getChainState(request.body.team);
       const block = Miner.mineBlock(chainState.recent, {
         player: request.body.player,
         team: request.body.team,

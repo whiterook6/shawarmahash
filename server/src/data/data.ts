@@ -96,15 +96,14 @@ export class Data {
   }
 
   async createChainFile(team: string): Promise<void> {
-    const dataDir = join(this.dataDirectory, "data");
-    const filePath = join(dataDir, team);
+    const filePath = join(this.dataDirectory, team);
 
     // Ensure data directory exists
     try {
-      await mkdir(dataDir, { recursive: true });
+      await mkdir(this.dataDirectory, { recursive: true });
     } catch (error) {
       throw new Error(
-        `Failed to create data directory: ${dataDir}: ${error instanceof Error ? error.message : String(error)}`,
+        `Failed to create data directory: ${this.dataDirectory}: ${error instanceof Error ? error.message : String(error)}`,
       );
     }
 

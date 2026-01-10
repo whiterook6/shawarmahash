@@ -269,7 +269,7 @@ export class Game {
     // Append to chain and persist to data layer
     await this.appendBlock(newBlock, chain, team);
     const chainState = this.getChainState(team);
-    await this.broadcast!.cast({
+    this.broadcast!.cast({
       type: "block_submitted",
       payload: chainState,
     });

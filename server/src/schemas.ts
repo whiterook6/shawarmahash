@@ -1,4 +1,21 @@
 export const schemas = {
+  getHealth: {
+    schema: {
+      response: {
+        200: {
+          type: "object",
+          properties: {
+            gitHash: { type: "string" },
+            startTime: { type: "string" },
+            now: { type: "string" },
+            uptime: { type: "number" },
+          },
+          required: ["gitHash", "startTime", "now", "uptime"],
+          additionalProperties: false,
+        },
+      },
+    },
+  },
   getPlayers: {
     schema: {
       response: {
@@ -7,37 +24,23 @@ export const schemas = {
           items: {
             type: "object",
             properties: {
-              player: {
-                type: "string",
-                description: "The name of the player",
-                pattern: "^[A-Z]{3}$",
-              },
-              score: {
-                type: "number",
-                description: "The player's score",
-              },
+              player: { type: "string" },
+              score: { type: "number" },
             },
             required: ["player", "score"],
             additionalProperties: false,
           },
+          additionalItems: false,
         },
       },
     },
   },
   getPlayerScore: {
     schema: {
-      params: {
+      Params: {
         type: "object",
         properties: {
-          player: {
-            type: "string",
-            description: "The name of the player",
-            pattern: "^[A-Z]{3}$",
-            example: "ASD",
-            errorMessage: {
-              pattern: "Player name must be 3 uppercase letters",
-            },
-          },
+          player: { type: "string" },
         },
         required: ["player"],
         additionalProperties: false,
@@ -46,15 +49,8 @@ export const schemas = {
         200: {
           type: "object",
           properties: {
-            player: {
-              type: "string",
-              description: "The name of the player",
-              pattern: "^[A-Z]{3}$",
-            },
-            score: {
-              type: "number",
-              description: "The player's score",
-            },
+            player: { type: "string" },
+            score: { type: "number" },
           },
           required: ["player", "score"],
           additionalProperties: false,
@@ -64,18 +60,10 @@ export const schemas = {
   },
   getPlayerMessages: {
     schema: {
-      params: {
+      Params: {
         type: "object",
         properties: {
-          player: {
-            type: "string",
-            description: "The name of the player",
-            pattern: "^[A-Z]{3}$",
-            example: "ASD",
-            errorMessage: {
-              pattern: "Player name must be 3 uppercase letters",
-            },
-          },
+          player: { type: "string" },
         },
         required: ["player"],
         additionalProperties: false,
@@ -87,8 +75,8 @@ export const schemas = {
             type: "object",
             properties: {
               index: { type: "number" },
-              player: { type: "string", pattern: "^[A-Z]{3}$" },
-              team: { type: "string", pattern: "^[A-Z]{3}$" },
+              player: { type: "string" },
+              team: { type: "string" },
               timestamp: { type: "number" },
               nonce: { type: "number" },
               hash: { type: "string" },
@@ -98,110 +86,16 @@ export const schemas = {
             required: [
               "index",
               "player",
+              "team",
               "timestamp",
               "nonce",
               "hash",
               "previousHash",
+              "message",
             ],
             additionalProperties: false,
           },
-        },
-      },
-    },
-  },
-  getPlayerChain: {
-    schema: {
-      params: {
-        type: "object",
-        properties: {
-          player: {
-            type: "string",
-            description: "The name of the player",
-            pattern: "^[A-Z]{3}$",
-            example: "ASD",
-            errorMessage: {
-              pattern: "Player name must be 3 uppercase letters",
-            },
-          },
-        },
-        required: ["player"],
-        additionalProperties: false,
-      },
-      response: {
-        200: {
-          type: "object",
-          properties: {
-            recent: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  index: { type: "number" },
-                  player: { type: "string", pattern: "^[A-Z]{3}$" },
-                  team: { type: "string", pattern: "^[A-Z]{3}$" },
-                  timestamp: { type: "number" },
-                  nonce: { type: "number" },
-                  hash: { type: "string" },
-                  previousHash: { type: "string" },
-                  message: { type: "string" },
-                },
-                required: [
-                  "index",
-                  "player",
-                  "timestamp",
-                  "nonce",
-                  "hash",
-                  "previousHash",
-                ],
-                additionalProperties: false,
-              },
-            },
-            difficulty: {
-              type: "string",
-              description: "The difficulty target hash prefix",
-            },
-          },
-          required: ["recent", "difficulty"],
-          additionalProperties: false,
-        },
-      },
-    },
-  },
-  getPlayerTeam: {
-    schema: {
-      params: {
-        type: "object",
-        properties: {
-          player: {
-            type: "string",
-            description: "The name of the player",
-            pattern: "^[A-Z]{3}$",
-            example: "ASD",
-            errorMessage: {
-              pattern: "Player name must be 3 uppercase letters",
-            },
-          },
-        },
-        required: ["player"],
-        additionalProperties: false,
-      },
-      response: {
-        200: {
-          type: "object",
-          properties: {
-            player: {
-              type: "string",
-              description: "The name of the player",
-              pattern: "^[A-Z]{3}$",
-            },
-            team: {
-              type: "string",
-              description: "The player's team",
-              pattern: "^[A-Z]{3}$",
-            },
-          },
-          required: ["player"],
-          additionalProperties: false,
+          additionalItems: false,
         },
       },
     },
@@ -214,37 +108,23 @@ export const schemas = {
           items: {
             type: "object",
             properties: {
-              team: {
-                type: "string",
-                description: "The name of the team",
-                pattern: "^[A-Z]{3}$",
-              },
-              score: {
-                type: "number",
-                description: "The team's score",
-              },
+              team: { type: "string" },
+              score: { type: "number" },
             },
             required: ["team", "score"],
             additionalProperties: false,
           },
+          additionalItems: false,
         },
       },
     },
   },
   getTeamScore: {
     schema: {
-      params: {
+      Params: {
         type: "object",
         properties: {
-          team: {
-            type: "string",
-            description: "The name of the team",
-            pattern: "^[A-Z]{3}$",
-            example: "ASD",
-            errorMessage: {
-              pattern: "Team name must be 3 uppercase letters",
-            },
-          },
+          team: { type: "string" },
         },
         required: ["team"],
         additionalProperties: false,
@@ -253,15 +133,8 @@ export const schemas = {
         200: {
           type: "object",
           properties: {
-            team: {
-              type: "string",
-              description: "The name of the team",
-              pattern: "^[A-Z]{3}$",
-            },
-            score: {
-              type: "number",
-              description: "The team's score",
-            },
+            team: { type: "string" },
+            score: { type: "number" },
           },
           required: ["team", "score"],
           additionalProperties: false,
@@ -271,18 +144,10 @@ export const schemas = {
   },
   getTeamMessages: {
     schema: {
-      params: {
+      Params: {
         type: "object",
         properties: {
-          team: {
-            type: "string",
-            description: "The name of the team",
-            pattern: "^[A-Z]{3}$",
-            example: "ASD",
-            errorMessage: {
-              pattern: "Team name must be 3 uppercase letters",
-            },
-          },
+          team: { type: "string" },
         },
         required: ["team"],
         additionalProperties: false,
@@ -294,8 +159,8 @@ export const schemas = {
             type: "object",
             properties: {
               index: { type: "number" },
-              player: { type: "string", pattern: "^[A-Z]{3}$" },
-              team: { type: "string", pattern: "^[A-Z]{3}$" },
+              player: { type: "string" },
+              team: { type: "string" },
               timestamp: { type: "number" },
               nonce: { type: "number" },
               hash: { type: "string" },
@@ -305,31 +170,26 @@ export const schemas = {
             required: [
               "index",
               "player",
+              "team",
               "timestamp",
               "nonce",
               "hash",
               "previousHash",
+              "message",
             ],
             additionalProperties: false,
           },
+          additionalItems: false,
         },
       },
     },
   },
   getTeamPlayers: {
     schema: {
-      params: {
+      Params: {
         type: "object",
         properties: {
-          team: {
-            type: "string",
-            description: "The name of the team",
-            pattern: "^[A-Z]{3}$",
-            example: "ASD",
-            errorMessage: {
-              pattern: "Team name must be 3 uppercase letters",
-            },
-          },
+          team: { type: "string" },
         },
         required: ["team"],
         additionalProperties: false,
@@ -339,48 +199,30 @@ export const schemas = {
           type: "array",
           items: {
             type: "string",
-            pattern: "^[A-Z]{3}$",
           },
+          additionalItems: false,
         },
       },
     },
   },
-  createPlayer: {
+  createTeam: {
     schema: {
-      params: {
+      Params: {
         type: "object",
         properties: {
-          player: {
-            type: "string",
-            description: "The name of the player",
-            pattern: "^[A-Z]{3}$",
-            example: "ASD",
-            errorMessage: {
-              pattern: "Player name must be 3 uppercase letters",
-            },
-          },
+          team: { type: "string" },
         },
-        required: ["player"],
+        required: ["team"],
         additionalProperties: false,
       },
-      body: {
+      Body: {
         type: "object",
         properties: {
-          hash: {
-            type: "string",
-            description: "The hash of the genesis block",
-            pattern: "^[0-9a-f]{32}$",
-            errorMessage: {
-              pattern: "Hash must be a 32-character hexadecimal string",
-            },
-          },
-          nonce: {
-            type: "number",
-            description: "The nonce used to generate the hash",
-            minimum: 0,
-          },
+          player: { type: "string" },
+          hash: { type: "string" },
+          nonce: { type: "number" },
         },
-        required: ["hash", "nonce"],
+        required: ["player", "hash", "nonce"],
         additionalProperties: false,
       },
       response: {
@@ -393,8 +235,8 @@ export const schemas = {
                 type: "object",
                 properties: {
                   index: { type: "number" },
-                  player: { type: "string", pattern: "^[A-Z]{3}$" },
-                  team: { type: "string", pattern: "^[A-Z]{3}$" },
+                  player: { type: "string" },
+                  team: { type: "string" },
                   timestamp: { type: "number" },
                   nonce: { type: "number" },
                   hash: { type: "string" },
@@ -404,6 +246,7 @@ export const schemas = {
                 required: [
                   "index",
                   "player",
+                  "team",
                   "timestamp",
                   "nonce",
                   "hash",
@@ -411,11 +254,9 @@ export const schemas = {
                 ],
                 additionalProperties: false,
               },
+              additionalItems: false,
             },
-            difficulty: {
-              type: "string",
-              description: "The difficulty target hash prefix",
-            },
+            difficulty: { type: "string" },
           },
           required: ["recent", "difficulty"],
           additionalProperties: false,
@@ -425,61 +266,24 @@ export const schemas = {
   },
   submitBlock: {
     schema: {
-      params: {
+      Params: {
         type: "object",
         properties: {
-          player: {
-            type: "string",
-            description: "The name of the player",
-            pattern: "^[A-Z]{3}$",
-            example: "ASD",
-            errorMessage: {
-              pattern: "Player name must be 3 uppercase letters",
-            },
-          },
+          team: { type: "string" },
         },
-        required: ["player"],
+        required: ["team"],
         additionalProperties: false,
       },
-      body: {
+      Body: {
         type: "object",
         properties: {
-          previousHash: {
-            type: "string",
-            description: "The hash of the previous block",
-            pattern: "^[0-9a-f]{32}$",
-            errorMessage: {
-              pattern:
-                "Previous hash must be a 32-character hexadecimal string",
-            },
-          },
-          team: {
-            type: "string",
-            description: "The name of the team",
-            pattern: "^[A-Z]{3}$",
-            errorMessage: {
-              pattern: "Team name must be 3 uppercase letters",
-            },
-          },
-          nonce: {
-            type: "number",
-            description: "The nonce used to generate the hash",
-            minimum: 0,
-          },
-          hash: {
-            type: "string",
-            description: "The hash of the block",
-            pattern: "^[0-9a-f]{32}$",
-            errorMessage: {
-              pattern: "Hash must be a 32-character hexadecimal string",
-            },
-          },
-          message: {
-            type: "string",
-            description: "An optional message associated with the block",
-          },
+          previousHash: { type: "string" },
+          player: { type: "string" },
+          nonce: { type: "number" },
+          hash: { type: "string" },
+          message: { type: "string" },
         },
-        required: ["previousHash", "team", "nonce", "hash"],
+        required: ["previousHash", "player", "nonce", "hash"],
         additionalProperties: false,
       },
       response: {
@@ -492,8 +296,8 @@ export const schemas = {
                 type: "object",
                 properties: {
                   index: { type: "number" },
-                  player: { type: "string", pattern: "^[A-Z]{3}$" },
-                  team: { type: "string", pattern: "^[A-Z]{3}$" },
+                  player: { type: "string" },
+                  team: { type: "string" },
                   timestamp: { type: "number" },
                   nonce: { type: "number" },
                   hash: { type: "string" },
@@ -503,6 +307,7 @@ export const schemas = {
                 required: [
                   "index",
                   "player",
+                  "team",
                   "timestamp",
                   "nonce",
                   "hash",
@@ -510,68 +315,11 @@ export const schemas = {
                 ],
                 additionalProperties: false,
               },
+              additionalItems: false,
             },
-            difficulty: {
-              type: "string",
-              description: "The difficulty target hash prefix",
-            },
+            difficulty: { type: "string" },
           },
           required: ["recent", "difficulty"],
-          additionalProperties: false,
-        },
-      },
-    },
-  },
-  testMint: {
-    schema: {
-      body: {
-        type: "object",
-        properties: {
-          player: {
-            type: "string",
-            description: "The name of the player",
-            pattern: "^[A-Z]{3}$",
-            errorMessage: {
-              pattern: "Player name must be 3 uppercase letters",
-            },
-          },
-          team: {
-            type: "string",
-            description: "The name of the team",
-            pattern: "^[A-Z]{3}$",
-            errorMessage: {
-              pattern: "Team name must be 3 uppercase letters",
-            },
-          },
-          message: {
-            type: "string",
-            description: "An optional message associated with the block",
-          },
-        },
-        required: ["player", "team"],
-        additionalProperties: false,
-      },
-      response: {
-        200: {
-          type: "object",
-          properties: {
-            index: { type: "number" },
-            player: { type: "string", pattern: "^[A-Z]{3}$" },
-            team: { type: "string", pattern: "^[A-Z]{3}$" },
-            timestamp: { type: "number" },
-            nonce: { type: "number" },
-            hash: { type: "string" },
-            previousHash: { type: "string" },
-            message: { type: "string" },
-          },
-          required: [
-            "index",
-            "player",
-            "timestamp",
-            "nonce",
-            "hash",
-            "previousHash",
-          ],
           additionalProperties: false,
         },
       },
