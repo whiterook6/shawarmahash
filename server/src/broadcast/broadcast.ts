@@ -35,4 +35,8 @@ export class Broadcast {
       }
     });
   }
+
+  getSubscriberCount(): number {
+    return this.subscribers.size;
+  }
 }

@@ -1,9 +1,10 @@
-import { readdir, writeFile, mkdir, appendFile } from "fs/promises";
+import { readdir, writeFile, mkdir, appendFile, access } from "fs/promises";
 import { createReadStream } from "fs";
 import { createInterface } from "readline";
 import { join } from "path";
 import { Chain } from "../chain/chain";
 import { Block } from "../block/block";
+import { constants } from "fs";
 
 export class Data {
   private dataDirectory: string;
@@ -155,5 +156,40 @@ export class Data {
         );
       }
     }
+  }
+
+  async getDirectoryStatus(): Promise<{
+    exists: boolean;
+    readable: boolean;
+    writable: boolean;
+  }> {
+    let exists = false;
+    let readable = false;
+    let writable = false;
+
+    try {
+      await access(this.dataDirectory, constants.F_OK);
+      exists = true;
+    } catch {
+      exists = false;
+    }
+
+    if (exists) {
+      try {
+        await access(this.dataDirectory, constants.R_OK);
+        readable = true;
+      } catch {
+        readable = false;
+      }
+
+      try {
+        await access(this.dataDirectory, constants.W_OK);
+        writable = true;
+      } catch {
+        writable = false;
+      }
+    }
+
+    return { exists, readable, writable };
   }
 }

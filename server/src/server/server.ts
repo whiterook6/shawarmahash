@@ -9,6 +9,7 @@ import { Game } from "../game/game";
 import { Miner } from "../miner/miner";
 import { Broadcast, Message } from "../broadcast/broadcast";
 import { schemas } from "../schemas";
+import { Data } from "../data/data";
 
 export type Options = {
   gitHash?: string;
@@ -17,6 +18,7 @@ export type Options = {
 export function createServer(
   game: Game,
   broadcast: Broadcast,
+  data: Data,
   options: Options = {},
 ) {
   const fastify = Fastify({
@@ -41,13 +43,29 @@ export function createServer(
   fastify.get(
     "/health",
     schemas.getHealth,
-    (_: FastifyRequest, reply: FastifyReply) => {
+    async (_: FastifyRequest, reply: FastifyReply) => {
       const now = new Date();
+      const memoryUsage = process.memoryUsage();
+      const activeChains = game.getActiveChainsCount();
+      const totalBlocks = game.getTotalBlocksCount();
+      const dataDirectoryStatus = await data.getDirectoryStatus();
+      const sseClients = broadcast.getSubscriberCount();
+
       return reply.status(200).send({
         gitHash: options.gitHash || "unknown",
         startTime: serverStartTime,
         now: now,
         uptime: (now.getTime() - serverStartTime.getTime()) / 1000,
+        activeChains,
+        totalBlocks,
+        memoryUsage: {
+          rss: memoryUsage.rss,
+          heapTotal: memoryUsage.heapTotal,
+          heapUsed: memoryUsage.heapUsed,
+          external: memoryUsage.external,
+        },
+        dataDirectory: dataDirectoryStatus,
+        sseClients,
       });
     },
   );

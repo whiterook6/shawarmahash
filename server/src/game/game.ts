@@ -329,6 +329,18 @@ export class Game {
     // TODO: Add callbacks here if needed (e.g., onBlockAppended callback)
   }
 
+  getActiveChainsCount(): number {
+    return this.chains.size;
+  }
+
+  getTotalBlocksCount(): number {
+    let total = 0;
+    for (const chain of this.chains.values()) {
+      total += chain.length;
+    }
+    return total;
+  }
+
   private aggregateChains<T>(fn: (chain: Chain) => T[]): T[] {
     const allResults: T[] = [];
     for (const chain of this.chains.values()) {

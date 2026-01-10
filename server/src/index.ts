@@ -19,7 +19,7 @@ const start = async () => {
   game.setChains(chains);
   game.setBroadcast(broadcast);
 
-  const fastify = createServer(game, broadcast, {
+  const fastify = createServer(game, broadcast, data, {
     gitHash: process.env.GIT_HASH,
   });
 
