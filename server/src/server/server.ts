@@ -2,14 +2,14 @@ import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import staticFiles from "@fastify/static";
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
-import { fileURLToPath } from "url";
 import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+import { Broadcast, Message } from "../broadcast/broadcast";
+import { Data } from "../data/data";
 import { errorHandler } from "../error/errors";
 import { Game } from "../game/game";
 import { Miner } from "../miner/miner";
-import { Broadcast, Message } from "../broadcast/broadcast";
-import { schemas } from "../schemas";
-import { Data } from "../data/data";
+import { schemas } from "./schemas";
 
 export type Options = {
   gitHash?: string;

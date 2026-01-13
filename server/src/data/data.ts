@@ -13,6 +13,16 @@ export class Data {
     this.dataDirectory = dataDirectory;
   }
 
+  async ensureDataDirectoryExists(): Promise<void> {
+    try {
+      await mkdir(this.dataDirectory, { recursive: true });
+    } catch (error) {
+      throw new Error(
+        `Failed to create data directory: ${this.dataDirectory}: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
+  }
+
   async loadChain(filename: string): Promise<Chain> {
     const filePath = join(this.dataDirectory, filename);
     return new Promise((resolve, reject) => {
@@ -60,6 +70,8 @@ export class Data {
   }
 
   async loadAllChains(): Promise<Map<string, Chain>> {
+    await this.ensureDataDirectoryExists();
+
     let files: string[] = [];
     try {
       files = await readdir(this.dataDirectory);
@@ -100,13 +112,7 @@ export class Data {
     const filePath = join(this.dataDirectory, team);
 
     // Ensure data directory exists
-    try {
-      await mkdir(this.dataDirectory, { recursive: true });
-    } catch (error) {
-      throw new Error(
-        `Failed to create data directory: ${this.dataDirectory}: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
+    await this.ensureDataDirectoryExists();
 
     // Create empty file
     try {
@@ -125,13 +131,7 @@ export class Data {
     const filePath = join(this.dataDirectory, team);
 
     // Ensure data directory exists
-    try {
-      await mkdir(this.dataDirectory, { recursive: true });
-    } catch (error) {
-      throw new Error(
-        `Failed to create data directory: ${this.dataDirectory}: ${error instanceof Error ? error.message : String(error)}`,
-      );
-    }
+    await this.ensureDataDirectoryExists();
 
     // Append each block as a JSON string on a new line
     for (const block of blocks) {
@@ -163,32 +163,23 @@ export class Data {
     readable: boolean;
     writable: boolean;
   }> {
-    let exists = false;
-    let readable = false;
-    let writable = false;
-
-    try {
-      await access(this.dataDirectory, constants.F_OK);
-      exists = true;
-    } catch {
-      exists = false;
-    }
-
-    if (exists) {
-      try {
-        await access(this.dataDirectory, constants.R_OK);
-        readable = true;
-      } catch {
-        readable = false;
-      }
-
-      try {
-        await access(this.dataDirectory, constants.W_OK);
-        writable = true;
-      } catch {
-        writable = false;
-      }
-    }
+    const [exists, readable, writable] = await Promise.all([
+      new Promise<boolean>((resolve) => {
+        access(this.dataDirectory, constants.F_OK)
+          .then(() => resolve(true))
+          .catch(() => resolve(false));
+      }),
+      new Promise<boolean>((resolve) => {
+        access(this.dataDirectory, constants.R_OK)
+          .then(() => resolve(true))
+          .catch(() => resolve(false));
+      }),
+      new Promise<boolean>((resolve) => {
+        access(this.dataDirectory, constants.W_OK)
+          .then(() => resolve(true))
+          .catch(() => resolve(false));
+      }),
+    ]);
 
     return { exists, readable, writable };
   }

@@ -1,5 +1,7 @@
 import { Block } from "../block/block";
 import { Difficulty } from "../difficulty/difficulty";
+import { ValidationError } from "../error/errors";
+import { Timestamp } from "../timestamp/timestamp";
 
 export type Chain = Block[];
 
@@ -104,5 +106,77 @@ export const Chain = {
         return `Block ${i} does not meet difficulty requirement: ${currentBlock.hash} does not start with ${requiredDifficulty}`;
       }
     }
+  },
+
+  verifyIncomingBlock: (
+    args: {
+      previousHash: string;
+      player: string;
+      team: string;
+      nonce: number;
+      hash: string;
+      message?: string;
+    },
+    chain: Chain,
+  ): Block => {
+    if (chain.length === 0) {
+      throw new ValidationError({
+        chain: ["Chain is empty"],
+      });
+    }
+
+    const { previousHash, player, team, nonce, hash, message } = args;
+    const previousBlock = chain[chain.length - 1];
+    if (previousHash !== previousBlock.hash) {
+      throw new ValidationError({
+        previousHash: [
+          `Invalid previous hash: ${previousHash} !== ${previousBlock.hash}`,
+        ],
+      });
+    } else if (team !== previousBlock.team) {
+      throw new ValidationError({
+        team: [`Invalid team: ${team} !== ${previousBlock.team}`],
+      });
+    }
+
+    // verify the provided hash is correct
+    const newBlockhash = Block.calculateHash({
+      team,
+      player,
+      previousHash: previousBlock.hash,
+      previousTimestamp: previousBlock.timestamp,
+      nonce,
+    });
+    if (hash !== newBlockhash) {
+      throw new ValidationError({
+        blockHash: [`Invalid block hash: ${hash}  !== ${newBlockhash}`],
+      });
+    }
+
+    // Verify the hash meets difficulty requirement
+    const difficultyTarget = Difficulty.getDifficultyTargetFromChain(chain);
+    if (!Difficulty.isDifficultyMet(newBlockhash, difficultyTarget)) {
+      throw new ValidationError({
+        blockHash: [
+          `Block does not meet difficulty requirement: ${newBlockhash} does not start with ${difficultyTarget}`,
+        ],
+      });
+    }
+
+    const newBlock: Block = {
+      hash,
+      previousHash,
+      player,
+      team,
+      timestamp: Timestamp.now(),
+      nonce,
+      index: previousBlock.index + 1,
+    };
+
+    if (message) {
+      newBlock.message = message;
+    }
+
+    return newBlock;
   },
 };

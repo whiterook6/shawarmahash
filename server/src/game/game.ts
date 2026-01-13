@@ -7,6 +7,7 @@ import { Difficulty } from "../difficulty/difficulty";
 import { PlayerScore, Score, TeamScore } from "../score/score";
 import { Timestamp } from "../timestamp/timestamp";
 import { Broadcast } from "../broadcast/broadcast";
+import { Mutex, MutexInterface } from "async-mutex";
 
 export type ChainState = {
   recent: Block[];
@@ -15,9 +16,20 @@ export type ChainState = {
 
 export class Game {
   /** Map teams to chains */
+  private teamMutexes: Map<string, MutexInterface> = new Map<
+    string,
+    MutexInterface
+  >();
   private chains: Map<string, Chain> = new Map<string, Chain>();
   private broadcast: Broadcast | undefined = undefined;
   private data: Data | undefined = undefined;
+
+  private getTeamMutex(team: string): MutexInterface {
+    if (!this.teamMutexes.has(team)) {
+      this.teamMutexes.set(team, new Mutex());
+    }
+    return this.teamMutexes.get(team)!;
+  }
 
   setBroadcast(broadcast: Broadcast): void {
     this.broadcast = broadcast;
@@ -45,64 +57,6 @@ export class Game {
       recent: chain.slice(-5),
       difficulty: difficulty,
     };
-  }
-
-  async createTeam({
-    team,
-    player,
-    hash,
-    nonce,
-  }: {
-    team: string;
-    player: string;
-    hash: string;
-    nonce: number;
-  }): Promise<{ recent: Block[]; difficulty: string }> {
-    // Check if chain already exists
-    if (this.chains.has(team)) {
-      throw new ValidationError({
-        team: [`Team ${team} already exists`],
-      });
-    }
-
-    // Validate genesis block hash
-    const expectedHash = Block.calculateHash({
-      previousHash: Block.GENESIS_PREVIOUS_HASH,
-      previousTimestamp: 0,
-      player,
-      team,
-      nonce,
-    });
-
-    if (hash !== expectedHash) {
-      throw new ValidationError({
-        hash: [`Invalid genesis block hash: ${hash} !== ${expectedHash}`],
-      });
-    }
-
-    // Verify the hash meets difficulty requirement
-    if (!Difficulty.isDifficultyMet(hash, Difficulty.DEFAULT_DIFFICULTY_HASH)) {
-      throw new ValidationError({
-        hash: [
-          `Genesis block does not meet difficulty requirement: ${hash} does not start with ${Difficulty.DEFAULT_DIFFICULTY_HASH}`,
-        ],
-      });
-    }
-
-    await this.initializeTeamChain({
-      player,
-      team,
-      hash,
-      nonce,
-    });
-
-    // Return the recent chain state
-    const chainState = this.getChainState(team);
-    this.broadcast!.cast({
-      type: "team_created",
-      payload: chainState,
-    });
-    return chainState;
   }
 
   getTeamScore(team: string): number {
@@ -199,6 +153,42 @@ export class Game {
     );
   }
 
+  async createTeam(args: {
+    team: string;
+    player: string;
+    hash: string;
+    nonce: number;
+  }): Promise<{ recent: Block[]; difficulty: string }> {
+    const { team, player, hash, nonce } = args;
+    const mutex = this.getTeamMutex(team);
+    await mutex.acquire();
+    try {
+      // Check if chain already exists
+      if (this.chains.has(team)) {
+        throw new ValidationError({
+          team: [`Team ${team} already exists`],
+        });
+      }
+
+      await this.initializeTeamChain({
+        player,
+        team,
+        hash,
+        nonce,
+      });
+    } finally {
+      mutex.release();
+    }
+
+    // Return the recent chain state
+    const chainState = this.getChainState(team);
+    this.broadcast!.cast({
+      type: "team_created",
+      payload: chainState,
+    });
+    return chainState;
+  }
+
   async submitBlock(args: {
     previousHash: string;
     player: string;
@@ -207,69 +197,30 @@ export class Game {
     hash: string;
     message?: string;
   }) {
-    // Check if chain exists - don't auto-create
-    const { previousHash, player, team, nonce, hash, message } = args;
-    if (!this.chains.has(team)) {
-      throw new ValidationError({
-        team: [
-          `Team ${team} must initialize their chain before submitting blocks`,
-        ],
-      });
-    }
-    const chain = this.chains.get(team)!;
+    const { team } = args;
+    const mutex = this.getTeamMutex(team);
+    await mutex.acquire();
+    try {
+      if (!this.chains.has(team)) {
+        throw new ValidationError({
+          team: [
+            `Team ${team} must initialize their chain before submitting blocks`,
+          ],
+        });
+      }
+      const teamChain = this.chains.get(team)!;
 
-    // verify the previous hash is correct
-    const previousBlock = chain[chain.length - 1];
-    if (previousHash !== previousBlock.hash) {
-      throw new ValidationError({
-        previousHash: [
-          `Invalid previous hash: ${previousHash} !== ${previousBlock.hash}`,
-        ],
-      });
-    }
+      // Create the new block
+      const newBlock: Block = Chain.verifyIncomingBlock(args, teamChain);
 
-    // verify the provided hash is correct
-    const newBlockhash = Block.calculateHash({
-      team,
-      player,
-      previousHash: previousBlock.hash,
-      previousTimestamp: previousBlock.timestamp,
-      nonce,
-    });
-    if (hash !== newBlockhash) {
-      throw new ValidationError({
-        blockHash: [`Invalid block hash: ${hash}  !== ${newBlockhash}`],
-      });
+      // Append to chain and persist to data layer
+      await this.appendBlock(newBlock, teamChain, team);
+    } finally {
+      mutex.release();
     }
 
-    // Verify the hash meets difficulty requirement
-    const difficultyTarget = Difficulty.getDifficultyTargetFromChain(chain);
-    if (!Difficulty.isDifficultyMet(newBlockhash, difficultyTarget)) {
-      throw new ValidationError({
-        blockHash: [
-          `Block does not meet difficulty requirement: ${newBlockhash} does not start with ${difficultyTarget}`,
-        ],
-      });
-    }
-
-    // Create the new block
-    const newBlock: Block = {
-      hash: newBlockhash,
-      previousHash: previousBlock.hash,
-      player,
-      team,
-      timestamp: Timestamp.now(),
-      nonce,
-      index: previousBlock.index + 1,
-    };
-    if (message) {
-      newBlock.message = message;
-    }
-
-    // Append to chain and persist to data layer
-    await this.appendBlock(newBlock, chain, team);
     const chainState = this.getChainState(team);
-    this.broadcast!.cast({
+    this.broadcast?.cast({
       type: "block_submitted",
       payload: chainState,
     });
@@ -300,14 +251,13 @@ export class Game {
       message: `Are you ready for a story?`,
     };
 
+    Chain.verifyGenesisBlock(genesisBlock);
     const chain: Chain = [genesisBlock];
     this.chains.set(team, chain);
 
     // Save genesis block to file
+    await this.data!.createChainFile(team);
     await this.data!.appendBlocks(team, [genesisBlock]);
-
-    // TODO: Add callbacks here if needed (e.g., onPlayerCreated callback)
-
     return chain;
   }
 
