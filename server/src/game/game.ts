@@ -1,13 +1,13 @@
-import { Chain } from "../chain/chain";
+import { Mutex, MutexInterface } from "async-mutex";
 import { Block } from "../block/block";
+import { Broadcast } from "../broadcast/broadcast";
+import { Chain } from "../chain/chain";
 import { Chat } from "../chat/chat";
-import { NotFoundError, ValidationError } from "../error/errors";
 import { Data } from "../data/data";
 import { Difficulty } from "../difficulty/difficulty";
+import { NotFoundError, ValidationError } from "../error/errors";
 import { PlayerScore, Score, TeamScore } from "../score/score";
 import { Timestamp } from "../timestamp/timestamp";
-import { Broadcast } from "../broadcast/broadcast";
-import { Mutex, MutexInterface } from "async-mutex";
 
 export type ChainState = {
   recent: Block[];
@@ -153,88 +153,64 @@ export class Game {
     );
   }
 
-  async createTeam(args: {
-    team: string;
-    player: string;
-    hash: string;
-    nonce: number;
-  }): Promise<{ recent: Block[]; difficulty: string }> {
-    const { team, player, hash, nonce } = args;
-    const mutex = this.getTeamMutex(team);
-    await mutex.acquire();
-    try {
-      // Check if chain already exists
-      if (this.chains.has(team)) {
-        throw new ValidationError({
-          team: [`Team ${team} already exists`],
-        });
-      }
-
-      const genesisBlock: Block = {
-        hash,
-        previousHash: Block.GENESIS_PREVIOUS_HASH,
-        player,
-        team,
-        timestamp: Timestamp.now(),
-        nonce,
-        index: 0,
-        message: `Are you ready for a story?`,
-      };
-
-      const error = Chain.verifyGenesisBlock(genesisBlock);
-      if (error) {
-        throw new ValidationError({
-          team: [`Invalid genesis block: ${error}`],
-        });
-      }
-
-      await this.initializeTeamChain(genesisBlock);
-    } finally {
-      mutex.release();
-    }
-
-    // Return the recent chain state
-    const chainState = this.getChainState(team);
-    this.broadcast!.cast({
-      type: "team_created",
-      payload: chainState,
-    });
-    return chainState;
-  }
-
   async submitBlock(args: {
     previousHash: string;
+    hash: string;
     player: string;
     team: string;
     nonce: number;
-    hash: string;
     message?: string;
-  }) {
-    const { team } = args;
+  }): Promise<{ recent: Block[]; difficulty: string }> {
+    const { team, previousHash } = args;
+    const isGenesisBlock = previousHash === Block.GENESIS_PREVIOUS_HASH;
+
     const mutex = this.getTeamMutex(team);
     await mutex.acquire();
     try {
-      if (!this.chains.has(team)) {
+      const chainExists = this.chains.has(team);
+
+      if (isGenesisBlock && chainExists) {
         throw new ValidationError({
           team: [
-            `Team ${team} must initialize their chain before submitting blocks`,
+            `Team ${team} already exists. Cannot submit genesis block to existing chain.`,
           ],
         });
+      } else if (isGenesisBlock) {
+        const genesisBlock: Block = {
+          ...args,
+          index: 0,
+          timestamp: Timestamp.now(),
+        };
+
+        const error = Chain.verifyGenesisBlock(genesisBlock);
+        if (error) {
+          throw new ValidationError({
+            team: [`Invalid genesis block: ${error}`],
+          });
+        }
+
+        await this.initializeTeamChain(genesisBlock);
+      } else if (!chainExists) {
+        throw new ValidationError({
+          team: [`Team ${team} does not exist. Mine a genesis block first.`],
+        });
+      } else {
+        const teamChain = this.chains.get(team)!;
+
+        // Create the new block
+        const newBlock: Block = Chain.verifyIncomingBlock(args, teamChain);
+
+        // Append to chain and persist to data layer
+        await this.appendBlock(newBlock, teamChain, team);
       }
-      const teamChain = this.chains.get(team)!;
-
-      // Create the new block
-      const newBlock: Block = Chain.verifyIncomingBlock(args, teamChain);
-
-      // Append to chain and persist to data layer
-      await this.appendBlock(newBlock, teamChain, team);
     } finally {
       mutex.release();
     }
 
     const chainState = this.getChainState(team);
+    const broadcastType = isGenesisBlock ? "team_created" : "block_submitted";
     this.broadcast?.cast({
-      type: "block_submitted",
+      type: broadcastType,
       payload: chainState,
     });
     return chainState;

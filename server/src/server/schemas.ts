@@ -239,65 +239,6 @@ export const schemas = {
       },
     },
   },
-  createTeam: {
-    schema: {
-      Params: {
-        type: "object",
-        properties: {
-          team: { type: "string" },
-        },
-        required: ["team"],
-        additionalProperties: false,
-      },
-      Body: {
-        type: "object",
-        properties: {
-          player: { type: "string" },
-          hash: { type: "string" },
-          nonce: { type: "number" },
-        },
-        required: ["player", "hash", "nonce"],
-        additionalProperties: false,
-      },
-      response: {
-        200: {
-          type: "object",
-          properties: {
-            recent: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  index: { type: "number" },
-                  player: { type: "string" },
-                  team: { type: "string" },
-                  timestamp: { type: "number" },
-                  nonce: { type: "number" },
-                  hash: { type: "string" },
-                  previousHash: { type: "string" },
-                  message: { type: "string" },
-                },
-                required: [
-                  "index",
-                  "player",
-                  "team",
-                  "timestamp",
-                  "nonce",
-                  "hash",
-                  "previousHash",
-                ],
-                additionalProperties: false,
-              },
-              additionalItems: false,
-            },
-            difficulty: { type: "string" },
-          },
-          required: ["recent", "difficulty"],
-          additionalProperties: false,
-        },
-      },
-    },
-  },
   submitBlock: {
     schema: {
       Params: {
@@ -354,6 +295,30 @@ export const schemas = {
             difficulty: { type: "string" },
           },
           required: ["recent", "difficulty"],
+          additionalProperties: false,
+        },
+      },
+    },
+  },
+  getTeamMiningInfo: {
+    schema: {
+      Params: {
+        type: "object",
+        properties: {
+          team: { type: "string" },
+        },
+        required: ["team"],
+        additionalProperties: false,
+      },
+      response: {
+        200: {
+          type: "object",
+          properties: {
+            previousHash: { type: "string" },
+            previousTimestamp: { type: "number" },
+            difficulty: { type: "string" },
+          },
+          required: ["previousHash", "previousTimestamp", "difficulty"],
           additionalProperties: false,
         },
       },

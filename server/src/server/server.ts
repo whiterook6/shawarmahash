@@ -4,11 +4,12 @@ import staticFiles from "@fastify/static";
 import Fastify, { FastifyReply, FastifyRequest } from "fastify";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { Block } from "../block/block";
 import { Broadcast, Message } from "../broadcast/broadcast";
 import { Data } from "../data/data";
+import { Difficulty } from "../difficulty/difficulty";
 import { errorHandler } from "../error/errors";
 import { Game } from "../game/game";
-import { Miner } from "../miner/miner";
 import { schemas } from "./schemas";
 
 export type Options = {
@@ -171,32 +172,39 @@ export function createServer(
     },
   );
 
-  // POST /teams/:team: create a genesis block for the team using user-provided hash/nonce
-  fastify.post(
-    "/teams/:team",
-    schemas.createTeam,
-    async (
+  // GET /teams/:team/mining-info: get the mining info needed to mine a new block
+  fastify.get(
+    "/teams/:team/mining-info",
+    schemas.getTeamMiningInfo,
+    (
       request: FastifyRequest<{
         Params: { team: string };
-        Body: {
-          player: string;
-          hash: string;
-          nonce: number;
-        };
       }>,
       reply: FastifyReply,
     ) => {
-      const chainState = await game.createTeam({
-        team: request.params.team,
-        player: request.body.player,
-        hash: request.body.hash,
-        nonce: request.body.nonce,
+      const chainState = game.getChainState(request.params.team);
+      const recent = chainState.recent;
+
+      // If there's no chain (genesis block case)
+      if (recent.length === 0) {
+        return reply.status(200).send({
+          previousHash: Block.GENESIS_PREVIOUS_HASH,
+          previousTimestamp: 0,
+          difficulty: Difficulty.DEFAULT_DIFFICULTY_HASH,
+        });
+      }
+
+      // Get the last block from the recent blocks
+      const lastBlock = recent[recent.length - 1];
+      return reply.status(200).send({
+        previousHash: lastBlock.hash,
+        previousTimestamp: lastBlock.timestamp,
+        difficulty: chainState.difficulty,
       });
-      return reply.status(200).send(chainState);
     },
   );
 
-  // POST /teams/:team/chain: attempt to submit a block to the team's chain
+  // POST /teams/:team/chain: submit a block (handles both genesis and append cases)
   fastify.post(
     "/teams/:team/chain",
     schemas.submitBlock,
@@ -213,39 +221,19 @@ export function createServer(
       }>,
       reply: FastifyReply,
     ) => {
-      const block = await game.submitBlock({
-        previousHash: request.body.previousHash,
-        player: request.body.player,
-        team: request.params.team,
-        nonce: request.body.nonce,
-        hash: request.body.hash,
-        message: request.body.message,
-      });
-      return reply.status(200).send(block);
-    },
-  );
+      const { team } = request.params;
+      const { previousHash, player, nonce, hash, message } = request.body;
 
-  // POST /test/mint: a test function to mine a block for a player and a team
-  fastify.post(
-    "/test/mint",
-    async (
-      request: FastifyRequest<{
-        Body: {
-          player: string;
-          team: string;
-          message?: string;
-        };
-      }>,
-      reply: FastifyReply,
-    ) => {
-      const chainState = await game.getChainState(request.body.team);
-      const block = Miner.mineBlock(chainState.recent, {
-        player: request.body.player,
-        team: request.body.team,
-        message: request.body.message,
+      const chainState = await game.submitBlock({
+        previousHash,
+        player,
+        team,
+        nonce,
+        hash,
+        message,
       });
-      await game.submitBlock(block);
-      return reply.status(200).send(block);
+
+      return reply.status(200).send(chainState);
     },
   );
 
