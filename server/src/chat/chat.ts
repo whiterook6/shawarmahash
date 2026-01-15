@@ -6,9 +6,7 @@ export const Chat = {
    * Returns blocks that have a message field.
    */
   getChatMessages: (chain: Chain): Block[] => {
-    return chain.filter(
-      (block) => block.message !== undefined && block.message.length > 0,
-    );
+    return chain.filter((block) => block.message?.length);
   },
 
   /**
