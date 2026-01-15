@@ -37,3 +37,25 @@ export type MiningInfo = {
   previousTimestamp: number;
   difficulty: string;
 };
+
+// Miner service types
+export type StartMiningParams = {
+  team: string;
+  player: string;
+  previousHash: string;
+  previousTimestamp: number;
+  difficulty: string;
+};
+
+export type HashFoundMessage = {
+  type: "HASH_FOUND";
+  hash: string;
+  nonce: number;
+  team: string;
+  player: string;
+};
+
+export type ProgressMessage = {
+  type: "PROGRESS";
+  hashesPerSecond: number;
+};
