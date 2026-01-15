@@ -1,5 +1,5 @@
 // Web Worker for mining blocks
-// Uses Web Crypto API for SHA-256 hashing
+// Uses Web Subtle Crypto API for SHA-256 hashing
 
 type StartMiningMessage = {
   type: "START_MINING";
@@ -29,8 +29,6 @@ type ProgressMessage = {
   hashesPerSecond: number;
 };
 
-type WorkerResponse = HashFoundMessage | ProgressMessage;
-
 // Calculate SHA-256 hash using Web Crypto API
 async function calculateHash(
   previousHash: string,
@@ -55,10 +53,7 @@ async function calculateHash(
 }
 
 // Check if hash meets difficulty target (lexicographic comparison)
-function isDifficultyMet(
-  hash: string,
-  difficultyTarget: string,
-): boolean {
+function isDifficultyMet(hash: string, difficultyTarget: string): boolean {
   return hash >= difficultyTarget;
 }
 
@@ -88,8 +83,7 @@ async function startMining(params: {
   hashCount = 0;
   startTime = Date.now();
 
-  const { team, player, previousHash, previousTimestamp, difficulty } =
-    params;
+  const { team, player, previousHash, previousTimestamp, difficulty } = params;
 
   // Set up progress reporting (every second)
   progressIntervalId = self.setInterval(() => {

@@ -28,7 +28,11 @@ let submissionStatus: {
 
 // Event service state
 let eventServiceConnected = false;
-let mostRecentEvent: { type: string; payload: unknown; timestamp: number } | null = null;
+let mostRecentEvent: {
+  type: string;
+  payload: unknown;
+  timestamp: number;
+} | null = null;
 
 // Configuration
 const MINING_TEAM = "TST";
@@ -49,18 +53,28 @@ const updateStatusDisplay = () => {
   const statusHtml = `
     <p><strong>Status:</strong> <span style="color: ${isMining ? "#0a0" : "#666"}">${isMining ? "Mining..." : "Stopped"}</span></p>
     ${isMining ? `<p><strong>Hash Rate:</strong> ${currentHashesPerSecond.toFixed(2)} hashes/sec</p>` : ""}
-    ${currentMiningParams ? `
+    ${
+      currentMiningParams
+        ? `
       <p><strong>Team:</strong> ${currentMiningParams.team}</p>
       <p><strong>Player:</strong> ${currentMiningParams.player}</p>
       <p><strong>Difficulty:</strong> <code>${currentMiningParams.difficulty}</code></p>
-    ` : ""}
-    ${submissionStatus ? `
+    `
+        : ""
+    }
+    ${
+      submissionStatus
+        ? `
       <div style="margin-top: 1rem; padding: 0.5rem; background: ${submissionStatus.status === "success" ? "#d4edda" : submissionStatus.status === "error" ? "#f8d7da" : "#fff3cd"}; border-radius: 4px; border: 1px solid ${submissionStatus.status === "success" ? "#c3e6cb" : submissionStatus.status === "error" ? "#f5c6cb" : "#ffeaa7"};">
         <p><strong>Submission:</strong> <span style="color: ${submissionStatus.status === "success" ? "#155724" : submissionStatus.status === "error" ? "#721c24" : "#856404"}">${submissionStatus.status === "submitting" ? "Submitting..." : submissionStatus.status === "success" ? "Success!" : "Error"}</span></p>
         ${submissionStatus.message ? `<p>${submissionStatus.message}</p>` : ""}
       </div>
-    ` : ""}
-    ${lastHashFound ? `
+    `
+        : ""
+    }
+    ${
+      lastHashFound
+        ? `
       <div style="margin-top: 1rem; padding: 0.5rem; background: #f0f0f0; border-radius: 4px;">
         <p><strong>Last Hash Found:</strong></p>
         <p><strong>Hash:</strong> <code>${lastHashFound.hash}</code></p>
@@ -68,7 +82,9 @@ const updateStatusDisplay = () => {
         <p><strong>Team:</strong> ${lastHashFound.team}</p>
         <p><strong>Player:</strong> ${lastHashFound.player}</p>
       </div>
-    ` : ""}
+    `
+        : ""
+    }
   `;
   statusDiv.innerHTML = statusHtml;
 };
@@ -104,7 +120,9 @@ export const render = () => {
           <div id="event-status" style="padding: 1rem; background: #f9f9f9; border-radius: 4px; border: 1px solid #ddd;">
             <p><strong>Event Service:</strong> <span id="event-connection-status" style="color: ${eventServiceConnected ? "#0a0" : "#dc3545"}">${eventServiceConnected ? "Connected" : "Disconnected"}</span></p>
             <div id="event-recent" style="margin-top: 0.5rem;">
-              ${mostRecentEvent ? `
+              ${
+                mostRecentEvent
+                  ? `
                 <p><strong>Most Recent Event:</strong></p>
                 <p><strong>Type:</strong> ${mostRecentEvent.type}</p>
                 <p><strong>Time:</strong> ${new Date(mostRecentEvent.timestamp).toLocaleTimeString()}</p>
@@ -112,7 +130,9 @@ export const render = () => {
                   <summary style="cursor: pointer; color: #007bff;">View Payload</summary>
                   <pre style="margin-top: 0.5rem; padding: 0.5rem; background: #fff; border: 1px solid #ddd; border-radius: 4px; overflow-x: auto; font-size: 0.875rem;">${JSON.stringify(mostRecentEvent.payload, null, 2)}</pre>
                 </details>
-              ` : "<p>No events received yet.</p>"}
+              `
+                  : "<p>No events received yet.</p>"
+              }
             </div>
           </div>
         </div>
@@ -121,7 +141,9 @@ export const render = () => {
   `;
 
   // Set up button handler
-  const toggleButton = document.getElementById("miner-toggle") as HTMLButtonElement | null;
+  const toggleButton = document.getElementById(
+    "miner-toggle",
+  ) as HTMLButtonElement | null;
   if (toggleButton) {
     toggleButton.addEventListener("click", async () => {
       if (isMining) {
@@ -134,10 +156,10 @@ export const render = () => {
         // Fetch current team state from server
         toggleButton.disabled = true;
         toggleButton.textContent = "Loading...";
-        
+
         try {
           const miningInfo = await teamService.getMiningInfo(MINING_TEAM);
-          
+
           const params = {
             team: MINING_TEAM,
             player: MINING_PLAYER,
@@ -145,7 +167,7 @@ export const render = () => {
             previousTimestamp: miningInfo.previousTimestamp,
             difficulty: miningInfo.difficulty,
           };
-          
+
           currentMiningParams = params;
           submissionStatus = null; // Clear previous submission status
           minerService.startMining(params);
@@ -174,12 +196,14 @@ export const render = () => {
 const updateEventDisplay = () => {
   const connectionStatusEl = document.getElementById("event-connection-status");
   const eventRecentEl = document.getElementById("event-recent");
-  
+
   if (connectionStatusEl) {
-    connectionStatusEl.textContent = eventServiceConnected ? "Connected" : "Disconnected";
+    connectionStatusEl.textContent = eventServiceConnected
+      ? "Connected"
+      : "Disconnected";
     connectionStatusEl.style.color = eventServiceConnected ? "#0a0" : "#dc3545";
   }
-  
+
   if (eventRecentEl) {
     if (mostRecentEvent) {
       eventRecentEl.innerHTML = `
@@ -200,7 +224,7 @@ const updateEventDisplay = () => {
 eventService.subscribe({
   send: (data: unknown) => {
     const event = data as { type: string; payload?: unknown; status?: string };
-    
+
     // Handle connection event (has status directly, not in payload)
     if (event.type === "connection") {
       eventServiceConnected = event.status === "open";
@@ -212,19 +236,28 @@ eventService.subscribe({
         payload: event.payload,
         timestamp: Date.now(),
       };
-      
+
       console.log("📨 Event received:", event.type, event.payload);
-      
+
       // Log block submissions specifically
       if (event.type === "block_submitted") {
-        const payload = event.payload as { recent?: unknown[]; difficulty?: string };
+        const payload = event.payload as {
+          recent?: unknown[];
+          difficulty?: string;
+        };
         if (payload.recent && payload.recent.length > 0) {
-          const latestBlock = payload.recent[payload.recent.length - 1] as { player?: string; team?: string; hash?: string };
-          console.log(`⛏️  Block mined by ${latestBlock.player || "unknown"} on team ${latestBlock.team || "unknown"}: ${latestBlock.hash?.substring(0, 16)}...`);
+          const latestBlock = payload.recent[payload.recent.length - 1] as {
+            player?: string;
+            team?: string;
+            hash?: string;
+          };
+          console.log(
+            `⛏️  Block mined by ${latestBlock.player || "unknown"} on team ${latestBlock.team || "unknown"}: ${latestBlock.hash?.substring(0, 16)}...`,
+          );
         }
       }
     }
-    
+
     updateEventDisplay();
   },
   close: () => {
@@ -244,35 +277,37 @@ minerService.onHashFound(async (message: HashFoundMessage) => {
   });
   lastHashFound = message;
   isMining = false;
-  
-  const toggleButton = document.getElementById("miner-toggle") as HTMLButtonElement | null;
+
+  const toggleButton = document.getElementById(
+    "miner-toggle",
+  ) as HTMLButtonElement | null;
   if (toggleButton) {
     toggleButton.textContent = "Start Mining";
     toggleButton.style.background = "#007bff";
     toggleButton.disabled = true;
   }
-  
+
   // Submit block to server
   submissionStatus = { status: "submitting" };
   updateStatusDisplay();
-  
+
   try {
     if (!currentMiningParams) {
       throw new Error("No mining parameters available");
     }
-    
+
     const result = await teamService.submitBlock(message.team, {
       previousHash: currentMiningParams.previousHash,
       player: message.player,
       nonce: message.nonce,
       hash: message.hash,
     });
-    
+
     submissionStatus = {
       status: "success",
       message: `Block submitted successfully! Chain now has ${result.recent.length} recent blocks. New difficulty: ${result.difficulty}`,
     };
-    
+
     console.log("✅ Block submitted successfully:", result);
   } catch (error) {
     submissionStatus = {
@@ -281,16 +316,18 @@ minerService.onHashFound(async (message: HashFoundMessage) => {
     };
     console.error("❌ Failed to submit block:", error);
   }
-  
+
   if (toggleButton) {
     toggleButton.disabled = false;
   }
-  
+
   updateStatusDisplay();
 });
 
 minerService.onProgress((message: ProgressMessage) => {
-  console.log(`⏱️  Mining progress: ${message.hashesPerSecond.toFixed(2)} hashes/sec`);
+  console.log(
+    `⏱️  Mining progress: ${message.hashesPerSecond.toFixed(2)} hashes/sec`,
+  );
   currentHashesPerSecond = message.hashesPerSecond;
   updateStatusDisplay();
 });

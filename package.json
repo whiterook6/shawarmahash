@@ -5,5 +5,15 @@
   },
   "scripts": {
     "prepare": "husky"
+  },
+  "lint-staged": {
+    "server/src/**/*.ts": [
+      "cd server && eslint src --fix",
+      "cd server && prettier --write src"
+    ],
+    "webui/src/**/*.ts": [
+      "cd webui && eslint src --fix",
+      "cd webui && prettier --write src"
+    ]
   }
 }

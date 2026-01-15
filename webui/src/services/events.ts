@@ -1,7 +1,7 @@
 type Listener = {
   send: (data: unknown) => void;
   close: () => void;
-}
+};
 
 export class EventService {
   listeners: Set<Listener> = new Set();
@@ -28,7 +28,7 @@ export class EventService {
           this.disconnect();
         }
       }
-    }
+    };
   }
 
   private getEventsUrl(): string {
@@ -80,7 +80,10 @@ export class EventService {
   }
 
   private handleError(): void {
-    if (!this.eventSource || this.eventSource.readyState !== EventSource.CLOSED) {
+    if (
+      !this.eventSource ||
+      this.eventSource.readyState !== EventSource.CLOSED
+    ) {
       return;
     }
     this.eventSource = null;

@@ -29,9 +29,7 @@ export class TeamService extends BaseService {
   }
 
   async getMiningInfo(team: string): Promise<MiningInfo> {
-    const response = await fetch(
-      `/teams/${encodeURIComponent(team)}`,
-    );
+    const response = await fetch(`/teams/${encodeURIComponent(team)}`);
     return this.handleResponse<MiningInfo>(response);
   }
 
