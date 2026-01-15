@@ -46,27 +46,7 @@ This is a blockchain-based game server built with Fastify, TypeScript, and a fil
 **Fix**: Add mutex/lock for chain modifications per team.
 
 ### 7. **Memory Leak in Broadcast Subscribers**
-**Location**: `src/broadcast/broadcast.ts:cast()`
-
-**Issue**: If `subscriber.send()` throws and `unsubscribe()` also fails, the subscriber remains in the set.
-
-**Impact**: Low-Medium - Memory leak over time
-
-**Fix**: Ensure cleanup happens even if errors occur:
-```typescript
-cast(message: Message): void {
-  const toRemove: Subscriber[] = [];
-  this.subscribers.forEach((subscriber) => {
-    try {
-      subscriber.send(message);
-    } catch (error) {
-      console.error(error);
-      toRemove.push(subscriber);
-    }
-  });
-  toRemove.forEach(sub => this.unsubscribe(sub));
-}
-```
+**Location**: `src/broadcast/broadcast.ts:cast()` - Incorrect, ignore
 
 ### 8. **Missing Error Handling in Data Layer**
 **Location**: `src/data/data.ts:loadAllChains()` - Ignore
@@ -105,13 +85,7 @@ Some error messages could be more user-friendly:
 - Add performance metrics
 
 ### 15. **Add Health Check Details**
-**Location**: `src/server.ts:40`
-
-Enhance `/health` endpoint with:
-- Number of active chains
-- Total blocks
-- Memory usage
-- Data directory status
+**Location**: `src/server.ts:40` - done
 
 ### 16. **Type Safety Improvements**
 - Remove non-null assertions
@@ -127,9 +101,7 @@ Current rate limiting is global. Consider:
 - Per-player rate limiting for block submission
 
 ### 18. **Add Chain State Caching**
-**Location**: `src/game/game.ts:getChainState()`
-
-Cache recent chain states to reduce file I/O for frequently accessed chains.
+**Location**: `src/game/game.ts:getChainState()` - Ignore
 
 ### 19. **Improve Broadcast Error Handling**
 **Location**: `src/broadcast/broadcast.ts`
