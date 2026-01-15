@@ -170,12 +170,25 @@ export class Game {
         });
       }
 
-      await this.initializeTeamChain({
+      const genesisBlock: Block = {
+        hash,
+        previousHash: Block.GENESIS_PREVIOUS_HASH,
         player,
         team,
-        hash,
+        timestamp: Timestamp.now(),
         nonce,
-      });
+        index: 0,
+        message: `Are you ready for a story?`,
+      };
+
+      const error = Chain.verifyGenesisBlock(genesisBlock);
+      if (error) {
+        throw new ValidationError({
+          team: [`Invalid genesis block: ${error}`],
+        });
+      }
+
+      await this.initializeTeamChain(genesisBlock);
     } finally {
       mutex.release();
     }
@@ -232,26 +245,8 @@ export class Game {
    * This is the single point where team creation happens,
    * making it easy to add callbacks or other logic later.
    */
-  private async initializeTeamChain(args: {
-    team: string;
-    player: string;
-    hash: string;
-    nonce: number;
-  }): Promise<Chain> {
-    const { player, hash, team, nonce } = args;
-    // Create genesis block using provided hash and nonce
-    const genesisBlock: Block = {
-      hash,
-      previousHash: Block.GENESIS_PREVIOUS_HASH,
-      player,
-      team,
-      timestamp: Timestamp.now(),
-      nonce,
-      index: 0,
-      message: `Are you ready for a story?`,
-    };
-
-    Chain.verifyGenesisBlock(genesisBlock);
+  private async initializeTeamChain(genesisBlock: Block): Promise<Chain> {
+    const team = genesisBlock.team;
     const chain: Chain = [genesisBlock];
     this.chains.set(team, chain);
 
