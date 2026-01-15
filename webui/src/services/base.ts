@@ -8,14 +8,4 @@ export class BaseService {
     }
     return response.json() as Promise<T>;
   }
-
-  protected async handleRawResponse(response: Response): Promise<Response> {
-    if (!response.ok) {
-      const details = await response.text().catch(() => "");
-      throw new Error(
-        `Request failed (${response.status}): ${details || response.statusText}`,
-      );
-    }
-    return response;
-  }
 }

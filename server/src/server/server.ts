@@ -172,10 +172,10 @@ export function createServer(
     },
   );
 
-  // GET /teams/:team/mining-info: get the mining info needed to mine a new block
+  // GET /teams/:team: get the info needed to mine a new block
   fastify.get(
-    "/teams/:team/mining-info",
-    schemas.getTeamMiningInfo,
+    "/teams/:team",
+    schemas.getTeam,
     (
       request: FastifyRequest<{
         Params: { team: string };

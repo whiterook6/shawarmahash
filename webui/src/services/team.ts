@@ -2,7 +2,7 @@ import { BaseService } from "./base";
 import {
   type Block,
   type ChainState,
-  type CreateTeamRequest,
+  type MiningInfo,
   type SubmitBlockRequest,
   type TeamScore,
 } from "./types";
@@ -28,18 +28,11 @@ export class TeamService extends BaseService {
     return this.handleResponse<string[]>(response);
   }
 
-  async createTeam(
-    team: string,
-    payload: CreateTeamRequest,
-  ): Promise<ChainState> {
-    const response = await fetch(`/teams/${encodeURIComponent(team)}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-    return this.handleResponse<ChainState>(response);
+  async getMiningInfo(team: string): Promise<MiningInfo> {
+    const response = await fetch(
+      `/teams/${encodeURIComponent(team)}`,
+    );
+    return this.handleResponse<MiningInfo>(response);
   }
 
   async submitBlock(

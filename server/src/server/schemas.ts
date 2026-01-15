@@ -300,7 +300,7 @@ export const schemas = {
       },
     },
   },
-  getTeamMiningInfo: {
+  getTeam: {
     schema: {
       Params: {
         type: "object",
