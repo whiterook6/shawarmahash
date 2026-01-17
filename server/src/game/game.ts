@@ -163,6 +163,7 @@ export class Game {
   }): Promise<{ recent: Block[]; difficulty: string }> {
     const { team, previousHash } = args;
     const isGenesisBlock = previousHash === Block.GENESIS_PREVIOUS_HASH;
+    let newBlock: Block;
 
     const mutex = this.getTeamMutex(team);
     await mutex.acquire();
@@ -176,20 +177,20 @@ export class Game {
           ],
         });
       } else if (isGenesisBlock) {
-        const genesisBlock: Block = {
+        newBlock = {
           ...args,
           index: 0,
           timestamp: Timestamp.now(),
         };
 
-        const error = Chain.verifyGenesisBlock(genesisBlock);
+        const error = Chain.verifyGenesisBlock(newBlock);
         if (error) {
           throw new ValidationError({
             team: [`Invalid genesis block: ${error}`],
           });
         }
 
-        await this.initializeTeamChain(genesisBlock);
+        await this.initializeTeamChain(newBlock);
       } else if (!chainExists) {
         throw new ValidationError({
           team: [`Team ${team} does not exist. Mine a genesis block first.`],
@@ -198,7 +199,7 @@ export class Game {
         const teamChain = this.chains.get(team)!;
 
         // Create the new block
-        const newBlock: Block = Chain.verifyIncomingBlock(args, teamChain);
+        newBlock = Chain.verifyIncomingBlock(args, teamChain);
 
         // Append to chain and persist to data layer
         await this.appendBlock(newBlock, teamChain, team);
@@ -207,6 +208,7 @@ export class Game {
       mutex.release();
     }
 
+    console.log("newBlock", JSON.stringify(newBlock, null, 2));
     const chainState = this.getChainState(team);
     const broadcastType = isGenesisBlock ? "team_created" : "block_submitted";
     this.broadcast?.cast({

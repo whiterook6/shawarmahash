@@ -1,11 +1,11 @@
 npx lint-staged
 
-# Run typecheck for server if server files are staged
-if git diff --cached --name-only --diff-filter=ACM | grep -q "^server/"; then
-  cd ./server && npm run typecheck
+# Run typecheck for server if server src files are staged
+if git diff --cached --name-only --diff-filter=ACM | grep -q "^server/src/"; then
+  (cd server && npm run typecheck)
 fi
 
-# Run typecheck for webui if webui files are staged
-if git diff --cached --name-only --diff-filter=ACM | grep -q "^webui/"; then
-  cd ./webui && npm run typecheck
+# Run typecheck for webui if webui src files are staged
+if git diff --cached --name-only --diff-filter=ACM | grep -q "^webui/src/"; then
+  (cd webui && npm run typecheck)
 fi

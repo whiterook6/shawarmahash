@@ -125,7 +125,6 @@ export const schemas = {
               "nonce",
               "hash",
               "previousHash",
-              "message",
             ],
             additionalProperties: false,
           },
@@ -239,6 +238,30 @@ export const schemas = {
       },
     },
   },
+  getTeam: {
+    schema: {
+      Params: {
+        type: "object",
+        properties: {
+          team: { type: "string" },
+        },
+        required: ["team"],
+        additionalProperties: false,
+      },
+      response: {
+        200: {
+          type: "object",
+          properties: {
+            previousHash: { type: "string" },
+            previousTimestamp: { type: "number" },
+            difficulty: { type: "string" },
+          },
+          required: ["previousHash", "previousTimestamp", "difficulty"],
+          additionalProperties: false,
+        },
+      },
+    },
+  },
   submitBlock: {
     schema: {
       Params: {
@@ -295,30 +318,6 @@ export const schemas = {
             difficulty: { type: "string" },
           },
           required: ["recent", "difficulty"],
-          additionalProperties: false,
-        },
-      },
-    },
-  },
-  getTeam: {
-    schema: {
-      Params: {
-        type: "object",
-        properties: {
-          team: { type: "string" },
-        },
-        required: ["team"],
-        additionalProperties: false,
-      },
-      response: {
-        200: {
-          type: "object",
-          properties: {
-            previousHash: { type: "string" },
-            previousTimestamp: { type: "number" },
-            difficulty: { type: "string" },
-          },
-          required: ["previousHash", "previousTimestamp", "difficulty"],
           additionalProperties: false,
         },
       },
