@@ -99,6 +99,16 @@ export class Game {
       .map(([player, score]) => ({ player, score }));
   }
 
+  getTopTeams(): TeamScore[] {
+    const allTeamScores = this.getAllTeamScores();
+    return allTeamScores.sort((a, b) => b.score - a.score).slice(0, 10);
+  }
+
+  getTopPlayers(): PlayerScore[] {
+    const allPlayerScore = this.getAllPlayerScores();
+    return allPlayerScore.sort((a, b) => b.score - a.score).slice(0, 10);
+  }
+
   getChat(): Block[] {
     // Aggregate chat messages from all chains
     const allMessages = this.aggregateChains((chain) =>

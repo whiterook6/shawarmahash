@@ -1,3 +1,10 @@
+const threeUppercaseLetters = {
+  type: "string",
+  minLength: 3,
+  maxLength: 3,
+  pattern: "^[A-Z]{3}$",
+} as const;
+
 export const schemas = {
   getHealth: {
     schema: {
@@ -58,7 +65,7 @@ export const schemas = {
           items: {
             type: "object",
             properties: {
-              player: { type: "string" },
+              player: threeUppercaseLetters,
               score: { type: "number" },
             },
             required: ["player", "score"],
@@ -74,7 +81,7 @@ export const schemas = {
       Params: {
         type: "object",
         properties: {
-          player: { type: "string" },
+          player: threeUppercaseLetters,
         },
         required: ["player"],
         additionalProperties: false,
@@ -83,11 +90,30 @@ export const schemas = {
         200: {
           type: "object",
           properties: {
-            player: { type: "string" },
+            player: threeUppercaseLetters,
             score: { type: "number" },
           },
           required: ["player", "score"],
           additionalProperties: false,
+        },
+      },
+    },
+  },
+  getTopPlayers: {
+    schema: {
+      response: {
+        200: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              player: threeUppercaseLetters,
+              score: { type: "number" },
+            },
+            required: ["player", "score"],
+            additionalProperties: false,
+          },
+          additionalItems: false,
         },
       },
     },
@@ -97,7 +123,7 @@ export const schemas = {
       Params: {
         type: "object",
         properties: {
-          player: { type: "string" },
+          player: threeUppercaseLetters,
         },
         required: ["player"],
         additionalProperties: false,
@@ -109,8 +135,8 @@ export const schemas = {
             type: "object",
             properties: {
               index: { type: "number" },
-              player: { type: "string" },
-              team: { type: "string" },
+              player: threeUppercaseLetters,
+              team: threeUppercaseLetters,
               timestamp: { type: "number" },
               nonce: { type: "number" },
               hash: { type: "string" },
@@ -141,7 +167,7 @@ export const schemas = {
           items: {
             type: "object",
             properties: {
-              team: { type: "string" },
+              team: threeUppercaseLetters,
               score: { type: "number" },
             },
             required: ["team", "score"],
@@ -157,7 +183,7 @@ export const schemas = {
       Params: {
         type: "object",
         properties: {
-          team: { type: "string" },
+          team: threeUppercaseLetters,
         },
         required: ["team"],
         additionalProperties: false,
@@ -166,11 +192,30 @@ export const schemas = {
         200: {
           type: "object",
           properties: {
-            team: { type: "string" },
+            team: threeUppercaseLetters,
             score: { type: "number" },
           },
           required: ["team", "score"],
           additionalProperties: false,
+        },
+      },
+    },
+  },
+  getTopTeams: {
+    schema: {
+      response: {
+        200: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              team: threeUppercaseLetters,
+              score: { type: "number" },
+            },
+            required: ["team", "score"],
+            additionalProperties: false,
+          },
+          additionalItems: false,
         },
       },
     },
@@ -180,7 +225,7 @@ export const schemas = {
       Params: {
         type: "object",
         properties: {
-          team: { type: "string" },
+          team: threeUppercaseLetters,
         },
         required: ["team"],
         additionalProperties: false,
@@ -192,8 +237,8 @@ export const schemas = {
             type: "object",
             properties: {
               index: { type: "number" },
-              player: { type: "string" },
-              team: { type: "string" },
+              player: threeUppercaseLetters,
+              team: threeUppercaseLetters,
               timestamp: { type: "number" },
               nonce: { type: "number" },
               hash: { type: "string" },
@@ -222,7 +267,7 @@ export const schemas = {
       Params: {
         type: "object",
         properties: {
-          team: { type: "string" },
+          team: threeUppercaseLetters,
         },
         required: ["team"],
         additionalProperties: false,
@@ -231,7 +276,7 @@ export const schemas = {
         200: {
           type: "array",
           items: {
-            type: "string",
+            ...threeUppercaseLetters,
           },
           additionalItems: false,
         },
@@ -243,7 +288,7 @@ export const schemas = {
       Params: {
         type: "object",
         properties: {
-          team: { type: "string" },
+          team: threeUppercaseLetters,
         },
         required: ["team"],
         additionalProperties: false,
@@ -267,7 +312,7 @@ export const schemas = {
       Params: {
         type: "object",
         properties: {
-          team: { type: "string" },
+          team: threeUppercaseLetters,
         },
         required: ["team"],
         additionalProperties: false,
@@ -276,7 +321,7 @@ export const schemas = {
         type: "object",
         properties: {
           previousHash: { type: "string" },
-          player: { type: "string" },
+          player: threeUppercaseLetters,
           nonce: { type: "number" },
           hash: { type: "string" },
           message: { type: "string" },
@@ -294,8 +339,8 @@ export const schemas = {
                 type: "object",
                 properties: {
                   index: { type: "number" },
-                  player: { type: "string" },
-                  team: { type: "string" },
+                  player: threeUppercaseLetters,
+                  team: threeUppercaseLetters,
                   timestamp: { type: "number" },
                   nonce: { type: "number" },
                   hash: { type: "string" },

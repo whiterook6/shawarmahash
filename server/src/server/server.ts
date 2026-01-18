@@ -71,6 +71,26 @@ export function createServer(
     },
   );
 
+  // GET /players/top: get the top 10 players and their scores (PlayerScore[])
+  fastify.get(
+    "/players/top",
+    schemas.getTopPlayers,
+    (_: FastifyRequest, reply: FastifyReply) => {
+      const topPlayers = game.getTopPlayers();
+      return reply.status(200).send(topPlayers);
+    },
+  );
+
+  // GET /teams/top: get the top 10 teams and their scores (TeamScore[])
+  fastify.get(
+    "/teams/top",
+    schemas.getTopTeams,
+    (_: FastifyRequest, reply: FastifyReply) => {
+      const topTeams = game.getTopTeams();
+      return reply.status(200).send(topTeams);
+    },
+  );
+
   // GET /players: get a list of players and their scores (PlayerScore[])
   fastify.get(
     "/players",
