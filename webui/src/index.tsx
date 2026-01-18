@@ -5,7 +5,9 @@ import "./index.scss";
 function App() {
   return (
     <div className="app">
-      <h1>Shawarma Hash</h1>
+      <h1>
+        shawarma<span className="hash">hash</span>
+      </h1>
     </div>
   );
 }

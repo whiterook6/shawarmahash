@@ -1,10 +1,34 @@
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: #583b25;
+  background: linear-gradient(
+    to bottom,
+    #e5c599 0%,
+    #e5c599 25%,
+    #e0c090 40%,
+    #d4b280 55%,
+    #c5a06f 70%,
+    #b58d5d 82%,
+    #a57a4d 92%,
+    #a57a4d 100%
+  );
+}
+
 .app {
   padding: 2rem;
-  font-family: system-ui, sans-serif;
+  font-family: "Sour Gummy", system-ui, sans-serif;
+  text-transform: uppercase;
+  width: 800px;
+  margin: 0 auto;
 
   h1 {
-    color: #333;
+    color: #583b25;
     margin-bottom: 1rem;
+
+    .hash {
+      color: #fff7ed;
+    }
   }
 
   button {
