@@ -1,39 +1,53 @@
 import type {
-  Block,
-  ChainStateResponse,
-  HealthResponse,
+  ChainStateAPIResponse,
+  HealthAPIResponse,
+  IdentityAPIResponse,
   MiningTarget,
-  PlayerWithScoreResponse,
-  TeamWithScoreResponse,
+  PlayerScoreByIdentityAPIResponse,
+  PlayerWithScoreAPIResponse,
+  SubmitBlockAPIRequest,
+  TeamWithScoreAPIResponse,
 } from "./types";
 
 export const Api = {
-  getHealth: async (): Promise<HealthResponse> => {
-    return Api.__get<HealthResponse>("/health");
+  getHealth: async (): Promise<HealthAPIResponse> => {
+    return Api.__get<HealthAPIResponse>("/health");
   },
 
-  getPlayers: async (): Promise<PlayerWithScoreResponse[]> => {
-    return Api.__get<PlayerWithScoreResponse[]>("/players");
+  postIdentity: async (): Promise<IdentityAPIResponse> => {
+    return Api.__post<IdentityAPIResponse>("/identity");
   },
 
-  getPlayerScore: async (player: string): Promise<PlayerWithScoreResponse> => {
-    return Api.__get<PlayerWithScoreResponse>(`/players/${player}/score`);
+  getPlayers: async (): Promise<PlayerWithScoreAPIResponse[]> => {
+    return Api.__get<PlayerWithScoreAPIResponse[]>("/players");
   },
 
-  getPlayerMessages: async (player: string): Promise<Block[]> => {
-    return Api.__get<Block[]>(`/players/${player}/messages`);
+  getTopPlayers: async (): Promise<PlayerWithScoreAPIResponse[]> => {
+    return Api.__get<PlayerWithScoreAPIResponse[]>("/players/top");
   },
 
-  getTeams: async (): Promise<TeamWithScoreResponse[]> => {
-    return Api.__get<TeamWithScoreResponse[]>("/teams");
+  getMyScore: async (): Promise<PlayerScoreByIdentityAPIResponse> => {
+    return Api.__get<PlayerScoreByIdentityAPIResponse>("/players/me/score");
   },
 
-  getTeamScore: async (team: string): Promise<TeamWithScoreResponse> => {
-    return Api.__get<TeamWithScoreResponse>(`/teams/${team}/score`);
+  getPlayerScore: async (
+    identity: string,
+  ): Promise<PlayerScoreByIdentityAPIResponse> => {
+    return Api.__get<PlayerScoreByIdentityAPIResponse>(
+      `/players/${identity}/score`,
+    );
   },
 
-  getTeamMessages: async (team: string): Promise<Block[]> => {
-    return Api.__get<Block[]>(`/teams/${team}/messages`);
+  getTeams: async (): Promise<TeamWithScoreAPIResponse[]> => {
+    return Api.__get<TeamWithScoreAPIResponse[]>("/teams");
+  },
+
+  getTopTeams: async (): Promise<TeamWithScoreAPIResponse[]> => {
+    return Api.__get<TeamWithScoreAPIResponse[]>("/teams/top");
+  },
+
+  getTeamScore: async (team: string): Promise<TeamWithScoreAPIResponse> => {
+    return Api.__get<TeamWithScoreAPIResponse>(`/teams/${team}/score`);
   },
 
   getTeamPlayers: async (team: string): Promise<string[]> => {
@@ -46,32 +60,51 @@ export const Api = {
 
   submitBlock: async (
     team: string,
-    block: Block,
-  ): Promise<ChainStateResponse> => {
-    return Api.__post<ChainStateResponse>(`/teams/${team}/chain`, block);
+    block: SubmitBlockAPIRequest,
+  ): Promise<ChainStateAPIResponse> => {
+    return Api.__post<ChainStateAPIResponse>(`/teams/${team}/chain`, block);
   },
 
   __get: async <T>(url: string): Promise<T> => {
-    const response = await fetch(url);
+    const response = await fetch(url, { credentials: "include" });
     if (!response.ok) {
-      const error = await response.text();
+      const error = await Api.__readError(response);
       throw new Error(`Failed to get ${url}: ${error}`);
     }
     return response.json() as Promise<T>;
   },
 
-  __post: async <T>(url: string, body: unknown): Promise<T> => {
+  __post: async <T>(url: string, body?: unknown): Promise<T> => {
     const response = await fetch(url, {
       method: "POST",
-      body: JSON.stringify(body),
-      headers: {
-        "Content-Type": "application/json",
-      },
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
     });
+
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to submit block: ${error}`);
+      const error = await Api.__readError(response);
+      throw new Error(`Failed to post ${url}: ${error}`);
     }
     return response.json() as Promise<T>;
+  },
+
+  __readError: async (response: Response): Promise<string> => {
+    try {
+      const error = await response.json();
+      if (error.error) {
+        return error.error;
+      } else if (error.message) {
+        return error.message;
+      } else if (error.validationErrors) {
+        return JSON.stringify(error.validationErrors);
+      } else if (error.statusCode) {
+        return `HTTP ${error.statusCode}`;
+      } else {
+        return JSON.stringify(error);
+      }
+    } catch {
+      return `HTTP ${response.status}`;
+    }
   },
 };

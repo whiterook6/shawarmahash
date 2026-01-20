@@ -3,9 +3,13 @@ import { createServer } from "./server/server";
 import { Data } from "./data/data";
 import { Broadcast } from "./broadcast/broadcast";
 import { join } from "path";
+import { EnvController } from "./server/env";
 
 // Start server
 const start = async () => {
+  EnvController.verifyEnv();
+  EnvController.printENV();
+
   // Load player chains from data directory
   const data = new Data(join(process.cwd(), "data"));
   const chains = await data.loadAllChains();
@@ -19,9 +23,7 @@ const start = async () => {
   game.setChains(chains);
   game.setBroadcast(broadcast);
 
-  const fastify = createServer(game, broadcast, data, {
-    gitHash: process.env.GIT_HASH,
-  });
+  const fastify = createServer(game, broadcast, data);
 
   const shutdown = async () => {
     try {

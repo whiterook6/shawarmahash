@@ -67,6 +67,7 @@ describe("Game", () => {
         Block.Faker.many(10, (index) => {
           return {
             player: "TIM",
+            identity: "b989bcb4a39c769d",
             timestamp: 1767315426 + index * 2,
             message: `@ASD Hello ${index}`,
           };
@@ -77,6 +78,7 @@ describe("Game", () => {
         Block.Faker.many(5, (index) => {
           return {
             player: "ASD",
+            identity: "727f8fc5f18ce498",
             timestamp: 1767315426 + index * 2 + 1,
             message: `@TIM Hello ${index}`,
           };
@@ -84,8 +86,8 @@ describe("Game", () => {
       );
       const game = new Game();
       game.setChains(chains);
-      expect(game.getPlayerScore("TIM")).toBe(10);
-      expect(game.getPlayerScore("ASD")).toBe(5);
+      expect(game.getPlayerScore("b989bcb4a39c769d")).toBe(10);
+      expect(game.getPlayerScore("727f8fc5f18ce498")).toBe(5);
     });
   });
 });

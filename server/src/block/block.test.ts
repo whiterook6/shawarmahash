@@ -5,14 +5,14 @@ import { Block } from "./block";
 describe("Block", () => {
   describe("calculateHash", () => {
     it("It can calculate a hash with a team", () => {
-      const expectedHash = "fffff86ec084f21ee3cc501d51068a39";
-      const previousHash = "fffff3bbda1760827f461c9b3eb39945";
+      const expectedHash = "fffffd908585329758a160fffe3b25ef";
+      const previousHash = "fffffe892c7ab1a894578e502be6a804";
       const actualHash = Block.calculateHash({
         previousHash,
-        previousTimestamp: 1767569780,
-        player: "MIT",
-        team: "TIM",
-        nonce: 48536,
+        previousTimestamp: 1768790924,
+        player: "TIM",
+        team: "TST",
+        nonce: 292026,
       });
       expect(actualHash).toEqual(expectedHash);
     });
@@ -23,6 +23,7 @@ describe("Block", () => {
       const genesisBlock = Block.createGenesisBlock({
         player: "AAA",
         team: "BBB",
+        identity: "b989bcb4a39c769d",
       });
       expect(genesisBlock).toEqual(
         expect.objectContaining({

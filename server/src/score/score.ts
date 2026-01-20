@@ -2,6 +2,7 @@ import { Chain } from "../chain/chain";
 
 export type PlayerScore = {
   player: string;
+  identity: string;
   score: number;
 };
 
@@ -19,10 +20,10 @@ export const Score = {
   },
 
   /**
-   * A single chain may have multiple players, so this filters the chain by player then counts the number of blocks.
+   * A single chain may have multiple identities, so this filters the chain by identity then counts the number of blocks.
    */
-  getPlayerScore: (chain: Chain, player: string): number => {
-    return chain.filter((block) => block.player === player).length;
+  getPlayerScore: (chain: Chain, identity: string): number => {
+    return Chain.getPlayerBlocks(chain, identity).length;
   },
 
   /**
@@ -50,14 +51,20 @@ export const Score = {
 
     const playerScores = new Map<string, number>();
     for (const block of chain) {
-      if (block.player) {
-        const current = playerScores.get(block.player) || 0;
-        playerScores.set(block.player, current + 1);
-      }
+      const key = `${block.player}-${block.identity}`;
+      const current = playerScores.get(key) || 0;
+      playerScores.set(key, current + 1);
     }
 
     return Array.from(playerScores.entries())
-      .map(([player, score]) => ({ player, score }))
+      .map(([key, score]) => {
+        const [player, identity] = key.split("-");
+        return {
+          player,
+          identity,
+          score,
+        };
+      })
       .sort((a, b) => a.player.localeCompare(b.player));
   },
 };

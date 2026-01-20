@@ -1,3 +1,4 @@
+import cookie from "@fastify/cookie";
 import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import staticFiles from "@fastify/static";
@@ -10,20 +11,17 @@ import { Data } from "../data/data";
 import { Difficulty } from "../difficulty/difficulty";
 import { errorHandler } from "../error/errors";
 import { Game } from "../game/game";
+import { IdentityController } from "../identity/identity.controller";
+import { EnvController } from "./env";
 import { schemas } from "./schemas";
 
 export type Options = {
   gitHash?: string;
 };
 
-export function createServer(
-  game: Game,
-  broadcast: Broadcast,
-  data: Data,
-  options: Options = {},
-) {
+export function createServer(game: Game, broadcast: Broadcast, data: Data) {
   const fastify = Fastify({
-    logger: process.env.NODE_ENV === "production",
+    logger: EnvController.env.NODE_ENV === "production",
   });
 
   fastify.register(helmet, {
@@ -38,8 +36,11 @@ export function createServer(
     timeWindow: "1m",
   });
 
+  fastify.register(cookie);
+
   fastify.setErrorHandler(errorHandler);
 
+  // GET /health: get the health of the server
   const serverStartTime = new Date();
   fastify.get(
     "/health",
@@ -53,7 +54,7 @@ export function createServer(
       const sseClients = broadcast.getSubscriberCount();
 
       return reply.status(200).send({
-        gitHash: options.gitHash || "unknown",
+        gitHash: EnvController.env.GIT_HASH,
         startTime: serverStartTime,
         now: now,
         uptime: (now.getTime() - serverStartTime.getTime()) / 1000,
@@ -68,6 +69,23 @@ export function createServer(
         dataDirectory: dataDirectoryStatus,
         sseClients,
       });
+    },
+  );
+
+  // POST /identity: ensure an identity cookie is present (anonymous session)
+  fastify.post(
+    "/identity",
+    schemas.postIdentity,
+    async (_: FastifyRequest, reply: FastifyReply) => {
+      const identityToken = IdentityController.generateIdentityToken();
+      reply.setCookie("identityToken", identityToken, {
+        path: "/",
+        httpOnly: true,
+        secure: EnvController.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 60 * 60 * 24 * 365, // 1 year
+      });
+      return reply.status(200).send({ identityToken });
     },
   );
 
@@ -101,36 +119,38 @@ export function createServer(
     },
   );
 
-  // GET /players/:player/score: get the player's score (PlayerScore)
   fastify.get(
-    "/players/:player/score",
+    "/players/me/score",
     schemas.getPlayerScore,
-    (
-      request: FastifyRequest<{
-        Params: { player: string };
-      }>,
-      reply: FastifyReply,
-    ) => {
-      const score = game.getPlayerScore(request.params.player);
-      return reply.status(200).send({
-        player: request.params.player,
-        score,
+    (request: FastifyRequest, reply: FastifyReply) => {
+      const identity = request.cookies.identityToken;
+      if (!identity) {
+        return reply.status(401).send({ error: "Unauthorized" });
+      }
+      const derivedIdentity = IdentityController.generateDerivedIdentityToken({
+        identityToken: identity,
+        secret: EnvController.env.IDENTITY_SECRET,
       });
+      const score = game.getPlayerScore(derivedIdentity);
+      return reply.status(200).send({ identity, score, you: true });
     },
   );
 
-  // GET /players/:player/messages: get the player's messages (PlayerMessages)
+  // GET /players/:identity/score: get the player's lifetime score (by identity)
   fastify.get(
-    "/players/:player/messages",
-    schemas.getPlayerMessages,
+    "/players/:identity/score",
+    schemas.getPlayerScore,
     (
       request: FastifyRequest<{
-        Params: { player: string };
+        Params: { identity: string };
       }>,
       reply: FastifyReply,
     ) => {
-      const messages = game.getPlayerMessages(request.params.player);
-      return reply.status(200).send(messages);
+      const score = game.getPlayerScore(request.params.identity);
+      return reply.status(200).send({
+        identity: request.params.identity,
+        score,
+      });
     },
   );
 
@@ -159,21 +179,6 @@ export function createServer(
         team: request.params.team,
         score: teamScore,
       });
-    },
-  );
-
-  // GET /teams/:team/messages: get the messages in blocks owned by the team (TeamMessages)
-  fastify.get(
-    "/teams/:team/messages",
-    schemas.getTeamMessages,
-    (
-      request: FastifyRequest<{
-        Params: { team: string };
-      }>,
-      reply: FastifyReply,
-    ) => {
-      const messages = game.getTeamMessages(request.params.team);
-      return reply.status(200).send(messages);
     },
   );
 
@@ -235,6 +240,7 @@ export function createServer(
           previousHash: string;
           player: string;
           nonce: number;
+          identity: string;
           hash: string;
           message?: string;
         };
@@ -242,13 +248,20 @@ export function createServer(
       reply: FastifyReply,
     ) => {
       const { team } = request.params;
-      const { previousHash, player, nonce, hash, message } = request.body;
+      const { previousHash, player, nonce, identity, hash, message } =
+        request.body;
+
+      const derivedIdentity = IdentityController.generateDerivedIdentityToken({
+        identityToken: identity,
+        secret: EnvController.env.IDENTITY_SECRET,
+      });
 
       const chainState = await game.submitBlock({
         previousHash,
         player,
         team,
         nonce,
+        identity: derivedIdentity,
         hash,
         message,
       });

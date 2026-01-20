@@ -1,10 +1,17 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
+import dotenv from "dotenv";
 import { Block } from "../block/block";
 import { Difficulty } from "../difficulty/difficulty";
 import { Timestamp } from "../timestamp/timestamp";
+import { IdentityController } from "../identity/identity.controller";
 
 const run = async () => {
+  dotenv.config();
+  if (!process.env.IDENTITY_SECRET) {
+    throw new Error("IDENTITY_SECRET is not set");
+  }
+
   // Parse command line arguments
   const argv = await yargs(hideBin(process.argv))
     .scriptName("generateBlock")
@@ -33,6 +40,12 @@ const run = async () => {
       demandOption: true,
       describe: "Three uppercase letters (e.g., ABC)",
     })
+    .option("identity", {
+      alias: "i",
+      type: "string",
+      demandOption: false,
+      describe: "Raw identity token (will be derived before storing on blocks)",
+    })
     .option("team", {
       alias: "t",
       type: "string",
@@ -40,7 +53,7 @@ const run = async () => {
       describe: "Three uppercase letters (e.g., ABC)",
     })
     .option("index", {
-      alias: "i",
+      alias: "x",
       type: "number",
       default: 0,
       describe: "Block index (default: 0)",
@@ -60,6 +73,12 @@ const run = async () => {
   const difficultyTarget = argv.difficultyTarget;
   const team = argv.team;
   const index = argv.index;
+  const identityToken =
+    argv.identity ?? IdentityController.generateIdentityToken();
+  const derivedIdentity = IdentityController.generateDerivedIdentityToken({
+    identityToken,
+    secret: process.env.IDENTITY_SECRET,
+  });
 
   console.error(
     `Mining block for player "${player}" with difficulty target "${difficultyTarget}"...`,
@@ -91,6 +110,7 @@ const run = async () => {
     team: team,
     timestamp: Timestamp.now(),
     nonce: nonce,
+    identity: derivedIdentity,
   };
 
   // Print the JSON
