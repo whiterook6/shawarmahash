@@ -14,6 +14,9 @@ export type Block = {
   /** The team that the player is on. Format: AAA-ZZZ */
   team: string;
 
+  /** The identity of the player who mined the block. */
+  identity: string;
+
   /** The timestamp of the block in seconds. */
   timestamp: number;
 
@@ -43,9 +46,7 @@ export const Block = {
     const { previousHash, previousTimestamp, player, team, nonce } = args;
     return crypto
       .createHash("sha256")
-      .update(
-        `${previousHash}${previousTimestamp}${player}${team ?? ""}${nonce}`,
-      )
+      .update(`${previousHash}${previousTimestamp}${player}${team}${nonce}`)
       .digest("hex")
       .substring(0, 32);
   },
@@ -54,9 +55,10 @@ export const Block = {
   createGenesisBlock: (args: {
     player: string;
     team: string;
+    identity: string;
     message?: string;
   }): Block => {
-    const { player, team, message } = args;
+    const { player, team, identity, message } = args;
     const timestamp = Timestamp.now();
     let nonce = 0;
     let hash = "";
@@ -85,6 +87,7 @@ export const Block = {
       nonce,
       index: 0,
       message: message,
+      identity,
     };
   },
 
@@ -112,6 +115,7 @@ export const Block = {
         hash: faker.string.hexadecimal({ length: 32 }),
         previousHash: faker.string.hexadecimal({ length: 32 }),
         team: faker.string.alpha(3).toUpperCase(),
+        identity: faker.string.hexadecimal({ length: 16 }),
         message: faker.lorem.sentence(),
         ...overrides,
       };

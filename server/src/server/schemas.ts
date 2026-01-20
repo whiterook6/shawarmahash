@@ -1,11 +1,53 @@
-const threeUppercaseLetters = {
-  type: "string",
-  minLength: 3,
-  maxLength: 3,
-  pattern: "^[A-Z]{3}$",
+const schemaRefs = {
+  playerName: {
+    type: "string",
+    minLength: 3,
+    maxLength: 3,
+    pattern: "^[A-Z]{3}$",
+  },
+  teamName: {
+    type: "string",
+    minLength: 3,
+    maxLength: 3,
+    pattern: "^[A-Z]{3}$",
+  },
+  identity: {
+    type: "string",
+    minLength: 16,
+    maxLength: 16,
+    pattern: "^[0-9a-f]{16}$",
+  },
+  hashCode: {
+    type: "string",
+    minLength: 32,
+    maxLength: 32,
+    pattern: "^[0-9a-f]{32}$",
+  },
+  nonce: {
+    type: "integer",
+    minimum: 1,
+  },
+  timestamp: {
+    type: "integer",
+    minimum: 1,
+  },
 } as const;
 
 export const schemas = {
+  postIdentity: {
+    schema: {
+      response: {
+        200: {
+          type: "object",
+          properties: {
+            identityToken: schemaRefs.identity,
+          },
+          required: ["identityToken"],
+          additionalProperties: false,
+        },
+      },
+    },
+  },
   getHealth: {
     schema: {
       response: {
@@ -65,10 +107,11 @@ export const schemas = {
           items: {
             type: "object",
             properties: {
-              player: threeUppercaseLetters,
+              player: schemaRefs.playerName,
+              identity: schemaRefs.identity,
               score: { type: "number" },
             },
-            required: ["player", "score"],
+            required: ["player", "identity", "score"],
             additionalProperties: false,
           },
           additionalItems: false,
@@ -81,19 +124,19 @@ export const schemas = {
       Params: {
         type: "object",
         properties: {
-          player: threeUppercaseLetters,
+          identity: schemaRefs.identity,
         },
-        required: ["player"],
+        required: ["identity"],
         additionalProperties: false,
       },
       response: {
         200: {
           type: "object",
           properties: {
-            player: threeUppercaseLetters,
+            identity: schemaRefs.identity,
             score: { type: "number" },
           },
-          required: ["player", "score"],
+          required: ["identity", "score"],
           additionalProperties: false,
         },
       },
@@ -107,10 +150,11 @@ export const schemas = {
           items: {
             type: "object",
             properties: {
-              player: threeUppercaseLetters,
+              player: schemaRefs.playerName,
+              identity: schemaRefs.identity,
               score: { type: "number" },
             },
-            required: ["player", "score"],
+            required: ["player", "identity", "score"],
             additionalProperties: false,
           },
           additionalItems: false,
@@ -123,7 +167,7 @@ export const schemas = {
       Params: {
         type: "object",
         properties: {
-          player: threeUppercaseLetters,
+          player: schemaRefs.playerName,
         },
         required: ["player"],
         additionalProperties: false,
@@ -135,12 +179,12 @@ export const schemas = {
             type: "object",
             properties: {
               index: { type: "number" },
-              player: threeUppercaseLetters,
-              team: threeUppercaseLetters,
-              timestamp: { type: "number" },
-              nonce: { type: "number" },
-              hash: { type: "string" },
-              previousHash: { type: "string" },
+              player: schemaRefs.playerName,
+              team: schemaRefs.teamName,
+              timestamp: schemaRefs.timestamp,
+              nonce: schemaRefs.nonce,
+              hash: schemaRefs.hashCode,
+              previousHash: schemaRefs.hashCode,
               message: { type: "string" },
             },
             required: [
@@ -167,7 +211,7 @@ export const schemas = {
           items: {
             type: "object",
             properties: {
-              team: threeUppercaseLetters,
+              team: schemaRefs.teamName,
               score: { type: "number" },
             },
             required: ["team", "score"],
@@ -183,7 +227,7 @@ export const schemas = {
       Params: {
         type: "object",
         properties: {
-          team: threeUppercaseLetters,
+          team: schemaRefs.teamName,
         },
         required: ["team"],
         additionalProperties: false,
@@ -192,7 +236,7 @@ export const schemas = {
         200: {
           type: "object",
           properties: {
-            team: threeUppercaseLetters,
+            team: schemaRefs.teamName,
             score: { type: "number" },
           },
           required: ["team", "score"],
@@ -209,7 +253,7 @@ export const schemas = {
           items: {
             type: "object",
             properties: {
-              team: threeUppercaseLetters,
+              team: schemaRefs.teamName,
               score: { type: "number" },
             },
             required: ["team", "score"],
@@ -225,7 +269,7 @@ export const schemas = {
       Params: {
         type: "object",
         properties: {
-          team: threeUppercaseLetters,
+          team: schemaRefs.teamName,
         },
         required: ["team"],
         additionalProperties: false,
@@ -237,12 +281,12 @@ export const schemas = {
             type: "object",
             properties: {
               index: { type: "number" },
-              player: threeUppercaseLetters,
-              team: threeUppercaseLetters,
-              timestamp: { type: "number" },
-              nonce: { type: "number" },
-              hash: { type: "string" },
-              previousHash: { type: "string" },
+              player: schemaRefs.playerName,
+              team: schemaRefs.teamName,
+              timestamp: schemaRefs.timestamp,
+              nonce: schemaRefs.nonce,
+              hash: schemaRefs.hashCode,
+              previousHash: schemaRefs.hashCode,
               message: { type: "string" },
             },
             required: [
@@ -267,7 +311,7 @@ export const schemas = {
       Params: {
         type: "object",
         properties: {
-          team: threeUppercaseLetters,
+          team: schemaRefs.teamName,
         },
         required: ["team"],
         additionalProperties: false,
@@ -275,9 +319,7 @@ export const schemas = {
       response: {
         200: {
           type: "array",
-          items: {
-            ...threeUppercaseLetters,
-          },
+          items: schemaRefs.playerName,
           additionalItems: false,
         },
       },
@@ -288,7 +330,7 @@ export const schemas = {
       Params: {
         type: "object",
         properties: {
-          team: threeUppercaseLetters,
+          team: schemaRefs.teamName,
         },
         required: ["team"],
         additionalProperties: false,
@@ -297,7 +339,7 @@ export const schemas = {
         200: {
           type: "object",
           properties: {
-            previousHash: { type: "string" },
+            previousHash: schemaRefs.hashCode,
             previousTimestamp: { type: "number" },
             difficulty: { type: "string" },
           },
@@ -312,7 +354,7 @@ export const schemas = {
       Params: {
         type: "object",
         properties: {
-          team: threeUppercaseLetters,
+          team: schemaRefs.teamName,
         },
         required: ["team"],
         additionalProperties: false,
@@ -320,13 +362,14 @@ export const schemas = {
       Body: {
         type: "object",
         properties: {
-          previousHash: { type: "string" },
-          player: threeUppercaseLetters,
-          nonce: { type: "number" },
-          hash: { type: "string" },
+          previousHash: schemaRefs.hashCode,
+          player: schemaRefs.playerName,
+          identity: schemaRefs.identity,
+          nonce: schemaRefs.nonce,
+          hash: schemaRefs.hashCode,
           message: { type: "string" },
         },
-        required: ["previousHash", "player", "nonce", "hash"],
+        required: ["previousHash", "player", "identity", "nonce", "hash"],
         additionalProperties: false,
       },
       response: {
@@ -339,12 +382,12 @@ export const schemas = {
                 type: "object",
                 properties: {
                   index: { type: "number" },
-                  player: threeUppercaseLetters,
-                  team: threeUppercaseLetters,
-                  timestamp: { type: "number" },
-                  nonce: { type: "number" },
-                  hash: { type: "string" },
-                  previousHash: { type: "string" },
+                  player: schemaRefs.playerName,
+                  team: schemaRefs.teamName,
+                  timestamp: schemaRefs.timestamp,
+                  nonce: schemaRefs.nonce,
+                  hash: schemaRefs.hashCode,
+                  previousHash: schemaRefs.hashCode,
                   message: { type: "string" },
                 },
                 required: [

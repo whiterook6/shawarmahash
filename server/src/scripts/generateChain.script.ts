@@ -2,12 +2,19 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { writeFile, mkdir } from "fs/promises";
 import { join } from "path";
+import dotenv from "dotenv";
 import { Block } from "../block/block";
 import { Chain } from "../chain/chain";
 import { Miner } from "../miner/miner";
 import { faker } from "@faker-js/faker";
+import { IdentityController } from "../identity/identity.controller";
 
 const run = async () => {
+  dotenv.config();
+  if (!process.env.IDENTITY_SECRET) {
+    throw new Error("IDENTITY_SECRET is not set");
+  }
+
   // Parse command line arguments
   const argv = await yargs(hideBin(process.argv))
     .scriptName("generateChain")
@@ -30,6 +37,12 @@ const run = async () => {
       demandOption: true,
       describe: "Player name",
     })
+    .option("identity", {
+      alias: "i",
+      type: "string",
+      demandOption: false,
+      describe: "Raw identity token (will be derived before storing on blocks)",
+    })
     .option("message", {
       alias: "m",
       type: "boolean",
@@ -48,6 +61,12 @@ const run = async () => {
   const player = argv.player;
   const team = argv.team;
   const numBlocks = argv.numBlocks;
+  const identityToken =
+    argv.identity ?? IdentityController.generateIdentityToken();
+  const derivedIdentity = IdentityController.generateDerivedIdentityToken({
+    identityToken,
+    secret: process.env.IDENTITY_SECRET,
+  });
 
   console.log(
     `Generating chain for player "${player}" in team "${team}" with ${numBlocks} blocks...`,
@@ -57,6 +76,7 @@ const run = async () => {
   const genesisBlock = Block.createGenesisBlock({
     player,
     team,
+    identity: derivedIdentity,
   });
   const chain: Chain = [genesisBlock];
 
@@ -68,6 +88,7 @@ const run = async () => {
     const newBlock = Miner.mineBlock(chain, {
       player,
       team,
+      identity: derivedIdentity,
       message,
     });
     chain.push(newBlock);

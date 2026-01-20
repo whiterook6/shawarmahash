@@ -144,6 +144,7 @@ export class Data {
           timestamp: block.timestamp,
           nonce: block.nonce,
           index: block.index,
+          identity: block.identity,
         };
 
         if (block.message) {

@@ -37,10 +37,11 @@ export const Miner = {
     args: {
       player: string;
       team: string;
+      identity: string;
       message?: string;
     },
   ): Block => {
-    const { player, team, message } = args;
+    const { player, team, identity, message } = args;
     if (recentChain.length === 0) {
       throw new Error("Cannot mine block on empty chain");
     }
@@ -65,6 +66,7 @@ export const Miner = {
       timestamp: Timestamp.now(),
       nonce,
       index: previousBlock.index + 1,
+      identity,
     };
     if (message) {
       newBlock.message = message;
