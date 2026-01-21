@@ -17,6 +17,15 @@ export const MiningProvider = ({
   children: React.ReactNode;
 }) => {
   const minerRef = useRef<Worker | null>(null);
+  const identityRef = useRef(identity);
+  const activeTargetRef = useRef<{
+    previousHash: string;
+    previousTimestamp: number;
+    difficulty: string;
+    player: string;
+    team: string;
+  } | null>(null);
+
   const [isMining, setIsMining] = useState(false);
   const [progress, setProgress] = useState<
     MiningProgressResponse["data"] | null
@@ -25,6 +34,10 @@ export const MiningProvider = ({
     MiningSuccessResponse["data"] | null
   >(null);
   const [lastError, setLastError] = useState<string | null>(null);
+
+  useEffect(() => {
+    identityRef.current = identity;
+  }, [identity]);
 
   useEffect(() => {
     const miner = new Worker(new URL("../services/miner.ts", import.meta.url), {
@@ -41,13 +54,22 @@ export const MiningProvider = ({
         case "mining_success":
           setLastSuccess(msg.data);
           setIsMining(false);
-          Api.submitBlock(msg.data.team, {
-            previousHash: msg.data.previousHash,
-            player: msg.data.player,
-            nonce: msg.data.nonce,
-            identity,
-            hash: msg.data.hash,
-          });
+          // NOTE: `mining_success` does not include `previousHash`, so we submit
+          // against the most recent target we started mining.
+          {
+            const target = activeTargetRef.current;
+            if (!target) return;
+            void Api.submitBlock(target.team, {
+              previousHash: target.previousHash,
+              player: msg.data.player,
+              nonce: msg.data.nonce,
+              identity: identityRef.current,
+              hash: msg.data.hash,
+            }).catch((e) => {
+              const message = e instanceof Error ? e.message : String(e);
+              setLastError(message);
+            });
+          }
           return;
         case "mining_error":
           setLastError(msg.data.message);
@@ -90,6 +112,7 @@ export const MiningProvider = ({
       setLastError(null);
       setLastSuccess(null);
       setIsMining(true);
+      activeTargetRef.current = target;
 
       post({
         type: "start_mining",

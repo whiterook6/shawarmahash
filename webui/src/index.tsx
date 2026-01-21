@@ -3,6 +3,8 @@ import { createRoot } from "react-dom/client";
 import "./index.scss";
 import { IdentityProvider } from "./game/IdentityProvider";
 import { useIdentity } from "./services/useIdentity";
+import { MiningProvider } from "./game/MiningProvider";
+import { MiningDemo } from "./game/MiningDemo";
 
 function App() {
   const { identity, isLoading, error, generateNewIdentity } = useIdentity();
@@ -23,6 +25,12 @@ function App() {
       <button onClick={() => void generateNewIdentity()} disabled={isLoading}>
         Generate new identity
       </button>
+
+      {identity ? (
+        <MiningProvider identity={identity}>
+          <MiningDemo identity={identity} />
+        </MiningProvider>
+      ) : null}
     </div>
   );
 }
