@@ -12,7 +12,7 @@ import { Difficulty } from "../difficulty/difficulty";
 import { errorHandler } from "../error/errors";
 import { Game } from "../game/game";
 import { IdentityController } from "../identity/identity.controller";
-import { EnvController } from "./env";
+import { EnvController } from "../env";
 import { schemas } from "./schemas";
 
 export type Options = {

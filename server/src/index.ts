@@ -3,7 +3,7 @@ import { createServer } from "./server/server";
 import { Data } from "./data/data";
 import { Broadcast } from "./broadcast/broadcast";
 import { join } from "path";
-import { EnvController } from "./server/env";
+import { EnvController } from "./env";
 
 // Start server
 const start = async () => {
