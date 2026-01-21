@@ -109,6 +109,8 @@ export type MiningProgressResponse = {
 export type MiningSuccessResponse = {
   type: "mining_success";
   data: {
+    previousHash: string;
+    previousTimestamp: number;
     player: string;
     team: string;
     nonce: number;

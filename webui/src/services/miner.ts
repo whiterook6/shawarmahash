@@ -7,7 +7,7 @@ import type {
   MiningStatusResponse,
   MiningSuccessResponse,
   StartMiningRequest,
-} from "./types";
+} from "../types";
 
 // Ensure crypto is available in worker context
 declare const self: DedicatedWorkerGlobalScope;
@@ -70,16 +70,22 @@ const Miner = {
     const PROGRESS_UPDATE_INTERVAL = 1000 / 30; // 30 times per second
 
     const interval = setInterval(() => {
+      if (Miner.currentMiningRequest.type === "stop_mining") {
+        clearInterval(interval);
+        return;
+      }
+
       const elapsed = (Date.now() - startTime) / 1000;
       const hashesPerSecond = Math.ceil(hashesChecked / elapsed);
-      self.postMessage({
+      const message: MiningProgressResponse = {
         type: "mining_progress",
         data: {
           nonce: nonce,
           bestHash: bestHash,
           hashesPerSecond: hashesPerSecond,
         },
-      } as MiningProgressResponse);
+      };
+      self.postMessage(message);
     }, PROGRESS_UPDATE_INTERVAL);
 
     try {
@@ -113,12 +119,13 @@ const Miner = {
           const errorMessage =
             error instanceof Error ? error.message : String(error);
           const errorName = error instanceof Error ? error.name : "Unknown";
-          self.postMessage({
+          const message: MiningErrorResponse = {
             type: "mining_error",
             data: {
               message: `Crypto operation failed (${errorName}): ${errorMessage}. Make sure you're using HTTPS or localhost, and your browser supports Web Crypto API in workers.`,
             },
-          } as MiningErrorResponse);
+          };
+          self.postMessage(message);
           return;
         }
 
@@ -135,15 +142,18 @@ const Miner = {
         hashesChecked++;
 
         if (hashString >= target.difficulty) {
-          self.postMessage({
+          const message: MiningSuccessResponse = {
             type: "mining_success",
             data: {
+              previousHash: target.previousHash,
+              previousTimestamp: target.previousTimestamp,
               player: target.player,
               team: target.team,
               nonce: nonce,
               hash: hashString,
             },
-          } as MiningSuccessResponse);
+          };
+          self.postMessage(message);
           return;
         }
         nonce++;
@@ -154,7 +164,7 @@ const Miner = {
   },
 
   getMiningStatus: () => {
-    self.postMessage({
+    const message: MiningStatusResponse = {
       type: "mining_status",
       data: {
         status:
@@ -162,7 +172,8 @@ const Miner = {
             ? "active"
             : "inactive",
       },
-    } as MiningStatusResponse);
+    };
+    self.postMessage(message);
   },
 };
 

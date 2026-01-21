@@ -75,11 +75,17 @@ export const Api = {
   },
 
   __post: async <T>(url: string, body?: unknown): Promise<T> => {
+    const headers: Record<string, string> = {};
+    const requestBody = body === undefined ? undefined : JSON.stringify(body);
+    if (requestBody !== undefined) {
+      headers["Content-Type"] = "application/json";
+    }
+
     const response = await fetch(url, {
       method: "POST",
       credentials: "include",
-      headers: { "Content-Type": "application/json" },
-      body: body ? JSON.stringify(body) : undefined,
+      headers,
+      body: requestBody,
     });
 
     if (!response.ok) {
