@@ -36,7 +36,7 @@ export type TeamWithScoreAPIResponse = {
   score: number;
 };
 
-export type MiningTarget = {
+export type TeamMiningTarget = {
   previousHash: string;
   previousTimestamp: number;
   difficulty: string;
@@ -71,15 +71,17 @@ export type Block = {
   message?: string;
 };
 
+export type MiningTarget = {
+  previousHash: string;
+  previousTimestamp: number;
+  player: string;
+  team: string;
+  difficulty: string;
+};
+
 export type StartMiningRequest = {
   type: "start_mining";
-  data: {
-    previousHash: string;
-    previousTimestamp: number;
-    player: string;
-    team: string;
-    difficulty: string;
-  };
+  data: MiningTarget;
 };
 
 export type StopMiningRequest = {

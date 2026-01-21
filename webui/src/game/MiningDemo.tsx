@@ -1,14 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Api } from "../api";
 import { useMining } from "../services/useMining";
-import type { MiningTarget } from "../types";
+import type { TeamMiningTarget } from "../types";
 
 const PLAYER = "TIM";
 const TEAM = "TST";
 
 export function MiningDemo({ identity }: { identity: string }) {
   const mining = useMining();
-  const [target, setTarget] = useState<MiningTarget | null>(null);
+  const [target, setTarget] = useState<TeamMiningTarget | null>(null);
   const [isTargetLoading, setIsTargetLoading] = useState(false);
   const [targetError, setTargetError] = useState<string | null>(null);
   const [autoMine, setAutoMine] = useState(true);

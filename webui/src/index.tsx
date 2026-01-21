@@ -1,7 +1,6 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.scss";
-import { IdentityProvider } from "./game/IdentityProvider";
 import { useIdentity } from "./services/useIdentity";
 import { MiningProvider } from "./game/MiningProvider";
 import { MiningDemo } from "./game/MiningDemo";
@@ -19,7 +18,9 @@ function App() {
           {isLoading ? "loading..." : (identity ?? "none")}
         </div>
         {error ? (
-          <div style={{ marginTop: "0.5rem", color: "#7f1d1d" }}>{error}</div>
+          <div style={{ marginTop: "0.5rem", color: "#7f1d1d" }}>
+            {error.message}
+          </div>
         ) : null}
       </div>
       <button onClick={() => void generateNewIdentity()} disabled={isLoading}>
@@ -43,8 +44,6 @@ if (!rootElement) {
 const root = createRoot(rootElement);
 root.render(
   <StrictMode>
-    <IdentityProvider>
-      <App />
-    </IdentityProvider>
+    <App />
   </StrictMode>,
 );

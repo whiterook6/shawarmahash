@@ -2,7 +2,7 @@ import type {
   ChainStateAPIResponse,
   HealthAPIResponse,
   IdentityAPIResponse,
-  MiningTarget,
+  TeamMiningTarget as TeamMiningTargetAPIResponse,
   PlayerScoreByIdentityAPIResponse,
   PlayerWithScoreAPIResponse,
   SubmitBlockAPIRequest,
@@ -54,8 +54,8 @@ export const Api = {
     return Api.__get<string[]>(`/teams/${team}/players`);
   },
 
-  getTeam: async (team: string): Promise<MiningTarget> => {
-    return Api.__get<MiningTarget>(`/teams/${team}`);
+  getTeam: async (team: string): Promise<TeamMiningTargetAPIResponse> => {
+    return Api.__get<TeamMiningTargetAPIResponse>(`/teams/${team}`);
   },
 
   submitBlock: async (
