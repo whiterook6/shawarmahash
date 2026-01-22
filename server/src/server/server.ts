@@ -40,10 +40,10 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
 
   fastify.setErrorHandler(errorHandler);
 
-  // GET /health: get the health of the server
+  // GET /api/health: get the health of the server
   const serverStartTime = new Date();
   fastify.get(
-    "/health",
+    "/api/health",
     schemas.getHealth,
     async (_: FastifyRequest, reply: FastifyReply) => {
       const now = new Date();
@@ -72,9 +72,9 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
     },
   );
 
-  // POST /identity: ensure an identity cookie is present (anonymous session)
+  // POST /api/identity: ensure an identity cookie is present (anonymous session)
   fastify.post(
-    "/identity",
+    "/api/identity",
     schemas.postIdentity,
     async (_: FastifyRequest, reply: FastifyReply) => {
       const identityToken = IdentityController.generateIdentityToken();
@@ -89,9 +89,9 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
     },
   );
 
-  // GET /players/top: get the top 10 players and their scores (PlayerScore[])
+  // GET /api/players/top: get the top 10 players and their scores (PlayerScore[])
   fastify.get(
-    "/players/top",
+    "/api/players/top",
     schemas.getTopPlayers,
     (_: FastifyRequest, reply: FastifyReply) => {
       const topPlayers = game.getTopPlayers();
@@ -99,9 +99,9 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
     },
   );
 
-  // GET /teams/top: get the top 10 teams and their scores (TeamScore[])
+  // GET /api/teams/top: get the top 10 teams and their scores (TeamScore[])
   fastify.get(
-    "/teams/top",
+    "/api/teams/top",
     schemas.getTopTeams,
     (_: FastifyRequest, reply: FastifyReply) => {
       const topTeams = game.getTopTeams();
@@ -109,9 +109,9 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
     },
   );
 
-  // GET /players: get a list of players and their scores (PlayerScore[])
+  // GET /api/players: get a list of players and their scores (PlayerScore[])
   fastify.get(
-    "/players",
+    "/api/players",
     schemas.getPlayers,
     (_: FastifyRequest, reply: FastifyReply) => {
       const playerScores = game.getAllPlayerScores();
@@ -120,7 +120,7 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
   );
 
   fastify.get(
-    "/players/me/score",
+    "/api/players/me/score",
     schemas.getPlayerScore,
     (request: FastifyRequest, reply: FastifyReply) => {
       const identity = request.cookies.identityToken;
@@ -136,9 +136,9 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
     },
   );
 
-  // GET /players/:identity/score: get the player's lifetime score (by identity)
+  // GET /api/players/:identity/score: get the player's lifetime score (by identity)
   fastify.get(
-    "/players/:identity/score",
+    "/api/players/:identity/score",
     schemas.getPlayerScore,
     (
       request: FastifyRequest<{
@@ -154,9 +154,9 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
     },
   );
 
-  // GET /teams: get the list of teams and their scores (TeamScore[])
+  // GET /api/teams: get the list of teams and their scores (TeamScore[])
   fastify.get(
-    "/teams",
+    "/api/teams",
     schemas.getTeams,
     (_: FastifyRequest, reply: FastifyReply) => {
       const teamScores = game.getAllTeamScores();
@@ -164,9 +164,9 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
     },
   );
 
-  // GET /teams/:team/score: get the score across all player's chains for the team (TeamScore)
+  // GET /api/teams/:team/score: get the score across all player's chains for the team (TeamScore)
   fastify.get(
-    "/teams/:team/score",
+    "/api/teams/:team/score",
     schemas.getTeamScore,
     (
       request: FastifyRequest<{
@@ -182,9 +182,9 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
     },
   );
 
-  // GET /teams/:team/players: get the players whose most recent block is owned by the team
+  // GET /api/teams/:team/players: get the players whose most recent block is owned by the team
   fastify.get(
-    "/teams/:team/players",
+    "/api/teams/:team/players",
     schemas.getTeamPlayers,
     (
       request: FastifyRequest<{
@@ -197,9 +197,9 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
     },
   );
 
-  // GET /teams/:team: get the info needed to mine a new block
+  // GET /api/teams/:team: get the info needed to mine a new block
   fastify.get(
-    "/teams/:team",
+    "/api/teams/:team",
     schemas.getTeam,
     (
       request: FastifyRequest<{
@@ -229,9 +229,9 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
     },
   );
 
-  // POST /teams/:team/chain: submit a block (handles both genesis and append cases)
+  // POST /api/teams/:team/chain: submit a block (handles both genesis and append cases)
   fastify.post(
-    "/teams/:team/chain",
+    "/api/teams/:team/chain",
     schemas.submitBlock,
     async (
       request: FastifyRequest<{
@@ -270,8 +270,8 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
     },
   );
 
-  // GET /events: Server-Sent Events endpoint
-  fastify.get("/events", async (_: FastifyRequest, reply: FastifyReply) => {
+  // GET /api/events: Server-Sent Events endpoint
+  fastify.get("/api/events", async (_: FastifyRequest, reply: FastifyReply) => {
     // Set SSE headers
     reply.raw.setHeader("Content-Type", "text/event-stream");
     reply.raw.setHeader("Cache-Control", "no-cache");
@@ -295,14 +295,28 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
     });
   });
 
-  // Serve static files from webui directory (registered last so API routes take precedence)
+  // Serve static files from webui/dist directory (registered last so API routes take precedence)
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename);
-  const webuiPath = join(__dirname, "../../webui");
+  const webuiDistPath = join(__dirname, "../../webui/dist");
+
   fastify.register(staticFiles, {
-    root: webuiPath,
+    root: webuiDistPath,
     prefix: "/",
   });
+
+  // Catch-all route for SPA: serve index.html for any non-API route
+  fastify.setNotFoundHandler(
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      // Don't serve index.html for API routes
+      if (request.url.startsWith("/api")) {
+        return reply.status(404).send({ error: "Not found" });
+      }
+
+      // Serve index.html for all other routes (SPA routing)
+      return reply.sendFile("index.html", webuiDistPath);
+    },
+  );
 
   return fastify;
 }

@@ -11,58 +11,58 @@ import type {
 
 export const Api = {
   getHealth: async (): Promise<HealthAPIResponse> => {
-    return Api.__get<HealthAPIResponse>("/health");
+    return Api.__get<HealthAPIResponse>("/api/health");
   },
 
   postIdentity: async (): Promise<IdentityAPIResponse> => {
-    return Api.__post<IdentityAPIResponse>("/identity");
+    return Api.__post<IdentityAPIResponse>("/api/identity");
   },
 
   getPlayers: async (): Promise<PlayerWithScoreAPIResponse[]> => {
-    return Api.__get<PlayerWithScoreAPIResponse[]>("/players");
+    return Api.__get<PlayerWithScoreAPIResponse[]>("/api/players");
   },
 
   getTopPlayers: async (): Promise<PlayerWithScoreAPIResponse[]> => {
-    return Api.__get<PlayerWithScoreAPIResponse[]>("/players/top");
+    return Api.__get<PlayerWithScoreAPIResponse[]>("/api/players/top");
   },
 
   getMyScore: async (): Promise<PlayerScoreByIdentityAPIResponse> => {
-    return Api.__get<PlayerScoreByIdentityAPIResponse>("/players/me/score");
+    return Api.__get<PlayerScoreByIdentityAPIResponse>("/api/players/me/score");
   },
 
   getPlayerScore: async (
     identity: string,
   ): Promise<PlayerScoreByIdentityAPIResponse> => {
     return Api.__get<PlayerScoreByIdentityAPIResponse>(
-      `/players/${identity}/score`,
+      `/api/players/${identity}/score`,
     );
   },
 
   getTeams: async (): Promise<TeamWithScoreAPIResponse[]> => {
-    return Api.__get<TeamWithScoreAPIResponse[]>("/teams");
+    return Api.__get<TeamWithScoreAPIResponse[]>("/api/teams");
   },
 
   getTopTeams: async (): Promise<TeamWithScoreAPIResponse[]> => {
-    return Api.__get<TeamWithScoreAPIResponse[]>("/teams/top");
+    return Api.__get<TeamWithScoreAPIResponse[]>("/api/teams/top");
   },
 
   getTeamScore: async (team: string): Promise<TeamWithScoreAPIResponse> => {
-    return Api.__get<TeamWithScoreAPIResponse>(`/teams/${team}/score`);
+    return Api.__get<TeamWithScoreAPIResponse>(`/api/teams/${team}/score`);
   },
 
   getTeamPlayers: async (team: string): Promise<string[]> => {
-    return Api.__get<string[]>(`/teams/${team}/players`);
+    return Api.__get<string[]>(`/api/teams/${team}/players`);
   },
 
   getTeam: async (team: string): Promise<TeamMiningTargetAPIResponse> => {
-    return Api.__get<TeamMiningTargetAPIResponse>(`/teams/${team}`);
+    return Api.__get<TeamMiningTargetAPIResponse>(`/api/teams/${team}`);
   },
 
   submitBlock: async (
     team: string,
     block: SubmitBlockAPIRequest,
   ): Promise<ChainStateAPIResponse> => {
-    return Api.__post<ChainStateAPIResponse>(`/teams/${team}/chain`, block);
+    return Api.__post<ChainStateAPIResponse>(`/api/teams/${team}/chain`, block);
   },
 
   __get: async <T>(url: string): Promise<T> => {

@@ -7,11 +7,7 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      "/identity": { target: backendTarget, changeOrigin: true },
-      "/health": { target: backendTarget, changeOrigin: true },
-      "/players": { target: backendTarget, changeOrigin: true },
-      "/teams": { target: backendTarget, changeOrigin: true },
-      "/events": { target: backendTarget, changeOrigin: true },
+      "/api": { target: backendTarget, changeOrigin: true },
     },
   },
 });

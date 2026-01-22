@@ -69,7 +69,7 @@ describe("Server", () => {
 
     const response = await server.inject({
       method: "GET",
-      url: "/players/top",
+      url: "/api/players/top",
     });
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual(
@@ -98,7 +98,7 @@ describe("Server", () => {
 
     const response = await server.inject({
       method: "GET",
-      url: "/players/top",
+      url: "/api/players/top",
     });
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual([]);
@@ -118,7 +118,7 @@ describe("Server", () => {
 
     const response = await server.inject({
       method: "GET",
-      url: "/teams/top",
+      url: "/api/teams/top",
     });
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual([
@@ -138,7 +138,7 @@ describe("Server", () => {
 
     const response = await server.inject({
       method: "GET",
-      url: "/teams/top",
+      url: "/api/teams/top",
     });
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual([]);
@@ -160,7 +160,7 @@ describe("Server", () => {
 
     const response = await server.inject({
       method: "GET",
-      url: "/players",
+      url: "/api/players",
     });
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual([
