@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Api } from "../api";
-import { useMining } from "../services/useMining";
+import { useMining } from "../services/miner/useMining.hook";
 import type { TeamMiningTarget } from "../types";
 
 const PLAYER = "TIM";

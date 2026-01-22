@@ -1,23 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Api } from "../api";
+import { Api } from "../../api";
+import { identityStorage } from "./identityStorage";
 
-export interface UseIdentityResult {
+export const useIdentity = (): {
   identity?: string;
   isLoading: boolean;
   error?: Error;
   generateNewIdentity: () => Promise<string>;
-}
-
-// Self-contained hook: no context/provider required.
-export function useIdentity(): UseIdentityResult {
+} => {
   const [state, setState] = useState<{
     identity?: string;
     isLoading: boolean;
     error?: Error;
-  }>({
-    identity: undefined,
-    isLoading: true,
-    error: undefined,
+  }>(() => {
+    // Initialize with stored identity if available
+    const stored = identityStorage.get();
+    return {
+      identity: stored || undefined,
+      isLoading: !stored, // Only loading if we don't have a stored identity
+      error: undefined,
+    };
   });
 
   // Prevent stale responses from overwriting newer identities.
@@ -35,6 +37,8 @@ export function useIdentity(): UseIdentityResult {
     try {
       const { identityToken } = await Api.postIdentity();
       if (seq === requestSeq.current) {
+        // Save to localStorage when we get a new identity
+        identityStorage.set(identityToken);
         setState((oldState) => ({
           ...oldState,
           identity: identityToken,
@@ -57,8 +61,11 @@ export function useIdentity(): UseIdentityResult {
   }, []);
 
   useEffect(() => {
-    void generateNewIdentity();
-  }, [generateNewIdentity]);
+    // Only generate a new identity if we don't have a stored one
+    if (!state.identity) {
+      void generateNewIdentity();
+    }
+  }, [generateNewIdentity, state.identity]);
 
   return {
     identity: state.identity,
@@ -66,4 +73,4 @@ export function useIdentity(): UseIdentityResult {
     error: state.error,
     generateNewIdentity,
   };
-}
+};

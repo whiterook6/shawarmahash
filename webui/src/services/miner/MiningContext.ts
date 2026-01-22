@@ -1,5 +1,8 @@
 import { createContext } from "react";
-import type { MiningProgressResponse, MiningSuccessResponse } from "../types";
+import type {
+  MiningProgressResponse,
+  MiningSuccessResponse,
+} from "../../types";
 
 export interface MiningContext {
   isMining: boolean;

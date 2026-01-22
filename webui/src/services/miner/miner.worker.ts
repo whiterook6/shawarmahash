@@ -7,7 +7,7 @@ import type {
   MiningStatusResponse,
   MiningSuccessResponse,
   StartMiningRequest,
-} from "../types";
+} from "../../types";
 
 // Ensure crypto is available in worker context
 declare const self: DedicatedWorkerGlobalScope;

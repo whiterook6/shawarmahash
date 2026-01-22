@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import "./index.scss";
-import { useIdentity } from "./services/useIdentity";
+import { useIdentity } from "./services/identity/useIdentity.hook";
 import { MiningProvider } from "./game/MiningProvider";
 import { MiningDemo } from "./game/MiningDemo";
 
