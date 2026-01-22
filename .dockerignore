@@ -9,10 +9,14 @@ webui/dist/
 **/dist/
 **/output/
 
-# Environment files
+# Environment files (exclude all .env files at any level to prevent secret leakage)
 .env
 .env.*
+**/.env
+**/.env.*
+# But allow .env.sample files for documentation
 !.env.sample
+!**/.env.sample
 
 # Git
 .git/
