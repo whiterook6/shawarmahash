@@ -1,4 +1,4 @@
-import { faker } from "@faker-js/faker/.";
+import { faker } from "@faker-js/faker";
 import { Block } from "./block";
 
 export const BlockFaker = {
@@ -12,7 +12,6 @@ export const BlockFaker = {
       previousHash: faker.string.hexadecimal({ length: 32 }),
       team: faker.string.alpha(3).toUpperCase(),
       identity: faker.string.hexadecimal({ length: 16 }),
-      message: faker.lorem.sentence(),
       ...overrides,
     };
   },

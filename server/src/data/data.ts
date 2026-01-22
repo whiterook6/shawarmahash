@@ -147,9 +147,6 @@ export class Data {
           identity: block.identity,
         };
 
-        if (block.message) {
-          blockData.message = block.message;
-        }
         await appendFile(filePath, JSON.stringify(blockData) + "\n", "utf-8");
       } catch (error) {
         throw new Error(

@@ -115,7 +115,6 @@ export const Chain = {
       team: string;
       nonce: number;
       hash: string;
-      message?: string;
       identity: string;
     },
     chain: Chain,
@@ -126,7 +125,7 @@ export const Chain = {
       });
     }
 
-    const { previousHash, player, team, nonce, hash, message, identity } = args;
+    const { previousHash, player, team, nonce, hash, identity } = args;
     const previousBlock = chain[chain.length - 1];
     if (previousHash !== previousBlock.hash) {
       throw new ValidationError({
@@ -174,10 +173,6 @@ export const Chain = {
       index: previousBlock.index + 1,
       identity,
     };
-
-    if (message) {
-      newBlock.message = message;
-    }
 
     return newBlock;
   },

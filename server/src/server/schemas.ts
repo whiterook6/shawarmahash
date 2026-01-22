@@ -162,47 +162,6 @@ export const schemas = {
       },
     },
   },
-  getPlayerMessages: {
-    schema: {
-      Params: {
-        type: "object",
-        properties: {
-          player: schemaRefs.playerName,
-        },
-        required: ["player"],
-        additionalProperties: false,
-      },
-      response: {
-        200: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              index: { type: "number" },
-              player: schemaRefs.playerName,
-              team: schemaRefs.teamName,
-              timestamp: schemaRefs.timestamp,
-              nonce: schemaRefs.nonce,
-              hash: schemaRefs.hashCode,
-              previousHash: schemaRefs.hashCode,
-              message: { type: "string" },
-            },
-            required: [
-              "index",
-              "player",
-              "team",
-              "timestamp",
-              "nonce",
-              "hash",
-              "previousHash",
-            ],
-            additionalProperties: false,
-          },
-          additionalItems: false,
-        },
-      },
-    },
-  },
   getTeams: {
     schema: {
       response: {
@@ -257,48 +216,6 @@ export const schemas = {
               score: { type: "number" },
             },
             required: ["team", "score"],
-            additionalProperties: false,
-          },
-          additionalItems: false,
-        },
-      },
-    },
-  },
-  getTeamMessages: {
-    schema: {
-      Params: {
-        type: "object",
-        properties: {
-          team: schemaRefs.teamName,
-        },
-        required: ["team"],
-        additionalProperties: false,
-      },
-      response: {
-        200: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: {
-              index: { type: "number" },
-              player: schemaRefs.playerName,
-              team: schemaRefs.teamName,
-              timestamp: schemaRefs.timestamp,
-              nonce: schemaRefs.nonce,
-              hash: schemaRefs.hashCode,
-              previousHash: schemaRefs.hashCode,
-              message: { type: "string" },
-            },
-            required: [
-              "index",
-              "player",
-              "team",
-              "timestamp",
-              "nonce",
-              "hash",
-              "previousHash",
-              "message",
-            ],
             additionalProperties: false,
           },
           additionalItems: false,
@@ -367,7 +284,6 @@ export const schemas = {
           identity: schemaRefs.identity,
           nonce: schemaRefs.nonce,
           hash: schemaRefs.hashCode,
-          message: { type: "string" },
         },
         required: ["previousHash", "player", "identity", "nonce", "hash"],
         additionalProperties: false,
@@ -388,7 +304,6 @@ export const schemas = {
                   nonce: schemaRefs.nonce,
                   hash: schemaRefs.hashCode,
                   previousHash: schemaRefs.hashCode,
-                  message: { type: "string" },
                 },
                 required: [
                   "index",

@@ -2,7 +2,6 @@ import { Mutex, MutexInterface } from "async-mutex";
 import { Block } from "../block/block";
 import { Broadcast } from "../broadcast/broadcast";
 import { Chain } from "../chain/chain";
-import { Chat } from "../chat/chat";
 import { Data } from "../data/data";
 import { Difficulty } from "../difficulty/difficulty";
 import { NotFoundError, ValidationError } from "../error/errors";
@@ -66,12 +65,6 @@ export class Game {
       throw new NotFoundError(`Team ${team} not found`);
     }
     return Score.getTeamScore(chain);
-  }
-
-  getChat(): Block[] {
-    return this.aggregateChains((chain) => Chat.getChatMessages(chain)).sort(
-      (a, b) => b.timestamp - a.timestamp,
-    );
   }
 
   getPlayerScore(identity: string): number {
@@ -167,7 +160,6 @@ export class Game {
     identity: string;
     team: string;
     nonce: number;
-    message?: string;
   }): Promise<{ recent: Block[]; difficulty: string }> {
     const { team, previousHash, identity } = args;
     const isGenesisBlock = previousHash === Block.GENESIS_PREVIOUS_HASH;

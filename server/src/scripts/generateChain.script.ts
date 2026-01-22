@@ -6,7 +6,6 @@ import dotenv from "dotenv";
 import { Block } from "../block/block";
 import { Chain } from "../chain/chain";
 import { Miner } from "../miner/miner";
-import { faker } from "@faker-js/faker";
 import { IdentityController } from "../identity/identity.controller";
 
 const run = async () => {
@@ -43,12 +42,6 @@ const run = async () => {
       demandOption: false,
       describe: "Raw identity token (will be derived before storing on blocks)",
     })
-    .option("message", {
-      alias: "m",
-      type: "boolean",
-      default: false,
-      describe: "Generate messages in each block",
-    })
     .check((argv) => {
       if (argv.numBlocks < 1 || !Number.isInteger(argv.numBlocks)) {
         throw new Error("numBlocks must be a positive integer");
@@ -84,12 +77,10 @@ const run = async () => {
 
   // Mine remaining blocks
   for (let i = 1; i < numBlocks; i++) {
-    const message = argv.message ? faker.lorem.sentence() : undefined;
     const newBlock = Miner.mineBlock(chain, {
       player,
       team,
       identity: derivedIdentity,
-      message,
     });
     chain.push(newBlock);
     console.log(`Mined block ${i + 1}/${numBlocks} (hash: ${newBlock.hash})`);

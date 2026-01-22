@@ -27,9 +27,6 @@ export type Block = {
 
   /** The previous hash of the block. A SHA-256 hash of the previous block's data. */
   previousHash: string;
-
-  /** A message associated with the block. */
-  message?: string;
 };
 
 export const Block = {
@@ -55,9 +52,8 @@ export const Block = {
     player: string;
     team: string;
     identity: string;
-    message?: string;
   }): Block => {
-    const { player, team, identity, message } = args;
+    const { player, team, identity } = args;
     const timestamp = Timestamp.now();
     let nonce = 0;
     let hash = "";
@@ -85,7 +81,6 @@ export const Block = {
       timestamp,
       nonce,
       index: 0,
-      message: message,
       identity,
     };
   },

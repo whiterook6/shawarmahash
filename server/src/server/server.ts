@@ -242,14 +242,12 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
           nonce: number;
           identity: string;
           hash: string;
-          message?: string;
         };
       }>,
       reply: FastifyReply,
     ) => {
       const { team } = request.params;
-      const { previousHash, player, nonce, identity, hash, message } =
-        request.body;
+      const { previousHash, player, nonce, identity, hash } = request.body;
 
       const derivedIdentity = IdentityController.generateDerivedIdentityToken({
         identityToken: identity,
@@ -263,7 +261,6 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
         nonce,
         identity: derivedIdentity,
         hash,
-        message,
       });
 
       return reply.status(200).send(chainState);
