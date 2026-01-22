@@ -1,4 +1,3 @@
-import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.scss";
 import { useIdentity } from "./services/useIdentity";
@@ -42,8 +41,4 @@ if (!rootElement) {
 }
 
 const root = createRoot(rootElement);
-root.render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+root.render(<App />);

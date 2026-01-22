@@ -296,9 +296,14 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
   });
 
   // Serve static files from webui/dist directory (registered last so API routes take precedence)
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = dirname(__filename);
-  const webuiDistPath = join(__dirname, "../../webui/dist");
+  // Use WEBUI_DIST_PATH environment variable if set, otherwise use relative path from built output
+  const webuiDistPath =
+    process.env.WEBUI_DIST_PATH ||
+    (() => {
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = dirname(__filename);
+      return join(__dirname, "../../webui/dist");
+    })();
 
   fastify.register(staticFiles, {
     root: webuiDistPath,

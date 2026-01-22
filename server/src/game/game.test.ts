@@ -1,8 +1,8 @@
 import { describe, it } from "node:test";
-import { Block } from "../block/block";
 import { Game } from "./game";
 import { Chain } from "../chain/chain";
 import expect from "expect";
+import { BlockFaker } from "../block/block.faker";
 
 describe("Game", () => {
   describe("Chat Messages", () => {
@@ -10,7 +10,7 @@ describe("Game", () => {
       const chains = new Map<string, Chain>();
       chains.set(
         "TIM",
-        Block.Faker.many(10, (index) => {
+        BlockFaker.many(10, (index) => {
           return {
             player: "TIM",
             timestamp: 1767315426 + index * 2,
@@ -20,7 +20,7 @@ describe("Game", () => {
       );
       chains.set(
         "ASD",
-        Block.Faker.many(10, (index) => {
+        BlockFaker.many(10, (index) => {
           return {
             player: "ASD",
             timestamp: 1767315426 + index * 2 + 1,
@@ -64,7 +64,7 @@ describe("Game", () => {
       const chains = new Map<string, Chain>();
       chains.set(
         "TIM",
-        Block.Faker.many(10, (index) => {
+        BlockFaker.many(10, (index) => {
           return {
             player: "TIM",
             identity: "b989bcb4a39c769d",
@@ -75,7 +75,7 @@ describe("Game", () => {
       );
       chains.set(
         "ASD",
-        Block.Faker.many(5, (index) => {
+        BlockFaker.many(5, (index) => {
           return {
             player: "ASD",
             identity: "727f8fc5f18ce498",

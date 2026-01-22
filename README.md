@@ -2,345 +2,184 @@
 
 A blockchain-based game where players mine blocks on team-specific chains. This document explains the block structure, mining process, difficulty adjustment, and available APIs.
 
-## Block Structure
+## Building and Running
 
-A block in ShawarmaHash contains the following fields:
+This project follows a common pattern for full-stack applications:
 
-```typescript
-type Block = {
-  /** The index of the block in the chain. Genesis block is index 0. */
-  index: number;
+- **Monorepo structure**: Separate `server/` and `webui/` directories with their own `package.json` files
+- **Development**: Frontend (Vite) and backend (Node.js) run separately with the frontend proxying API requests
+- **Production**: Frontend is built to static files, and the backend serves both the API and static frontend files
+- **Docker**: Multi-stage build optimizes image size by separating build and runtime dependencies
 
-  /** The player who mined the block. Format: AAA-ZZZ */
-  player: string;
+This approach allows for:
+- Fast development with hot reload for both frontend and backend
+- Optimized production builds with tree-shaking and minification
+- Single deployment unit (the server) that serves everything
+- Easy containerization with Docker
 
-  /** The team that the player is on. Format: AAA-ZZZ */
-  team: string;
+### Prerequisites
 
-  /** The timestamp of the block in seconds (Unix timestamp). */
-  timestamp: number;
+- Node.js 20+ and Yarn
+- For Docker: Docker and Docker Compose
 
-  /** The nonce of the block. A number that is incremented until the hash meets the difficulty target. */
-  nonce: number;
+### Environment Variables
 
-  /** The hash of the block. A SHA-256 hash of the block's data. */
-  hash: string;
+The server requires the following environment variables (set in `server/.env` or via Docker):
 
-  /** The previous hash of the block. A SHA-256 hash of the previous block's data. */
-  previousHash: string;
+- `NODE_ENV`: Either `"development"` or `"production"` (required)
+- `IDENTITY_SECRET`: Secret key for identity token generation (required)
+- `GIT_HASH`: Git commit hash (optional, defaults to "not set")
+- `WEBUI_DIST_PATH`: Path to webui dist directory (optional, only needed for custom deployments)
 
-  /** A message associated with the block (optional). */
-  message?: string;
-};
+### Development Mode
+
+#### Running the WebUI in Development
+
+The webui uses Vite for development with hot module replacement and proxying to the backend:
+
+```bash
+cd webui
+yarn install
+yarn dev
 ```
 
-### Genesis Block
+This will start the Vite dev server (typically on `http://localhost:5173`) with API requests proxied to `http://localhost:3000`. You'll probably see error HTTP responses if the API server itself isn't also running on :3000. See the next section:
 
-The genesis block (index 0) has special properties:
-- `previousHash` is always `"ffffffffffffffffffffffffffffffff"` (32 hex characters)
-- `previousTimestamp` is `0` for hash calculation purposes
-- Must meet the default difficulty target: `"fffff000000000000000000000000000"`
+#### Running the Server in Development
 
-## Hash Calculation
+In a separate terminal:
 
-The block hash is calculated using SHA-256 over the following concatenated string:
+```bash
+cd server
+yarn install
 
-```
-previousHash + previousTimestamp + player + team + nonce
-```
+# Create .env file with required variables
+cp .env.sample .env
+# Edit .env and set IDENTITY_SECRET, NODE_ENV, etc.
 
-The resulting hash is then truncated to 32 hexadecimal characters (128 bits).
+# Build in development mode
+yarn dev:build
 
-**Note:** If `team` is `undefined` or `null`, it is replaced with an empty string in the hash calculation.
-
-**Example:**
-```typescript
-const hash = crypto
-  .createHash("sha256")
-  .update(`${previousHash}${previousTimestamp}${player}${team ?? ""}${nonce}`)
-  .digest("hex")
-  .substring(0, 32);
+# Run the server
+node output/index.js
 ```
 
-## Mining Process
+The server will start on `http://localhost:3000`.
 
-Mining a block involves finding a nonce value that produces a hash meeting the difficulty target:
+### Production Build
 
-1. **Get Chain State**: Request the current chain state for your team via `GET /teams/:team`
-   - Returns: `previousHash`, `previousTimestamp`, and current `difficulty` target
+#### Building the WebUI
 
-2. **Find Valid Nonce**: Iteratively increment the nonce starting from 0:
-   ```typescript
-   let nonce = 0;
-   while (true) {
-     const hash = Block.calculateHash({
-       previousHash,
-       previousTimestamp,
-       player,
-       team,
-       nonce,
-     });
-     if (Difficulty.isDifficultyMet(hash, difficultyTarget)) {
-       return { hash, nonce };
-     }
-     nonce++;
-   }
-   ```
-
-3. **Submit Block**: Once a valid nonce is found, submit the block via `POST /teams/:team/chain`
-   - Include: `previousHash`, `player`, `nonce`, `hash`, and optionally `message`
-
-### Mining Validation
-
-When a block is submitted, the server validates:
-- The `previousHash` matches the last block's hash
-- The `team` matches the chain's team
-- The calculated hash matches the provided hash
-- The hash meets the current difficulty target
-- The block index is sequential
-
-## Difficulty Target
-
-The difficulty system uses a target hash string that blocks must meet or exceed (lexicographically).
-
-### Difficulty Format
-
-The difficulty target is a 32-character hexadecimal string. The difficulty level is determined by:
-- **Leading F's**: Each leading `f` represents 1 unit of difficulty
-- **Fractional Part**: The first non-`f` hex digit (0-15) represents fractional difficulty (0.0 to 0.9375)
-
-**Examples:**
-- `"fffff000000000000000000000000000"` = difficulty 5.0 (default)
-- `"fffff100000000000000000000000000"` = difficulty 5.0625
-- `"ffffff00000000000000000000000000"` = difficulty 6.0
-- `"ffffffffffffffffffffffffffffffff"` = maximum difficulty (32.0)
-- `"00000000000000000000000000000000"` = minimum difficulty (0.0)
-
-### Difficulty Adjustment
-
-The difficulty target is dynamically adjusted based on the last 100 blocks:
-
-1. **If chain has < 100 blocks**: Uses default difficulty `"fffff000000000000000000000000000"` (5.0)
-
-2. **If chain has ≥ 100 blocks**: 
-   - Calculates average difficulty of the last 100 blocks (minimum 5.0 if chain has < 5 blocks)
-   - Calculates average mining interval (time between blocks, minimum 1 second to prevent division by zero)
-   - Estimates operations per second: `16^averageDifficulty / averageInterval`
-   - Adjusts difficulty to maintain consistent mining rate: `log(opsPerSecond) / log(16)`
-   - Minimum difficulty is capped at 5.0
-
-**Formula:**
-```typescript
-const averageDifficulty = getAverageDifficulty(last100Blocks);
-// Returns 5.0 if chain has < 5 blocks
-const averageInterval = Math.max(1, getAverageMiningInterval(last100Blocks));
-// Minimum 1 second to prevent division by zero
-const opsPerSecond = Math.pow(16, averageDifficulty) / averageInterval;
-const newDifficulty = Math.max(5, Math.log(opsPerSecond) / Math.log(16));
+```bash
+cd webui
+yarn install
+yarn build
 ```
 
-### Difficulty Check
+This creates a production build in `webui/dist/` that can be served statically.
 
-A hash meets the difficulty target if it is **greater than or equal to** the target (lexicographic string comparison):
+#### Building the Server
 
-```typescript
-isDifficultyMet(hash: string, difficultyTarget: string): boolean {
-  return hash >= difficultyTarget;
-}
+```bash
+cd server
+yarn install
+
+# Create .env file with required variables
+cp .env.sample .env
+# Edit .env and set IDENTITY_SECRET, NODE_ENV=production, etc.
+
+# Build for production
+yarn prod:build
 ```
 
-This means higher hex values (closer to `f`) meet the requirement. For example:
-- Target: `"fffff000000000000000000000000000"`
-- Valid: `"fffff1234..."`, `"ffffffff..."`, `"fffff0000..."`
-- Invalid: `"ffffe1234..."`, `"00000000..."`
+This creates a production build in `server/output/` with bundled and minified code.
 
-## Chain Structure
+#### Running the Server in Production
 
-- Each team has its own independent chain
-- Chains are linked via `previousHash` references
-- Blocks must be submitted sequentially (index 0, 1, 2, ...)
-- The server maintains the last 5 blocks in memory for quick access
-- Full chains are persisted to disk
+After building both webui and server:
 
-## Scoring
-
-### Team Score
-A team's score is simply the **length of its chain** (number of blocks).
-
-### Player Score
-A player's score is the **total number of blocks they've mined across all chains**.
-
-## API Reference
-
-### Health & Status
-
-#### `GET /health`
-Returns server health information including uptime, memory usage, active chains, and total blocks.
-
-**Response:**
-```json
-{
-  "gitHash": "string",
-  "startTime": "ISO date string",
-  "now": "ISO date string",
-  "uptime": 12345,
-  "activeChains": 5,
-  "totalBlocks": 100,
-  "memoryUsage": { ... },
-  "dataDirectory": { ... },
-  "sseClients": 3
-}
+```bash
+cd server
+node output/index.js
 ```
 
-### Players
+The server will:
+- Serve API endpoints at `/api/*`
+- Serve the built webui from `webui/dist/` at the root path
+- Store chain data in `server/data/` directory (relative to where the server runs)
 
-#### `GET /players`
-Get all players and their scores.
+**Note:** The server expects the `webui/dist` directory to be at `../../webui/dist` relative to the built server output, or you can set `WEBUI_DIST_PATH` environment variable to specify a custom path.
 
-**Response:** `PlayerScore[]`
-```json
-[
-  { "player": "AAA", "score": 10 },
-  { "player": "BBB", "score": 5 }
-]
+### Docker
+
+#### Building the Docker Image
+
+```bash
+# Build with default git hash
+docker build -t shawarmahash .
+
+# Build with specific git hash
+docker build --build-arg GIT_HASH=$(git rev-parse HEAD) -t shawarmahash .
 ```
 
-#### `GET /players/:player/score`
-Get a specific player's score.
+#### Running with Docker Compose (Recommended)
 
-**Response:**
-```json
-{
-  "player": "AAA",
-  "score": 10
-}
+1. Create a `.env` file in the project root (or set environment variables):
+
+```bash
+IDENTITY_SECRET=your-secret-key-here
+GIT_HASH=$(git rev-parse HEAD)  # Optional
 ```
 
-#### `GET /players/:player/messages`
-Get all messages mentioning a player across all chains.
+2. Start the container:
 
-**Note:** Messages are filtered to only include blocks where the `message` field starts with `@PLAYER` (e.g., `"@AAA Hello"` mentions player "AAA").
-
-**Response:** `Block[]` (blocks with messages)
-
-### Teams
-
-#### `GET /teams`
-Get all teams and their scores.
-
-**Response:** `TeamScore[]`
-```json
-[
-  { "team": "TEAM1", "score": 50 },
-  { "team": "TEAM2", "score": 30 }
-]
+```bash
+docker-compose up -d
 ```
 
-#### `GET /teams/:team`
-Get chain state needed to mine a new block.
+3. View logs:
 
-**Response:**
-```json
-{
-  "previousHash": "abc123...",
-  "previousTimestamp": 1234567890,
-  "difficulty": "fffff000000000000000000000000000"
-}
+```bash
+docker-compose logs -f
 ```
 
-#### `GET /teams/:team/score`
-Get a specific team's score.
+4. Stop the container:
 
-**Response:**
-```json
-{
-  "team": "TEAM1",
-  "score": 50
-}
+```bash
+docker-compose down
 ```
 
-#### `GET /teams/:team/players`
-Get all players who have mined blocks on this team's chain.
+The data volume (`shawarmahash-data`) will persist chain data between container restarts.
 
-**Response:** `string[]`
-```json
-["AAA", "BBB", "CCC"]
+#### Running with Docker (Manual)
+
+```bash
+# Create a directory for data persistence
+mkdir -p ./data
+
+# Run the container
+docker run -d \
+  --name shawarmahash \
+  -p 3000:3000 \
+  -v $(pwd)/data:/app/data \
+  -e NODE_ENV=production \
+  -e IDENTITY_SECRET=your-secret-key-here \
+  -e GIT_HASH=$(git rev-parse HEAD) \
+  shawarmahash
 ```
 
-#### `GET /teams/:team/messages`
-Get all messages in blocks owned by the team.
+#### Docker Features
 
-**Note:** Messages are filtered to only include blocks where the `message` field starts with `#TEAM` (e.g., `"#TEAM1 Hello"` mentions team "TEAM1").
+- **Multi-stage build**: Optimized image size by building webui and server separately
+- **Data persistence**: Chain data is stored in a Docker volume (`shawarmahash-data`) or mounted directory
+- **Health checks**: Built-in health check endpoint
+- **Production ready**: Includes all optimizations for production deployment
 
-**Response:** `Block[]` (blocks with messages)
-
-#### `POST /teams/:team/chain`
-Submit a mined block (genesis or regular).
-
-**Request Body:**
-```json
-{
-  "previousHash": "abc123...",
-  "player": "AAA",
-  "nonce": 12345,
-  "hash": "def456...",
-  "message": "Optional message"
-}
-```
-
-**Response:**
-```json
-{
-  "recent": [ /* last 5 blocks */ ],
-  "difficulty": "fffff000000000000000000000000000"
-}
-```
-
-**Note:** For genesis blocks, use `previousHash: "ffffffffffffffffffffffffffffffff"`.
-
-### Events
-
-#### `GET /events`
-Server-Sent Events (SSE) endpoint for real-time updates.
-
-**Events:**
-- `connection`: Connection established
-- `team_created`: New team chain created (genesis block)
-- `block_submitted`: New block added to a chain
-
-**Event Format:**
-```
-data: {"type": "block_submitted", "payload": { "recent": [...], "difficulty": "..." }}\n\n
-```
-
-## Messages & Chat
-
-Blocks can include an optional `message` field for chat functionality. Messages support special formatting:
-
-- **Player Mentions**: Messages starting with `@PLAYER` (e.g., `"@AAA Hello!"`) are considered mentions of that player
-- **Team Mentions**: Messages starting with `#TEAM` (e.g., `"#TEAM1 Great work!"`) are considered mentions of that team
-
-The API endpoints for messages filter blocks based on these prefixes:
-- `/players/:player/messages` returns blocks with messages starting with `@PLAYER`
-- `/teams/:team/messages` returns blocks with messages starting with `#TEAM`
-
-Only blocks with non-empty `message` fields are included in chat results.
-
-## Block Utilities
-
-### Likelihood
-Blocks can generate a random likelihood value (0-1) based on their hash:
-```typescript
-const likelihood = Block.getLikelihood(block);
-// Uses last 8 hex digits of hash: parseInt(hash.slice(-8), 16) / 0xffffffff
-```
-
-### RNG
-Blocks can generate a seeded random number generator:
-```typescript
-const rng = Block.getRNG(block);
-// Uses seedrandom with the block hash as seed
-```
+The Docker image:
+- Builds both webui and server in separate stages
+- Copies the built artifacts into a minimal runtime image
+- Serves the webui statically from the Fastify server
+- Persists chain data to `/app/data` (mapped to a volume)
 
 ## Development
 

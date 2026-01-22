@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  shawarmahash:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GIT_HASH: ${GIT_HASH:-docker-build}
+    container_name: shawarmahash
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - GIT_HASH=${GIT_HASH:-docker-build}
+      - IDENTITY_SECRET=${IDENTITY_SECRET:?IDENTITY_SECRET is required}
+      - WEBUI_DIST_PATH=/app/webui/dist
+    volumes:
+      # Persist chain data
+      - shawarmahash-data:/app/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
+volumes:
+  shawarmahash-data:
+    driver: local

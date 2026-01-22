@@ -16,7 +16,7 @@ const run = async () => {
     bundle: true,
     platform: "node",
     format: "esm",
-    target: "node24",
+    target: "node20",
     outdir: "output",
     minify: true,
     sourcemap: false,
