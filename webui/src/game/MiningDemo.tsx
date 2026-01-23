@@ -126,6 +126,12 @@ export function MiningDemo({ identity }: { identity: string }) {
             : "none"}
         </div>
         <div>
+          <strong>Total hashes</strong>:{" "}
+          {mining.progress?.totalHashes != null
+            ? mining.progress.totalHashes.toLocaleString()
+            : "—"}
+        </div>
+        <div>
           <strong>Last success</strong>:{" "}
           {mining.lastSuccess
             ? `nonce=${mining.lastSuccess.nonce} hash=${mining.lastSuccess.hash}`

@@ -105,6 +105,7 @@ export type MiningProgressResponse = {
     nonce: number;
     bestHash: string;
     hashesPerSecond: number;
+    totalHashes: number;
   };
 };
 

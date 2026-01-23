@@ -15,10 +15,13 @@ export class Miner {
   private updateInterval: number | null;
   private isMiningLoopActive: boolean;
   private activeMiningTarget: MiningTarget | null;
+  private totalHashesSinceInstantiation: number;
 
   constructor(scope: DedicatedWorkerGlobalScope) {
+    console.log("[Miner] Constructor called");
     const SubtleCrypto = Miner.getCryptoSubtle(scope);
     if (!SubtleCrypto) {
+      console.error("[Miner] Web Crypto API not available");
       throw new Error("Web Crypto API not available.");
     }
 
@@ -30,6 +33,8 @@ export class Miner {
     this.updateInterval = null;
     this.isMiningLoopActive = false;
     this.activeMiningTarget = null;
+    this.totalHashesSinceInstantiation = 0;
+    console.log("[Miner] Initialized successfully");
   }
 
   clearUpdateInterval() {
@@ -40,6 +45,7 @@ export class Miner {
   }
 
   stopMining() {
+    console.log("[Miner] stopMining");
     this.currentMiningRequest = {
       type: "stop_mining",
     };
@@ -49,6 +55,13 @@ export class Miner {
   }
 
   async startMining(request: StartMiningRequest) {
+    console.log("[Miner] startMining", {
+      previousHash: request.data.previousHash,
+      previousTimestamp: request.data.previousTimestamp,
+      player: request.data.player,
+      team: request.data.team,
+      difficulty: request.data.difficulty,
+    });
     // Stop any existing mining loop before starting a new one
     // This prevents race conditions where multiple loops could run concurrently
     if (this.isMiningLoopActive) {
@@ -97,6 +110,7 @@ export class Miner {
         nonce: nonce,
         bestHash: bestHash,
         hashesPerSecond: hashesPerSecond,
+        totalHashes: this.totalHashesSinceInstantiation,
       });
     }, PROGRESS_UPDATE_INTERVAL);
 
@@ -142,6 +156,7 @@ export class Miner {
         }
 
         hashesChecked++;
+        this.totalHashesSinceInstantiation++;
 
         // Check if we found a valid hash
         if (hashString >= current.data.difficulty) {
@@ -183,6 +198,7 @@ export class Miner {
 
   getMiningStatus() {
     const status = this.isMining() ? "active" : "inactive";
+    console.log("[Miner] getMiningStatus", { status });
 
     const message: MiningStatusResponse = {
       type: "mining_status",
@@ -215,6 +231,7 @@ export class Miner {
     nonce: number;
     bestHash: string;
     hashesPerSecond: number;
+    totalHashes: number;
   }) {
     const message: MiningProgressResponse = {
       type: "mining_progress",
@@ -222,6 +239,7 @@ export class Miner {
         nonce: progress.nonce,
         bestHash: progress.bestHash,
         hashesPerSecond: progress.hashesPerSecond,
+        totalHashes: progress.totalHashes,
       },
     };
     this.scope.postMessage(message);
@@ -235,6 +253,14 @@ export class Miner {
     nonce: number;
     hash: string;
   }) {
+    console.log("[Miner] sendSuccess", {
+      previousHash: success.previousHash,
+      previousTimestamp: success.previousTimestamp,
+      player: success.player,
+      team: success.team,
+      nonce: success.nonce,
+      hash: success.hash,
+    });
     const message: MiningSuccessResponse = {
       type: "mining_success",
       data: {
@@ -250,6 +276,7 @@ export class Miner {
   }
 
   private sendError(error: string) {
+    console.log("[Miner] sendError", { error });
     const message: MiningErrorResponse = {
       type: "mining_error",
       data: {
@@ -260,6 +287,7 @@ export class Miner {
   }
 
   private sendStatus(status: "active" | "inactive") {
+    console.log("[Miner] sendStatus", { status });
     const message: MiningStatusResponse = {
       type: "mining_status",
       data: {
