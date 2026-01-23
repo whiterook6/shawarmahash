@@ -15,10 +15,6 @@ import { IdentityController } from "../identity/identity.controller";
 import { EnvController } from "../env";
 import { schemas } from "./schemas";
 
-export type Options = {
-  gitHash?: string;
-};
-
 export function createServer(game: Game, broadcast: Broadcast, data: Data) {
   const fastify = Fastify({
     logger: EnvController.env.NODE_ENV === "production",
