@@ -57,22 +57,18 @@ export const MiningProvider = ({
         case "mining_success":
           setLastSuccess(msg.data);
           setIsMining(false);
-          // NOTE: `mining_success` does not include `previousHash`, so we submit
-          // against the most recent target we started mining.
-          {
-            const target = activeTargetRef.current;
-            if (!target) return;
-            void Api.submitBlock(target.team, {
-              previousHash: target.previousHash,
-              player: msg.data.player,
-              nonce: msg.data.nonce,
-              identity: identityRef.current,
-              hash: msg.data.hash,
-            }).catch((e) => {
-              const message = e instanceof Error ? e.message : String(e);
-              setLastError(message);
-            });
-          }
+          // Use the data from the success message which includes all the necessary fields
+          // This ensures we submit the block with the exact data that was mined
+          void Api.submitBlock(msg.data.team, {
+            previousHash: msg.data.previousHash,
+            player: msg.data.player,
+            nonce: msg.data.nonce,
+            identity: identityRef.current,
+            hash: msg.data.hash,
+          }).catch((e) => {
+            const message = e instanceof Error ? e.message : String(e);
+            setLastError(message);
+          });
           return;
         case "mining_error":
           setLastError(msg.data.message);
