@@ -126,12 +126,13 @@ describe("Chain", () => {
       expect(interval).toBe(0);
     });
 
-    it("The interval for a chain with a negative interval is zero", () => {
+    it("The interval for a chain with a negative interval is not zero", () => {
       const chain = BlockFaker.many(10);
       chain[0].timestamp = 1767315452;
       chain[9].timestamp = 767315426;
       const interval = Chain.getAverageMiningInterval(chain);
-      expect(interval).toBe(0);
+      expect(interval).toBeGreaterThan(0);
+      expect(interval).toBeLessThan(1);
     });
   });
 

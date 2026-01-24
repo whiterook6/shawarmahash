@@ -7,6 +7,58 @@ import { Block } from "../block/block";
 import { constants } from "fs";
 
 export class Data {
+  static removeLeadingFs(hash: string): string {
+    return hash.replace(/^F+/i, "");
+  }
+
+  static stringify(block: Block): string {
+    // Remove leading Fs from hash and previousHash
+    const hash = Data.removeLeadingFs(block.hash);
+    const previousHash = Data.removeLeadingFs(block.previousHash);
+
+    return `${hash}:${previousHash}:${block.player}:${block.team}:${block.timestamp}:${block.nonce.toString(16)}:${block.identity}:${block.index}`;
+  }
+
+  static padWithFs(hash: string): string {
+    return hash.padStart(32, "f");
+  }
+
+  static parse(line: string): Block {
+    const parts = line.trim().split(":");
+    if (parts.length !== 8) {
+      throw new Error(
+        `Invalid block format: expected 8 parts separated by ':', got ${parts.length}`,
+      );
+    }
+
+    // Left pad hash and previousHash with Fs until 32 characters
+    const hash = Data.padWithFs(parts[0]);
+    const previousHash = Data.padWithFs(parts[1]);
+    const player = parts[2];
+    const team = parts[3];
+    const timestamp = parseInt(parts[4], 10);
+    const nonce = parseInt(parts[5], 16);
+    const identity = parts[6];
+    const index = parseInt(parts[7], 10);
+
+    if (isNaN(timestamp) || isNaN(nonce) || isNaN(index)) {
+      throw new Error(
+        `Invalid block format: timestamp, nonce, or index is not a valid number`,
+      );
+    }
+
+    return {
+      hash,
+      previousHash,
+      player,
+      team,
+      timestamp,
+      nonce,
+      identity,
+      index,
+    };
+  }
+
   private dataDirectory: string;
 
   constructor(dataDirectory: string) {
@@ -37,7 +89,7 @@ export class Data {
         const trimmed = line.trim();
         if (trimmed !== "") {
           try {
-            const block = JSON.parse(trimmed) as Block;
+            const block = Data.parse(trimmed);
             chain.push(block);
           } catch (error) {
             rl.close();
@@ -133,21 +185,10 @@ export class Data {
     // Ensure data directory exists
     await this.ensureDataDirectoryExists();
 
-    // Append each block as a JSON string on a new line
+    // Append each block using stringify on a new line
     for (const block of blocks) {
       try {
-        const blockData: Block = {
-          hash: block.hash,
-          previousHash: block.previousHash,
-          player: block.player,
-          team: block.team,
-          timestamp: block.timestamp,
-          nonce: block.nonce,
-          index: block.index,
-          identity: block.identity,
-        };
-
-        await appendFile(filePath, JSON.stringify(blockData) + "\n", "utf-8");
+        await appendFile(filePath, Data.stringify(block) + "\n", "utf-8");
       } catch (error) {
         throw new Error(
           `Failed to append blocks to chain file: ${filePath}: ${error instanceof Error ? error.message : String(error)}`,
