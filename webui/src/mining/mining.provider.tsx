@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MiningContext } from "../services/miner/MiningContext";
+import { MiningContext } from "./mining.context";
 import type {
   MiningProgressResponse,
   MiningResponse,
@@ -40,12 +40,9 @@ export const MiningProvider = ({
   }, [identity]);
 
   useEffect(() => {
-    const miner = new Worker(
-      new URL("../services/miner/miner.worker.ts", import.meta.url),
-      {
-        type: "module",
-      },
-    );
+    const miner = new Worker(new URL("./miner.worker.ts", import.meta.url), {
+      type: "module",
+    });
     minerRef.current = miner;
 
     miner.onmessage = (event: MessageEvent<MiningResponse>) => {

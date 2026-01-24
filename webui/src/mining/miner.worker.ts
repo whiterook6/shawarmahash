@@ -1,3 +1,4 @@
+/// <reference lib="webworker" />
 import type {
   MiningErrorResponse,
   MiningProgressResponse,
@@ -6,9 +7,9 @@ import type {
   MiningSuccessResponse,
   MiningTarget,
   StartMiningRequest,
-} from "../../types";
+} from "../types";
 
-export class Miner {
+class Miner {
   private scope: DedicatedWorkerGlobalScope;
   private SubtleCrypto: SubtleCrypto;
   private currentMiningRequest: MiningRequest;
@@ -273,12 +274,12 @@ export class Miner {
   }
 
   static getCryptoSubtle(
-    self: DedicatedWorkerGlobalScope,
+    scope: DedicatedWorkerGlobalScope,
   ): SubtleCrypto | null {
     try {
       // Try to access crypto API
-      if (self.crypto && self.crypto.subtle) {
-        return self.crypto.subtle;
+      if (scope.crypto && scope.crypto.subtle) {
+        return scope.crypto.subtle;
       }
     } catch (e) {
       console.error("[Miner] Error getting crypto.subtle:", e);
@@ -286,3 +287,25 @@ export class Miner {
     return null;
   }
 }
+
+// Ensure crypto is available in worker context
+declare const self: DedicatedWorkerGlobalScope;
+const miner = new Miner(self);
+self.addEventListener("message", async (event: MessageEvent<MiningRequest>) => {
+  const request = event.data;
+  switch (request.type) {
+    case "start_mining":
+      return miner.startMining(request as StartMiningRequest);
+    case "stop_mining":
+      return miner.stopMining();
+    case "mining_status":
+      return miner.getMiningStatus();
+    default: {
+      const unknownType = (request as { type: string }).type;
+      self.postMessage({
+        type: "error",
+        data: { message: `Unknown message type: ${unknownType}` },
+      });
+    }
+  }
+});

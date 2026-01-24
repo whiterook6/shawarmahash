@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Api } from "../../api";
+import { Api } from "../api";
 import { identityStorage } from "./identityStorage";
 
 export const useIdentity = (): {
