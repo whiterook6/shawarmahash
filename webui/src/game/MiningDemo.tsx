@@ -53,19 +53,32 @@ export function MiningDemo({ identity }: { identity: string }) {
 
   // After a mined block, refresh target and keep going if autoMine is enabled.
   useEffect(() => {
-    if (!mining.lastSuccess) return;
-    if (!autoMine) return;
+    if (!mining.lastSuccess) {
+      return;
+    }
+
+    if (!autoMine) {
+      return;
+    }
     void (async () => {
       const t = await fetchTarget();
-      if (!t) return;
+      if (!t) {
+        return;
+      }
       mining.startMining({ ...t, player: PLAYER, team: TEAM });
     })();
   }, [autoMine, fetchTarget, mining, mining.lastSuccess]);
 
   const status = useMemo(() => {
-    if (isTargetLoading) return "Fetching target...";
-    if (targetError) return "Target fetch failed";
-    if (mining.isMining) return "Mining…";
+    if (isTargetLoading) {
+      return "Fetching target...";
+    }
+    if (targetError) {
+      return "Target fetch failed";
+    }
+    if (mining.isMining) {
+      return "Mining…";
+    }
     return "Idle";
   }, [isTargetLoading, mining.isMining, targetError]);
 

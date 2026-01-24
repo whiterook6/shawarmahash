@@ -73,20 +73,49 @@ export const Difficulty = {
     return totalDifficulty / chain.length;
   },
 
-  getDifficultyTargetFromChain: (previousBlocks: Chain = []): string => {
-    if (previousBlocks.length < 100) {
-      return Difficulty.DEFAULT_DIFFICULTY_HASH;
+  getDifficultySliceFromChain: (chain: Chain = []): Chain => {
+    if (chain.length < 100) {
+      return [];
     }
 
-    const oneHundredBlocks = previousBlocks.slice(-100);
+    // We assume there are no missing indexes and chain[i].index === chain[0].index + i
+    // Find the last block whose index is a multiple of 100 and less than the most recent block (since the end slice is exclusive)
+    const lastBlock = chain[chain.length - 1];
+    const lastMultipleOf100 = Math.floor((lastBlock.index - 1) / 100) * 100;
+
+    // Find the array index corresponding to this block index
+    const firstIndex = chain[0].index;
+    const endArrayIndex = lastMultipleOf100 - firstIndex + 1; // end index is exclusive in slice, so +1
+    const startArrayIndex = endArrayIndex - 100;
+
+    if (startArrayIndex < 0) {
+      return [];
+    }
+
+    return chain.slice(startArrayIndex, endArrayIndex);
+  },
+
+  getDifficultyTargetFromChain: (previousBlocks: Chain = []): string => {
+    const oneHundredBlocks =
+      Difficulty.getDifficultySliceFromChain(previousBlocks);
+    if (oneHundredBlocks.length < 100) {
+      return Difficulty.DEFAULT_DIFFICULTY_HASH;
+    }
     const averageDifficulty = Difficulty.getAverageDifficulty(oneHundredBlocks);
     const averageIntervalInSeconds = Math.max(
-      1,
+      0,
       Chain.getAverageMiningInterval(oneHundredBlocks),
     );
-    const totalOps = Math.pow(16, averageDifficulty);
-    const opsPerSecond = totalOps / averageIntervalInSeconds;
-    const newDifficulty = Math.max(5, Math.log(opsPerSecond) / Math.log(16));
+    const TARGET_INTERVAL_SECONDS = 1;
+    const intervalRatio = averageIntervalInSeconds / TARGET_INTERVAL_SECONDS;
+    const difficultyAdjustment = Math.log(intervalRatio) / Math.log(16);
+    const newDifficulty = Math.max(
+      Difficulty.MIN_DIFFICULTY,
+      Math.min(
+        Difficulty.MAX_DIFFICULTY,
+        averageDifficulty - difficultyAdjustment,
+      ),
+    );
     return Difficulty.buildDifficultyTarget(newDifficulty);
   },
 

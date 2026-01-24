@@ -14,11 +14,9 @@ export class Miner {
   private currentMiningRequest: MiningRequest;
   private updateInterval: number | null;
   private isMiningLoopActive: boolean;
-  private activeMiningTarget: MiningTarget | null;
   private totalHashesSinceInstantiation: number;
 
   constructor(scope: DedicatedWorkerGlobalScope) {
-    console.log("[Miner] Constructor called");
     const SubtleCrypto = Miner.getCryptoSubtle(scope);
     if (!SubtleCrypto) {
       console.error("[Miner] Web Crypto API not available");
@@ -32,9 +30,7 @@ export class Miner {
     };
     this.updateInterval = null;
     this.isMiningLoopActive = false;
-    this.activeMiningTarget = null;
     this.totalHashesSinceInstantiation = 0;
-    console.log("[Miner] Initialized successfully");
   }
 
   clearUpdateInterval() {
@@ -45,23 +41,14 @@ export class Miner {
   }
 
   stopMining() {
-    console.log("[Miner] stopMining");
     this.currentMiningRequest = {
       type: "stop_mining",
     };
-    this.activeMiningTarget = null;
     this.clearUpdateInterval();
     // Note: isMiningLoopActive will be set to false when the loop exits
   }
 
   async startMining(request: StartMiningRequest) {
-    console.log("[Miner] startMining", {
-      previousHash: request.data.previousHash,
-      previousTimestamp: request.data.previousTimestamp,
-      player: request.data.player,
-      team: request.data.team,
-      difficulty: request.data.difficulty,
-    });
     // Stop any existing mining loop before starting a new one
     // This prevents race conditions where multiple loops could run concurrently
     if (this.isMiningLoopActive) {
@@ -78,7 +65,6 @@ export class Miner {
       type: "start_mining",
       data: target,
     };
-    this.activeMiningTarget = target;
 
     // Mark that a mining loop is starting
     this.isMiningLoopActive = true;
@@ -164,13 +150,14 @@ export class Miner {
           // This prevents sending success for a target that was superseded
           if (
             this.isMiningLoopActive &&
-            this.activeMiningTarget &&
-            this.activeMiningTarget.previousHash === target.previousHash &&
-            this.activeMiningTarget.previousTimestamp ===
+            this.currentMiningRequest.type === "start_mining" &&
+            this.currentMiningRequest.data.previousHash ===
+              target.previousHash &&
+            this.currentMiningRequest.data.previousTimestamp ===
               target.previousTimestamp &&
-            this.activeMiningTarget.player === target.player &&
-            this.activeMiningTarget.team === target.team &&
-            this.activeMiningTarget.difficulty === target.difficulty
+            this.currentMiningRequest.data.player === target.player &&
+            this.currentMiningRequest.data.team === target.team &&
+            this.currentMiningRequest.data.difficulty === target.difficulty
           ) {
             this.sendSuccess({
               previousHash: target.previousHash,
@@ -198,8 +185,6 @@ export class Miner {
 
   getMiningStatus() {
     const status = this.isMining() ? "active" : "inactive";
-    console.log("[Miner] getMiningStatus", { status });
-
     const message: MiningStatusResponse = {
       type: "mining_status",
       data: {
@@ -253,14 +238,6 @@ export class Miner {
     nonce: number;
     hash: string;
   }) {
-    console.log("[Miner] sendSuccess", {
-      previousHash: success.previousHash,
-      previousTimestamp: success.previousTimestamp,
-      player: success.player,
-      team: success.team,
-      nonce: success.nonce,
-      hash: success.hash,
-    });
     const message: MiningSuccessResponse = {
       type: "mining_success",
       data: {
@@ -276,7 +253,6 @@ export class Miner {
   }
 
   private sendError(error: string) {
-    console.log("[Miner] sendError", { error });
     const message: MiningErrorResponse = {
       type: "mining_error",
       data: {
@@ -287,7 +263,6 @@ export class Miner {
   }
 
   private sendStatus(status: "active" | "inactive") {
-    console.log("[Miner] sendStatus", { status });
     const message: MiningStatusResponse = {
       type: "mining_status",
       data: {

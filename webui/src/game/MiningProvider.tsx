@@ -55,20 +55,27 @@ export const MiningProvider = ({
           setProgress(msg.data);
           return;
         case "mining_success":
-          setLastSuccess(msg.data);
           setIsMining(false);
           // Use the data from the success message which includes all the necessary fields
           // This ensures we submit the block with the exact data that was mined
+          // Wait for submission to complete before setting lastSuccess to prevent
+          // race conditions where a new target is fetched before the block is processed
           void Api.submitBlock(msg.data.team, {
             previousHash: msg.data.previousHash,
             player: msg.data.player,
             nonce: msg.data.nonce,
             identity: identityRef.current,
             hash: msg.data.hash,
-          }).catch((e) => {
-            const message = e instanceof Error ? e.message : String(e);
-            setLastError(message);
-          });
+          })
+            .then(() => {
+              // Only set lastSuccess after successful submission
+              // This ensures the server has processed the block and updated the chain
+              setLastSuccess(msg.data);
+            })
+            .catch((e) => {
+              const message = e instanceof Error ? e.message : String(e);
+              setLastError(message);
+            });
           return;
         case "mining_error":
           setLastError(msg.data.message);

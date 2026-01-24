@@ -14,7 +14,7 @@ export const Chain = {
 
     // Timestamps are in seconds
     const elapsedSeconds = Math.max(
-      0,
+      1, // we'll usually be calling this with a chain of 100 blocks, so it's unlikely that the actual value will be less than one second
       chain[length - 1].timestamp - chain[0].timestamp,
     );
     return elapsedSeconds / length;
