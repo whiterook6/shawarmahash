@@ -305,7 +305,12 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
         if (!isClosed) {
           isClosed = true;
           try {
+            // End the response and destroy the socket to ensure clean closure
             reply.raw.end();
+            // Also destroy the socket if it exists to force immediate closure
+            if (reply.raw.socket && !reply.raw.socket.destroyed) {
+              reply.raw.socket.destroy();
+            }
           } catch {
             // Ignore errors when closing
           }

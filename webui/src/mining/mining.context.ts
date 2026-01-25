@@ -1,11 +1,19 @@
 import { createContext } from "react";
-import type { MiningProgressResponse, MiningSuccessResponse } from "../types";
+import type {
+  MiningErrorResponse,
+  MiningProgressResponse,
+  MiningSuccessResponse,
+} from "../types";
+
+export type MiningSuccessCallback = (
+  data: MiningSuccessResponse["data"],
+) => void;
 
 export interface MiningContext {
   isMining: boolean;
   progress: MiningProgressResponse["data"] | null;
   lastSuccess: MiningSuccessResponse["data"] | null;
-  lastError: string | null;
+  lastError: MiningErrorResponse["data"] | null;
   startMining: (target: {
     previousHash: string;
     previousTimestamp: number;
@@ -14,6 +22,7 @@ export interface MiningContext {
     team: string;
   }) => void;
   stopMining: () => void;
+  subscribe: (callback: MiningSuccessCallback) => () => void;
 }
 
 export const MiningContext = createContext<MiningContext>({
@@ -23,4 +32,7 @@ export const MiningContext = createContext<MiningContext>({
   lastError: null,
   startMining: () => {},
   stopMining: () => {},
+  subscribe: () => () => {
+    return;
+  },
 });

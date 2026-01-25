@@ -1,31 +1,21 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { MiningContext } from "./mining.context";
+import { MiningContext, type MiningSuccessCallback } from "./mining.context";
 import type {
+  MiningErrorResponse,
   MiningProgressResponse,
   MiningResponse,
   MiningSuccessResponse,
   StartMiningRequest,
-  StopMiningRequest,
+  TeamMiningTarget,
 } from "../types";
-import { Api } from "../api";
 
 export const MiningProvider = ({
-  identity,
+  minerWorker,
   children,
 }: {
-  identity: string;
+  minerWorker: Worker;
   children: React.ReactNode;
 }) => {
-  const minerRef = useRef<Worker | null>(null);
-  const identityRef = useRef(identity);
-  const activeTargetRef = useRef<{
-    previousHash: string;
-    previousTimestamp: number;
-    difficulty: string;
-    player: string;
-    team: string;
-  } | null>(null);
-
   const [isMining, setIsMining] = useState(false);
   const [progress, setProgress] = useState<
     MiningProgressResponse["data"] | null
@@ -33,119 +23,95 @@ export const MiningProvider = ({
   const [lastSuccess, setLastSuccess] = useState<
     MiningSuccessResponse["data"] | null
   >(null);
-  const [lastError, setLastError] = useState<string | null>(null);
+  const [lastError, setLastError] = useState<
+    MiningErrorResponse["data"] | null
+  >(null);
+  const successCallbacksRef = useRef<Set<MiningSuccessCallback>>(new Set());
 
   useEffect(() => {
-    identityRef.current = identity;
-  }, [identity]);
-
-  useEffect(() => {
-    if (minerRef.current) {
-      return;
-    }
-
-    const miner = new Worker(new URL("./miner.worker.ts", import.meta.url), {
-      type: "module",
-    });
-    minerRef.current = miner;
-
-    miner.onmessage = (event: MessageEvent<MiningResponse>) => {
-      const msg = event.data;
-      switch (msg.type) {
+    const onMessage = (event: MessageEvent<MiningResponse>) => {
+      const response = event.data;
+      switch (response.type) {
         case "mining_progress":
-          setProgress(msg.data);
+          setProgress(response.data);
           setIsMining(true);
-          return;
+          break;
         case "mining_success":
+          setLastSuccess(response.data);
           setIsMining(false);
-          // Use the data from the success message which includes all the necessary fields
-          // This ensures we submit the block with the exact data that was mined
-          // Wait for submission to complete before setting lastSuccess to prevent
-          // race conditions where a new target is fetched before the block is processed
-          void Api.submitBlock(msg.data.team, {
-            previousHash: msg.data.previousHash,
-            player: msg.data.player,
-            nonce: msg.data.nonce,
-            identity: identityRef.current,
-            hash: msg.data.hash,
-          })
-            .then(() => {
-              // Only set lastSuccess after successful submission
-              // This ensures the server has processed the block and updated the chain
-              setLastSuccess(msg.data);
-            })
-            .catch((e) => {
-              const message = e instanceof Error ? e.message : String(e);
-              setLastError(message);
-            });
-          return;
+          successCallbacksRef.current.forEach((callback) => {
+            callback(response.data);
+          });
+          break;
         case "mining_error":
-          setLastError(msg.data.message);
+          setLastError(response.data);
           setIsMining(false);
-          return;
+          break;
         case "mining_status":
-          setIsMining(msg.data.status === "active");
-          return;
-        default:
-          return;
+          setIsMining(response.data.status === "active");
+          break;
       }
     };
 
-    miner.onerror = (event) => {
-      setLastError(event.message ?? "Worker error");
+    const onError = (event: ErrorEvent) => {
+      setLastError({
+        message: event.message ?? "Unknown worker error",
+      });
       setIsMining(false);
     };
 
+    minerWorker.addEventListener("message", onMessage);
+    minerWorker.addEventListener("error", onError);
     return () => {
-      miner.terminate();
-      minerRef.current = null;
+      minerWorker.removeEventListener("message", onMessage);
+      minerWorker.removeEventListener("error", onError);
     };
-  }, [minerRef.current]);
-
-  const post = useCallback(
-    (message: StartMiningRequest | StopMiningRequest) => {
-      minerRef.current?.postMessage(message);
-    },
-    [],
-  );
+  }, [minerWorker]);
 
   const startMining = useCallback(
-    (target: {
-      previousHash: string;
-      previousTimestamp: number;
-      difficulty: string;
-      player: string;
-      team: string;
-    }) => {
-      setLastError(null);
-      setLastSuccess(null);
-      setIsMining(true);
-      activeTargetRef.current = target;
-
-      post({
+    (target: TeamMiningTarget) => {
+      minerWorker.postMessage({
         type: "start_mining",
         data: target,
-      });
+      } as StartMiningRequest);
+      setIsMining(true);
     },
-    [post],
+    [minerWorker],
   );
 
   const stopMining = useCallback(() => {
-    post({ type: "stop_mining" });
+    minerWorker.postMessage({
+      type: "stop_mining",
+    });
     setIsMining(false);
-  }, [post]);
+  }, [minerWorker]);
 
-  const value = useMemo(
-    () => ({
+  const subscribe = useCallback((callback: MiningSuccessCallback) => {
+    successCallbacksRef.current.add(callback);
+    return () => {
+      successCallbacksRef.current.delete(callback);
+    };
+  }, []);
+
+  const value = useMemo<MiningContext>(() => {
+    return {
       isMining,
       progress,
       lastSuccess,
       lastError,
       startMining,
       stopMining,
-    }),
-    [isMining, progress, lastSuccess, lastError, startMining, stopMining],
-  );
+      subscribe,
+    };
+  }, [
+    isMining,
+    progress,
+    lastSuccess,
+    lastError,
+    startMining,
+    stopMining,
+    subscribe,
+  ]);
 
   return (
     <MiningContext.Provider value={value}>{children}</MiningContext.Provider>

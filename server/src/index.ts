@@ -26,7 +26,12 @@ const start = async () => {
   const fastify = createServer(game, broadcast, data);
 
   const shutdown = async () => {
+    console.log("[Shutdown] Starting graceful shutdown...");
     try {
+      // Close all SSE connections first to allow the server to exit cleanly
+      broadcast.closeAll();
+      // Give connections a moment to close
+      await new Promise((resolve) => setTimeout(resolve, 100));
       await fastify.close();
     } catch (err) {
       fastify.log.error(err, "Failed to close Fastify");
@@ -34,13 +39,31 @@ const start = async () => {
     // Add any other cleanup here (e.g., database connections, file handles, etc.)
   };
 
+  // Set up a timeout to force exit if shutdown takes too long
+  let shutdownTimeout: NodeJS.Timeout | null = null;
+  const forceExit = () => {
+    if (shutdownTimeout) {
+      clearTimeout(shutdownTimeout);
+    }
+    console.log("[Shutdown] Forcing exit after timeout");
+    process.exit(0);
+  };
+
   process.on("SIGTERM", () => {
+    shutdownTimeout = setTimeout(forceExit, 5000); // Force exit after 5 seconds
     shutdown().finally(() => {
+      if (shutdownTimeout) {
+        clearTimeout(shutdownTimeout);
+      }
       process.exit(0);
     });
   });
   process.on("SIGINT", () => {
+    shutdownTimeout = setTimeout(forceExit, 5000); // Force exit after 5 seconds
     shutdown().finally(() => {
+      if (shutdownTimeout) {
+        clearTimeout(shutdownTimeout);
+      }
       process.exit(0);
     });
   });

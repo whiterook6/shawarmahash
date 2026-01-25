@@ -1,40 +1,26 @@
 import { createRoot } from "react-dom/client";
 import "./index.scss";
-import { useIdentity } from "./identity/useIdentity.hook";
 import { MiningProvider } from "./mining/mining.provider";
 import { MiningDemo } from "./game/MiningDemo";
 import { BroadcastProvider } from "./broadcast/broadcast.provider";
 
-function App() {
-  const { identity, isLoading, error, generateNewIdentity } = useIdentity();
-  return (
-    <div className="app">
-      <h1>
-        shawarma<span className="hash">hash</span>
-      </h1>
-      <div style={{ marginBottom: "1rem" }}>
-        <div>
-          <strong>Identity</strong>:{" "}
-          {isLoading ? "loading..." : (identity ?? "none")}
-        </div>
-        {error ? (
-          <div style={{ marginTop: "0.5rem", color: "#7f1d1d" }}>
-            {error.message}
-          </div>
-        ) : null}
-      </div>
-      <button onClick={() => void generateNewIdentity()} disabled={isLoading}>
-        Generate new identity
-      </button>
+const minerWorker = new Worker(
+  new URL("./mining/miner.worker.ts", import.meta.url),
+  {
+    type: "module",
+  },
+);
+const eventSource = new EventSource("/api/events", {
+  withCredentials: true,
+});
 
-      {identity ? (
-        <MiningProvider identity={identity}>
-          <BroadcastProvider>
-            <MiningDemo identity={identity} />
-          </BroadcastProvider>
-        </MiningProvider>
-      ) : null}
-    </div>
+function App() {
+  return (
+    <BroadcastProvider eventSource={eventSource}>
+      <MiningProvider minerWorker={minerWorker}>
+        <MiningDemo />
+      </MiningProvider>
+    </BroadcastProvider>
   );
 }
 

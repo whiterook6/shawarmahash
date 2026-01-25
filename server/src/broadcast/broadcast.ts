@@ -51,4 +51,15 @@ export class Broadcast {
   getSubscriberCount(): number {
     return this.subscribers.size;
   }
+
+  closeAll(): void {
+    console.log(
+      `[Broadcast] Closing all ${this.subscribers.size} subscriber connection(s)`,
+    );
+    // Create a copy of the set to avoid modification during iteration
+    const subscribersToClose = Array.from(this.subscribers);
+    subscribersToClose.forEach((subscriber) => {
+      this.unsubscribe(subscriber);
+    });
+  }
 }
