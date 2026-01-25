@@ -17,7 +17,7 @@ import { schemas } from "./schemas";
 
 export function createServer(game: Game, broadcast: Broadcast, data: Data) {
   const fastify = Fastify({
-    logger: EnvController.env.NODE_ENV === "production",
+    logger: false,
   });
 
   fastify.register(helmet, {
@@ -209,6 +209,7 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
       // If there's no chain (genesis block case)
       if (recent.length === 0) {
         return reply.status(200).send({
+          team: request.params.team,
           previousHash: Block.GENESIS_PREVIOUS_HASH,
           previousTimestamp: 0,
           difficulty: Difficulty.DEFAULT_DIFFICULTY_HASH,
@@ -218,6 +219,7 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
       // Get the last block from the recent blocks
       const lastBlock = recent[recent.length - 1];
       return reply.status(200).send({
+        team: request.params.team,
         previousHash: lastBlock.hash,
         previousTimestamp: lastBlock.timestamp,
         difficulty: chainState.difficulty,
@@ -259,31 +261,65 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
         hash,
       });
 
-      return reply.status(200).send(chainState);
+      return reply.status(200).send({
+        team,
+        ...chainState,
+      });
     },
   );
 
   // GET /api/events: Server-Sent Events endpoint
   fastify.get("/api/events", async (_: FastifyRequest, reply: FastifyReply) => {
+    reply.hijack();
+
     // Set SSE headers
     reply.raw.setHeader("Content-Type", "text/event-stream");
     reply.raw.setHeader("Cache-Control", "no-cache");
     reply.raw.setHeader("Connection", "keep-alive");
-    reply.raw.write(
-      `data: ${JSON.stringify({ type: "connection", status: "open" })}\n\n`,
-    );
+    reply.raw.setHeader("X-Accel-Buffering", "no");
 
+    // Send initial connection message
+    try {
+      reply.raw.write(
+        `data: ${JSON.stringify({ type: "connection", payload: { status: "open" } })}\n\n`,
+      );
+    } catch {
+      // Client may have disconnected immediately
+      return;
+    }
+
+    let isClosed = false;
     const unsubscribe = broadcast.subscribe({
       send: (data: Message) => {
-        reply.raw.write(`data: ${JSON.stringify(data)}\n\n`);
+        if (!isClosed) {
+          try {
+            reply.raw.write(`data: ${JSON.stringify(data)}\n\n`);
+          } catch {
+            // Connection closed or error writing
+            isClosed = true;
+            unsubscribe();
+          }
+        }
       },
       close: () => {
-        reply.raw.end();
+        if (!isClosed) {
+          isClosed = true;
+          try {
+            reply.raw.end();
+          } catch {
+            // Ignore errors when closing
+          }
+        }
       },
     });
 
     // Clean up on client disconnect
     reply.raw.on("close", () => {
+      console.log("[SSE] Client connection closed");
+      unsubscribe();
+    });
+    reply.raw.on("error", (error) => {
+      console.log("[SSE] Client connection error:", error);
       unsubscribe();
     });
   });

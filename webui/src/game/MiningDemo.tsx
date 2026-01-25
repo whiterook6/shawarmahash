@@ -1,17 +1,66 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Api } from "../api";
 import { useMining } from "../mining/useMining.hook";
 import type { TeamMiningTarget } from "../types";
+import { useBroadcast } from "../broadcast/useBroadcast.hook";
+import type {
+  BlockSubmittedMessage,
+  BroadcastMessage,
+} from "../broadcast/broadcast.types";
 
 const PLAYER = "TIM";
 const TEAM = "TST";
 
 export function MiningDemo({ identity }: { identity: string }) {
   const mining = useMining();
+  const broadcast = useBroadcast();
+
   const [target, setTarget] = useState<TeamMiningTarget | null>(null);
   const [isTargetLoading, setIsTargetLoading] = useState(false);
   const [targetError, setTargetError] = useState<string | null>(null);
   const [autoMine, setAutoMine] = useState(true);
+
+  const onBlockSubmitted = useCallback(
+    (message: BlockSubmittedMessage) => {
+      if (message.payload.team === target?.team) {
+        const recent = message.payload.recent;
+        if (recent.length > 0) {
+          const lastBlock = recent[recent.length - 1];
+          const newTarget = {
+            team: message.payload.team,
+            previousHash: lastBlock.hash,
+            previousTimestamp: lastBlock.timestamp,
+            difficulty: message.payload.difficulty,
+          };
+          setTarget(newTarget);
+          mining.startMining({
+            ...newTarget,
+            player: PLAYER,
+            team: newTarget.team,
+          });
+        }
+      }
+    },
+    [mining, target?.team],
+  );
+
+  const onBlockSubmittedRef = useRef(onBlockSubmitted);
+  onBlockSubmittedRef.current = onBlockSubmitted;
+
+  useEffect(() => {
+    if (!broadcast) return;
+
+    const onMessage = (message: BroadcastMessage) => {
+      switch (message.type) {
+        case "block_submitted":
+          onBlockSubmittedRef.current(message);
+          break;
+      }
+    };
+
+    const unsubscribe = broadcast.subscribe(onMessage);
+    return () => unsubscribe();
+  }, [broadcast]);
 
   const fetchTarget = useCallback(async () => {
     setIsTargetLoading(true);
@@ -96,6 +145,19 @@ export function MiningDemo({ identity }: { identity: string }) {
           </div>
           <div>
             <strong>Identity</strong>: {identity}
+          </div>
+          <div>
+            <strong>SSE Connection</strong>:{" "}
+            <span
+              style={{ color: broadcast.isConnected ? "#16a34a" : "#dc2626" }}
+            >
+              {broadcast.isConnected ? "● Connected" : "○ Disconnected"}
+            </span>
+            {broadcast.connectionError && (
+              <span style={{ marginLeft: "0.5rem", color: "#dc2626" }}>
+                ({broadcast.connectionError.message})
+              </span>
+            )}
           </div>
         </div>
       </div>

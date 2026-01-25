@@ -3,6 +3,7 @@ import "./index.scss";
 import { useIdentity } from "./identity/useIdentity.hook";
 import { MiningProvider } from "./mining/mining.provider";
 import { MiningDemo } from "./game/MiningDemo";
+import { BroadcastProvider } from "./broadcast/broadcast.provider";
 
 function App() {
   const { identity, isLoading, error, generateNewIdentity } = useIdentity();
@@ -28,7 +29,9 @@ function App() {
 
       {identity ? (
         <MiningProvider identity={identity}>
-          <MiningDemo identity={identity} />
+          <BroadcastProvider>
+            <MiningDemo identity={identity} />
+          </BroadcastProvider>
         </MiningProvider>
       ) : null}
     </div>

@@ -13,6 +13,10 @@ export class Broadcast {
 
   subscribe(subscriber: Subscriber): () => void {
     this.subscribers.add(subscriber);
+    const subscriberCount = this.subscribers.size;
+    console.log(
+      `[Broadcast] Client connected. Total subscribers: ${subscriberCount}`,
+    );
     return () => this.unsubscribe(subscriber);
   }
 
@@ -23,14 +27,22 @@ export class Broadcast {
       console.error(error);
     }
     this.subscribers.delete(subscriber);
+    const subscriberCount = this.subscribers.size;
+    console.log(
+      `[Broadcast] Client disconnected. Total subscribers: ${subscriberCount}`,
+    );
   }
 
   cast(message: Message): void {
+    const subscriberCount = this.subscribers.size;
+    console.log(
+      `[Broadcast] Sending message type "${message.type}" to ${subscriberCount} client(s)`,
+    );
     this.subscribers.forEach((subscriber) => {
       try {
         subscriber.send(message);
       } catch (error) {
-        console.error(error);
+        console.error("[Broadcast] Error sending message to client:", error);
         this.unsubscribe(subscriber);
       }
     });

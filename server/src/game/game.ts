@@ -213,7 +213,10 @@ export class Game {
     const broadcastType = isGenesisBlock ? "team_created" : "block_submitted";
     this.broadcast?.cast({
       type: broadcastType,
-      payload: chainState,
+      payload: {
+        team,
+        ...chainState,
+      },
     });
     return chainState;
   }

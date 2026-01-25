@@ -256,11 +256,12 @@ export const schemas = {
         200: {
           type: "object",
           properties: {
+            team: schemaRefs.teamName,
             previousHash: schemaRefs.hashCode,
             previousTimestamp: { type: "number" },
             difficulty: { type: "string" },
           },
-          required: ["previousHash", "previousTimestamp", "difficulty"],
+          required: ["team", "previousHash", "previousTimestamp", "difficulty"],
           additionalProperties: false,
         },
       },

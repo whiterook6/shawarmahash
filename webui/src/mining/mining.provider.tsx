@@ -40,6 +40,10 @@ export const MiningProvider = ({
   }, [identity]);
 
   useEffect(() => {
+    if (minerRef.current) {
+      return;
+    }
+
     const miner = new Worker(new URL("./miner.worker.ts", import.meta.url), {
       type: "module",
     });
@@ -50,6 +54,7 @@ export const MiningProvider = ({
       switch (msg.type) {
         case "mining_progress":
           setProgress(msg.data);
+          setIsMining(true);
           return;
         case "mining_success":
           setIsMining(false);
@@ -95,7 +100,7 @@ export const MiningProvider = ({
       miner.terminate();
       minerRef.current = null;
     };
-  }, []);
+  }, [minerRef.current]);
 
   const post = useCallback(
     (message: StartMiningRequest | StopMiningRequest) => {

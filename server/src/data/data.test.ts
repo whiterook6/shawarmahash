@@ -23,7 +23,7 @@ describe("Data", () => {
       const result = Data.stringify(block);
       // Leading Fs should be removed
       expect(result).toBe(
-        "b13b9e5e847936705e86dd4b7799:edb8c1afbf45558223119f87365a:TIM:TST:1769230455:267150:f77ad768fd3d3f64:6648",
+        "b13b9e5e847936705e86dd4b7799:edb8c1afbf45558223119f87365a:TIM:TST:1769230455:4138e:f77ad768fd3d3f64:6648",
       );
     });
 
@@ -41,7 +41,7 @@ describe("Data", () => {
 
       const result = Data.stringify(block);
       expect(result).toBe(
-        "b13b9e5e847936705e86dd4b7799:edb8c1afbf45558223119f87365a:TIM:TST:1769230455:267150:f77ad768fd3d3f64:6648",
+        "b13b9e5e847936705e86dd4b7799:edb8c1afbf45558223119f87365a:TIM:TST:1769230455:4138e:f77ad768fd3d3f64:6648",
       );
     });
 
@@ -59,14 +59,14 @@ describe("Data", () => {
 
       const result = Data.stringify(block);
       // All Fs should be removed, leaving empty strings
-      expect(result).toBe("::TIM:TST:1769230455:267150:f77ad768fd3d3f64:6648");
+      expect(result).toBe("::TIM:TST:1769230455:4138e:f77ad768fd3d3f64:6648");
     });
   });
 
   describe("parse", () => {
     it("Can parse a line with leading Fs removed from hash and previousHash", () => {
       const line =
-        "b13b9e5e847936705e86dd4b7799:edb8c1afbf45558223119f87365a:TIM:TST:1769230455:267150:f77ad768fd3d3f64:6648";
+        "b13b9e5e847936705e86dd4b7799:edb8c1afbf45558223119f87365a:TIM:TST:1769230455:4138e:f77ad768fd3d3f64:6648";
 
       const result = Data.parse(line);
       expect(result).toEqual({
@@ -82,7 +82,7 @@ describe("Data", () => {
     });
 
     it("Can parse a line with empty hash and previousHash (all Fs)", () => {
-      const line = "::TIM:TST:1769230455:267150:f77ad768fd3d3f64:6648";
+      const line = "::TIM:TST:1769230455:4138e:f77ad768fd3d3f64:6648";
 
       const result = Data.parse(line);
       expect(result).toEqual({

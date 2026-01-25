@@ -37,12 +37,14 @@ export type TeamWithScoreAPIResponse = {
 };
 
 export type TeamMiningTarget = {
+  team: string;
   previousHash: string;
   previousTimestamp: number;
   difficulty: string;
 };
 
 export type ChainStateAPIResponse = {
+  team: string;
   recent: Block[];
   difficulty: string;
 };
