@@ -15,9 +15,15 @@ import { IdentityController } from "../identity/identity.controller";
 import { EnvController } from "../env";
 import { schemas } from "./schemas";
 
-export function createServer(game: Game, broadcast: Broadcast, data: Data) {
+export function createServer(
+  game: Game,
+  broadcast: Broadcast,
+  data: Data,
+  httpsOptions?: { key: Buffer; cert: Buffer },
+) {
   const fastify = Fastify({
     logger: false,
+    ...(httpsOptions && { https: httpsOptions }),
   });
 
   fastify.register(helmet, {

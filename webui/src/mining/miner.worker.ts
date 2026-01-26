@@ -99,7 +99,7 @@ class Miner {
         hashesPerSecond: hashesPerSecond,
         totalHashes: this.totalHashesSinceInstantiation,
       });
-    }, PROGRESS_UPDATE_INTERVAL);
+    }, PROGRESS_UPDATE_INTERVAL) as unknown as number;
 
     try {
       const encoder = new TextEncoder();

@@ -4,6 +4,7 @@ import { Data } from "./data/data";
 import { Broadcast } from "./broadcast/broadcast";
 import { join } from "path";
 import { EnvController } from "./env";
+import { readFileSync, existsSync } from "fs";
 
 // Start server
 const start = async () => {
@@ -23,7 +24,42 @@ const start = async () => {
   game.setChains(chains);
   game.setBroadcast(broadcast);
 
-  const fastify = createServer(game, broadcast, data);
+  // Check for SSL certificates in multiple possible locations
+  // 1. Docker: /app/certs (mounted volume)
+  // 2. Development: ../certs (relative to project root)
+  // 3. Project root: ./certs (if running from root)
+  const possibleCertPaths = [
+    "/app/certs/localhost.pem", // Docker
+    join(process.cwd(), "..", "certs", "localhost.pem"), // Development (from server/output)
+    join(process.cwd(), "certs", "localhost.pem"), // If running from project root
+  ];
+
+  const possibleKeyPaths = [
+    "/app/certs/localhost-key.pem", // Docker
+    join(process.cwd(), "..", "certs", "localhost-key.pem"), // Development
+    join(process.cwd(), "certs", "localhost-key.pem"), // If running from project root
+  ];
+
+  let certPath: string | null = null;
+  let keyPath: string | null = null;
+
+  for (let i = 0; i < possibleCertPaths.length; i++) {
+    if (existsSync(possibleCertPaths[i]) && existsSync(possibleKeyPaths[i])) {
+      certPath = possibleCertPaths[i];
+      keyPath = possibleKeyPaths[i];
+      break;
+    }
+  }
+
+  const httpsOptions =
+    certPath && keyPath
+      ? {
+          key: readFileSync(keyPath),
+          cert: readFileSync(certPath),
+        }
+      : undefined;
+
+  const fastify = createServer(game, broadcast, data, httpsOptions);
 
   const shutdown = async () => {
     console.log("[Shutdown] Starting graceful shutdown...");
@@ -82,6 +118,12 @@ const start = async () => {
 
   try {
     await fastify.listen({ port: 3000, host: "0.0.0.0" });
+    if (httpsOptions) {
+      console.log("🚀 Server running on https://0.0.0.0:3000");
+    } else {
+      console.log("🚀 Server running on http://0.0.0.0:3000");
+      console.log("💡 To enable HTTPS, run: ./scripts/generate-certs.sh");
+    }
   } catch (err) {
     fastify.log.error(err, "Failed to start Fastify");
     await shutdown();

@@ -124,9 +124,9 @@ export class Data {
   async loadAllChains(): Promise<Map<string, Chain>> {
     await this.ensureDataDirectoryExists();
 
-    let files: string[] = [];
+    let filenames: string[] = [];
     try {
-      files = await readdir(this.dataDirectory);
+      filenames = await readdir(this.dataDirectory);
     } catch (error) {
       throw new Error(
         `Failed to read data directory: ${this.dataDirectory}: ${error instanceof Error ? error.message : String(error)}`,
@@ -137,23 +137,25 @@ export class Data {
 
     // Load all chains in parallel using Promise.all
     await Promise.all(
-      files.map(async (file) => {
+      filenames.map(async (filename) => {
         let chain: Chain;
         try {
-          chain = await this.loadChain(file);
+          chain = await this.loadChain(filename);
         } catch (error) {
           throw new Error(
-            `Failed to load chain for ${file}: ${error instanceof Error ? error.message : String(error)}`,
+            `Failed to load chain for ${filename}: ${error instanceof Error ? error.message : String(error)}`,
           );
         }
 
-        const verificationError = Chain.verifyChain(chain);
-        if (verificationError) {
-          throw new Error(
-            `Chain verification failed for ${file}: ${verificationError}`,
-          );
+        if (chain.length > 0) {
+          const verificationError = Chain.verifyChain(chain);
+          if (verificationError) {
+            throw new Error(
+              `Chain verification failed for ${filename}: ${verificationError}`,
+            );
+          }
+          chains.set(filename, chain);
         }
-        chains.set(file, chain);
       }),
     );
 

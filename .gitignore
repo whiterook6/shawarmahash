@@ -14,3 +14,8 @@ Thumbs.db
 # Environment variables
 .env
 
+# SSL Certificates
+certs/
+*.pem
+*.key
+
