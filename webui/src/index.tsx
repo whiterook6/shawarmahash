@@ -5,7 +5,7 @@ import { MiningDemo } from "./game/MiningDemo";
 import { BroadcastProvider } from "./broadcast/broadcast.provider";
 
 const minerWorker = new Worker(
-  new URL("./mining/miner.worker.ts", import.meta.url),
+  new URL("./mining/mining.worker.ts", import.meta.url),
   {
     type: "module",
   },

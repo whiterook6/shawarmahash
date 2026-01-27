@@ -1,21 +1,28 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Api } from "../api";
-import { useMining } from "../mining/useMining.hook";
-import type { TeamMiningTarget } from "../types";
-import { useBroadcast } from "../broadcast/useBroadcast.hook";
+import { BroadcastContext } from "../broadcast/broadcast.context";
 import type {
   BlockSubmittedMessage,
   BroadcastMessage,
 } from "../broadcast/broadcast.types";
 import { useIdentity } from "../identity/useIdentity.hook";
+import { MiningContext } from "../mining/mining.context";
+import type { TeamMiningTarget } from "../types";
 
 const PLAYER = "TIM";
 const TEAM = "TST";
 
 export function MiningDemo() {
   const identity = useIdentity();
-  const mining = useMining();
-  const broadcast = useBroadcast();
+  const mining = useContext(MiningContext);
+  const broadcast = useContext(BroadcastContext);
 
   const [target, setTarget] = useState<TeamMiningTarget | null>(null);
   const [isTargetLoading, setIsTargetLoading] = useState(false);
