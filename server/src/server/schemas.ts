@@ -285,6 +285,10 @@ export const schemas = {
           identity: schemaRefs.identity,
           nonce: schemaRefs.nonce,
           hash: schemaRefs.hashCode,
+          data: {
+            type: "object",
+            additionalProperties: true,
+          },
         },
         required: ["previousHash", "player", "identity", "nonce", "hash"],
         additionalProperties: false,
@@ -305,6 +309,10 @@ export const schemas = {
                   nonce: schemaRefs.nonce,
                   hash: schemaRefs.hashCode,
                   previousHash: schemaRefs.hashCode,
+                  data: {
+                    type: "object",
+                    additionalProperties: true,
+                  },
                 },
                 required: [
                   "index",

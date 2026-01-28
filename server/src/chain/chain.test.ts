@@ -270,6 +270,84 @@ describe("Chain", () => {
     });
   });
 
+  describe("verifyIncomingBlock", () => {
+    it("Can verify and create a block with data field", () => {
+      const chain = [validChain[0]];
+      const previousBlock = chain[chain.length - 1];
+      const { hash, nonce } = Miner.findHash({
+        difficultyTarget: Difficulty.getDifficultyTargetFromChain(chain),
+        previousHash: previousBlock.hash,
+        previousTimestamp: previousBlock.timestamp,
+        player: "BOB",
+        team: "TST",
+      });
+
+      const newBlock = Chain.verifyIncomingBlock(
+        {
+          previousHash: previousBlock.hash,
+          player: "BOB",
+          team: "TST",
+          nonce,
+          hash,
+          identity: "abcdef1234567890",
+          data: { hello: "world", count: 42 },
+        },
+        chain,
+      );
+
+      expect(newBlock).toEqual(
+        expect.objectContaining({
+          hash,
+          previousHash: previousBlock.hash,
+          player: "BOB",
+          team: "TST",
+          nonce,
+          identity: "abcdef1234567890",
+          index: 1,
+          data: { hello: "world", count: 42 },
+        }),
+      );
+    });
+
+    it("Can verify and create a block without data field", () => {
+      const chain = [validChain[0]];
+      const previousBlock = chain[chain.length - 1];
+      const { hash, nonce } = Miner.findHash({
+        difficultyTarget: Difficulty.getDifficultyTargetFromChain(chain),
+        previousHash: previousBlock.hash,
+        previousTimestamp: previousBlock.timestamp,
+        player: "BOB",
+        team: "TST",
+      });
+
+      const newBlock = Chain.verifyIncomingBlock(
+        {
+          previousHash: previousBlock.hash,
+          player: "BOB",
+          team: "TST",
+          nonce,
+          hash,
+          identity: "abcdef1234567890",
+        },
+        chain,
+      );
+
+      expect(newBlock).toEqual(
+        expect.objectContaining({
+          hash,
+          previousHash: previousBlock.hash,
+          player: "BOB",
+          team: "TST",
+          nonce,
+          identity: "abcdef1234567890",
+          index: 1,
+        }),
+      );
+      // Data field should be undefined when not provided
+      expect(newBlock.data).toBeUndefined();
+    });
+  });
+
   describe("getPlayerBlocks", () => {
     it("It can get the blocks for a player", () => {
       const chain = validChain.map((block) => ({ ...block }));

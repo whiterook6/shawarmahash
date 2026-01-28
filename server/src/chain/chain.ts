@@ -116,6 +116,7 @@ export const Chain = {
       nonce: number;
       hash: string;
       identity: string;
+      data?: Record<string, unknown>;
     },
     chain: Chain,
   ): Block => {
@@ -172,6 +173,7 @@ export const Chain = {
       nonce,
       index: previousBlock.index + 1,
       identity,
+      data: args.data,
     };
 
     return newBlock;
