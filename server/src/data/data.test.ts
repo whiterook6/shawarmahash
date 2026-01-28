@@ -78,6 +78,7 @@ describe("Data", () => {
         nonce: 267150,
         index: 6648,
         identity: "f77ad768fd3d3f64",
+        data: {},
       });
     });
 
@@ -94,6 +95,7 @@ describe("Data", () => {
         nonce: 267150,
         index: 6648,
         identity: "f77ad768fd3d3f64",
+        data: {},
       });
     });
 
@@ -154,7 +156,8 @@ describe("Data", () => {
       for (const block of testBlocks) {
         const stringified = Data.stringify(block);
         const parsed = Data.parse(stringified);
-        expect(parsed).toEqual(block);
+        // When parsing blocks without data, data should be set to {}
+        expect(parsed).toEqual({ ...block, data: {} });
       }
     });
 
@@ -163,6 +166,88 @@ describe("Data", () => {
 
       expect(() => Data.parse(line)).toThrow(
         "Invalid block format: expected 8 parts separated by ':', got 7",
+      );
+    });
+
+    it("Can parse a line with data (9 parts)", () => {
+      const line =
+        'b13b9e5e847936705e86dd4b7799:edb8c1afbf45558223119f87365a:TIM:TST:1769230455:4138e:f77ad768fd3d3f64:6648:{"hello":"world","count":42}';
+
+      const result = Data.parse(line);
+      expect(result).toEqual({
+        hash: "ffffb13b9e5e847936705e86dd4b7799",
+        previousHash: "ffffedb8c1afbf45558223119f87365a",
+        player: "TIM",
+        team: "TST",
+        timestamp: 1769230455,
+        nonce: 267150,
+        index: 6648,
+        identity: "f77ad768fd3d3f64",
+        data: { hello: "world", count: 42 },
+      });
+    });
+
+    it("Can stringify and parse a block with data", () => {
+      const block: Block = {
+        hash: "ffffb13b9e5e847936705e86dd4b7799",
+        previousHash: "ffffedb8c1afbf45558223119f87365a",
+        player: "TIM",
+        team: "TST",
+        timestamp: 1769230455,
+        nonce: 267150,
+        index: 6648,
+        identity: "f77ad768fd3d3f64",
+        data: { hello: "world", count: 42 },
+      };
+
+      const stringified = Data.stringify(block);
+      expect(stringified).toBe(
+        'b13b9e5e847936705e86dd4b7799:edb8c1afbf45558223119f87365a:TIM:TST:1769230455:4138e:f77ad768fd3d3f64:6648:{"hello":"world","count":42}',
+      );
+
+      const parsed = Data.parse(stringified);
+      expect(parsed).toEqual(block);
+    });
+
+    it("Does not include data separator when data is empty object", () => {
+      const block: Block = {
+        hash: "ffffb13b9e5e847936705e86dd4b7799",
+        previousHash: "ffffedb8c1afbf45558223119f87365a",
+        player: "TIM",
+        team: "TST",
+        timestamp: 1769230455,
+        nonce: 267150,
+        index: 6648,
+        identity: "f77ad768fd3d3f64",
+        data: {},
+      };
+
+      const stringified = Data.stringify(block);
+      // Should not include the 9th part when data is empty
+      expect(stringified).toBe(
+        "b13b9e5e847936705e86dd4b7799:edb8c1afbf45558223119f87365a:TIM:TST:1769230455:4138e:f77ad768fd3d3f64:6648",
+      );
+
+      const parsed = Data.parse(stringified);
+      // Should return empty object when parsing 8 parts
+      expect(parsed.data).toEqual({});
+    });
+
+    it("Throws error for invalid JSON in data part", () => {
+      const line =
+        "b13b9e5e847936705e86dd4b7799:edb8c1afbf45558223119f87365a:TIM:TST:1769230455:4138e:f77ad768fd3d3f64:6648:invalid-json";
+
+      expect(() => Data.parse(line)).toThrow(
+        "Invalid block format: data part is not valid JSON",
+      );
+    });
+
+    it("Throws error when data part is not an object", () => {
+      const line =
+        'b13b9e5e847936705e86dd4b7799:edb8c1afbf45558223119f87365a:TIM:TST:1769230455:4138e:f77ad768fd3d3f64:6648:["array","not","object"]';
+
+      expect(() => Data.parse(line)).toThrow(
+        "Invalid block format: data part is not valid JSON",
       );
     });
 
@@ -243,7 +328,8 @@ describe("Data", () => {
 
         expect(loadedChain).toHaveLength(5);
         for (let i = 0; i < testBlocks.length; i++) {
-          expect(loadedChain[i]).toEqual(testBlocks[i]);
+          // When parsing blocks without data, data should be set to {}
+          expect(loadedChain[i]).toEqual({ ...testBlocks[i], data: {} });
         }
 
         // Verify file content format
@@ -254,7 +340,8 @@ describe("Data", () => {
         // Verify each line can be parsed back
         for (let i = 0; i < lines.length; i++) {
           const parsed = Data.parse(lines[i]);
-          expect(parsed).toEqual(testBlocks[i]);
+          // When parsing blocks without data, data should be set to {}
+          expect(parsed).toEqual({ ...testBlocks[i], data: {} });
         }
       } finally {
         await rm(tempDir, { recursive: true, force: true });

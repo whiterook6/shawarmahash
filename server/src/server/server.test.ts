@@ -176,4 +176,147 @@ describe("Server", () => {
       },
     ]);
   });
+
+  describe("POST /api/teams/:team/chain - data field validation", () => {
+    test("Accepts valid object for data field", async (context) => {
+      context.mock.method(game, "submitBlock", async () => ({
+        recent: [],
+        difficulty: "ffff0000000000000000000000000000",
+      }));
+
+      const response = await server.inject({
+        method: "POST",
+        url: "/api/teams/TST/chain",
+        payload: {
+          previousHash: "ffffffffffffffffffffffffffffffff",
+          player: "AAA",
+          identity: "b989bcb4a39c769d",
+          nonce: 1,
+          hash: "ffff0000000000000000000000000000",
+          data: { hello: "world", count: 42 },
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+    });
+
+    test("Rejects array for data field", async () => {
+      const response = await server.inject({
+        method: "POST",
+        url: "/api/teams/TST/chain",
+        payload: {
+          previousHash: "ffffffffffffffffffffffffffffffff",
+          player: "AAA",
+          identity: "b989bcb4a39c769d",
+          nonce: 1,
+          hash: "ffff0000000000000000000000000000",
+          data: ["array", "not", "object"],
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = response.json();
+      expect(body).toHaveProperty("validationErrors");
+    });
+
+    test("Rejects string for data field", async () => {
+      const response = await server.inject({
+        method: "POST",
+        url: "/api/teams/TST/chain",
+        payload: {
+          previousHash: "ffffffffffffffffffffffffffffffff",
+          player: "AAA",
+          identity: "b989bcb4a39c769d",
+          nonce: 1,
+          hash: "ffff0000000000000000000000000000",
+          data: "not an object",
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = response.json();
+      expect(body).toHaveProperty("validationErrors");
+    });
+
+    test("Rejects null for data field", async () => {
+      const response = await server.inject({
+        method: "POST",
+        url: "/api/teams/TST/chain",
+        payload: {
+          previousHash: "ffffffffffffffffffffffffffffffff",
+          player: "AAA",
+          identity: "b989bcb4a39c769d",
+          nonce: 1,
+          hash: "ffff0000000000000000000000000000",
+          data: null,
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = response.json();
+      expect(body).toHaveProperty("validationErrors");
+    });
+
+    test("Rejects number for data field", async () => {
+      const response = await server.inject({
+        method: "POST",
+        url: "/api/teams/TST/chain",
+        payload: {
+          previousHash: "ffffffffffffffffffffffffffffffff",
+          player: "AAA",
+          identity: "b989bcb4a39c769d",
+          nonce: 1,
+          hash: "ffff0000000000000000000000000000",
+          data: 123,
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const body = response.json();
+      expect(body).toHaveProperty("validationErrors");
+    });
+
+    test("Accepts empty object for data field", async (context) => {
+      context.mock.method(game, "submitBlock", async () => ({
+        recent: [],
+        difficulty: "ffff0000000000000000000000000000",
+      }));
+
+      const response = await server.inject({
+        method: "POST",
+        url: "/api/teams/TST/chain",
+        payload: {
+          previousHash: "ffffffffffffffffffffffffffffffff",
+          player: "AAA",
+          identity: "b989bcb4a39c769d",
+          nonce: 1,
+          hash: "ffff0000000000000000000000000000",
+          data: {},
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+    });
+
+    test("Accepts request without data field", async (context) => {
+      context.mock.method(game, "submitBlock", async () => ({
+        recent: [],
+        difficulty: "ffff0000000000000000000000000000",
+      }));
+
+      const response = await server.inject({
+        method: "POST",
+        url: "/api/teams/TST/chain",
+        payload: {
+          previousHash: "ffffffffffffffffffffffffffffffff",
+          player: "AAA",
+          identity: "b989bcb4a39c769d",
+          nonce: 1,
+          hash: "ffff0000000000000000000000000000",
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+    });
+  });
 });

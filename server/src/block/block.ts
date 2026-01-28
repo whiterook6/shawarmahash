@@ -27,6 +27,9 @@ export type Block = {
 
   /** The previous hash of the block. A SHA-256 hash of the previous block's data. */
   previousHash: string;
+
+  /** Optional JSON data associated with the block. */
+  data?: Record<string, unknown>;
 };
 
 export const Block = {

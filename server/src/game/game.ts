@@ -160,6 +160,7 @@ export class Game {
     identity: string;
     team: string;
     nonce: number;
+    data?: Record<string, unknown>;
   }): Promise<{ recent: Block[]; difficulty: string }> {
     const { team, previousHash, identity } = args;
     const isGenesisBlock = previousHash === Block.GENESIS_PREVIOUS_HASH;
@@ -182,6 +183,7 @@ export class Game {
           index: 0,
           timestamp: Timestamp.now(),
           identity,
+          data: args.data,
         };
 
         const error = Chain.verifyGenesisBlock(newBlock);
@@ -200,7 +202,10 @@ export class Game {
         const teamChain = this.chains.get(team)!;
 
         // Create the new block
-        newBlock = Chain.verifyIncomingBlock(args, teamChain);
+        newBlock = Chain.verifyIncomingBlock(
+          { ...args, data: args.data },
+          teamChain,
+        );
 
         // Append to chain and persist to data layer
         await this.appendBlock(newBlock, teamChain, team);

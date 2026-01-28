@@ -57,6 +57,7 @@ export type SubmitBlockAPIRequest = {
   nonce: number;
   hash: string;
   message?: string;
+  data?: Record<string, unknown>;
 };
 
 export type Block = {
@@ -68,4 +69,5 @@ export type Block = {
   hash: string;
   previousHash: string;
   message?: string;
+  data?: Record<string, unknown>;
 };

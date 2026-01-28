@@ -15,16 +15,29 @@ export class Data {
     // Remove leading Fs from hash and previousHash
     const hash = Data.removeLeadingFs(block.hash);
     const previousHash = Data.removeLeadingFs(block.previousHash);
-
-    return `${hash}:${previousHash}:${block.player}:${block.team}:${block.timestamp}:${block.nonce.toString(16)}:${block.identity}:${block.index}`;
+    const start = `${hash}:${previousHash}:${block.player}:${block.team}:${block.timestamp}:${block.nonce.toString(16)}:${block.identity}:${block.index}`;
+    if (block.data && Object.keys(block.data).length > 0) {
+      return `${start}:${JSON.stringify(block.data)}`;
+    } else {
+      return start;
+    }
   }
 
   static padWithFs(hash: string): string {
     return hash.padStart(32, "f");
   }
 
+  static findJsonStart(line: string): number {
+    let colonIndex = -1;
+    for (let i = 0; i < 8; i++) {
+      colonIndex = line.indexOf(":", colonIndex + 1);
+      if (colonIndex === -1) return -1;
+    }
+    return colonIndex;
+  }
+
   static parse(line: string): Block {
-    const parts = line.trim().split(":");
+    const parts = line.trim().split(":", 8);
     if (parts.length !== 8) {
       throw new Error(
         `Invalid block format: expected 8 parts separated by ':', got ${parts.length}`,
@@ -47,6 +60,28 @@ export class Data {
       );
     }
 
+    let data: Record<string, unknown> = {};
+    const jsonStart = Data.findJsonStart(line);
+    if (jsonStart !== -1) {
+      const json = line.slice(jsonStart + 1);
+      try {
+        const parsed = JSON.parse(json);
+        // Add this validation check:
+        if (
+          typeof parsed !== "object" ||
+          parsed === null ||
+          Array.isArray(parsed)
+        ) {
+          throw new Error("Data must be a JSON object");
+        }
+        data = parsed;
+      } catch (error) {
+        throw new Error(
+          `Invalid block format: data part is not valid JSON: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+    }
+
     return {
       hash,
       previousHash,
@@ -56,6 +91,7 @@ export class Data {
       nonce,
       identity,
       index,
+      data: data || {},
     };
   }
 
