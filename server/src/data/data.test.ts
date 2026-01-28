@@ -242,7 +242,7 @@ describe("Data", () => {
       );
     });
 
-    it.only("Throws error when data part is not an object", () => {
+    it("Throws error when data part is not an object", () => {
       const line =
         'b13b9e5e847936705e86dd4b7799:edb8c1afbf45558223119f87365a:TIM:TST:1769230455:4138e:f77ad768fd3d3f64:6648:["array","not","object"]';
 
