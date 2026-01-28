@@ -1,4 +1,4 @@
-import type { ChainStateAPIResponse } from "../types";
+import type { ChainStateAPIResponse } from "../api/api.types";
 
 /**
  * Connection message sent when SSE connection is established

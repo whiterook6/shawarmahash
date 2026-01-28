@@ -7,7 +7,7 @@ import type {
   MiningSuccessResponse,
   StartMiningRequest,
   TeamMiningTarget,
-} from "../types";
+} from "./mining.types";
 
 export const MiningProvider = ({
   minerWorker,

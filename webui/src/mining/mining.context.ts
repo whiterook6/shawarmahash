@@ -3,7 +3,7 @@ import type {
   MiningErrorResponse,
   MiningProgressResponse,
   MiningSuccessResponse,
-} from "../types";
+} from "./mining.types";
 
 export type MiningSuccessCallback = (
   data: MiningSuccessResponse["data"],

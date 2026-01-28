@@ -6,21 +6,19 @@ import {
   useRef,
   useState,
 } from "react";
-import { Api } from "../api";
+import { Api } from "../api/api";
 import { BroadcastContext } from "../broadcast/broadcast.context";
 import type {
   BlockSubmittedMessage,
   BroadcastMessage,
 } from "../broadcast/broadcast.types";
-import { useIdentity } from "../identity/useIdentity.hook";
+import { IdentityContext } from "../identity/identity.context";
 import { MiningContext } from "../mining/mining.context";
-import type { TeamMiningTarget } from "../types";
-
-const PLAYER = "TIM";
-const TEAM = "TST";
+import type { TeamMiningTarget } from "../mining/mining.types";
 
 export function MiningDemo() {
-  const identity = useIdentity();
+  const { player, team, identity, generateNewIdentity, isGeneratingIdentity } =
+    useContext(IdentityContext);
   const mining = useContext(MiningContext);
   const broadcast = useContext(BroadcastContext);
 
@@ -35,10 +33,14 @@ export function MiningDemo() {
   );
 
   const fetchTarget = useCallback(async () => {
+    if (!team) {
+      return;
+    }
+
     setIsTargetLoading(true);
     setTargetError(null);
     try {
-      const t = await Api.getTeam(TEAM);
+      const t = await Api.getTeam(team);
       setTarget(t);
       return t;
     } catch (e) {
@@ -48,7 +50,7 @@ export function MiningDemo() {
     } finally {
       setIsTargetLoading(false);
     }
-  }, []);
+  }, [team]);
 
   const submitBlock = useCallback(
     async (blockData: {
@@ -58,7 +60,7 @@ export function MiningDemo() {
       player: string;
       nonce: number;
     }) => {
-      if (!identity.identity) {
+      if (!identity) {
         setSubmitError("No identity available");
         return false;
       }
@@ -75,7 +77,7 @@ export function MiningDemo() {
         await Api.submitBlock(blockData.team, {
           previousHash: blockData.previousHash,
           player: blockData.player,
-          identity: identity.identity,
+          identity: identity,
           nonce: blockData.nonce,
           hash: blockData.hash,
         });
@@ -89,15 +91,19 @@ export function MiningDemo() {
         setIsSubmitting(false);
       }
     },
-    [identity.identity, lastSubmittedHash],
+    [identity, lastSubmittedHash],
   );
 
   const start = useCallback(async () => {
+    if (!player || !team) {
+      return;
+    }
+
     setAutoMine(true);
     const t = target ?? (await fetchTarget());
     if (!t) return;
-    mining.startMining({ ...t, player: PLAYER, team: TEAM });
-  }, [fetchTarget, mining, target]);
+    mining.startMining({ ...t, player, team });
+  }, [fetchTarget, mining, target, player, team]);
 
   const stop = useCallback(() => {
     setAutoMine(false);
@@ -138,15 +144,26 @@ export function MiningDemo() {
       return;
     }
 
+    if (!player || !team) {
+      return;
+    }
+
     lastRestartedHashRef.current = lastSubmittedHash;
     void (async () => {
       const t = await fetchTarget();
       if (!t) {
         return;
       }
-      mining.startMining({ ...t, player: PLAYER, team: TEAM });
+      mining.startMining({ ...t, player, team });
     })();
-  }, [autoMine, fetchTarget, mining.startMining, lastSubmittedHash]);
+  }, [
+    autoMine,
+    fetchTarget,
+    mining.startMining,
+    lastSubmittedHash,
+    player,
+    team,
+  ]);
 
   // Listen for broadcast block submissions to update target
   const autoMineRef = useRef(autoMine);
@@ -154,7 +171,11 @@ export function MiningDemo() {
 
   const onBlockSubmitted = useCallback(
     (message: BlockSubmittedMessage) => {
-      if (message.payload.team === TEAM) {
+      if (!team || !player) {
+        return;
+      }
+
+      if (message.payload.team === team) {
         const recent = message.payload.recent;
         if (recent.length > 0) {
           const lastBlock = recent[recent.length - 1];
@@ -173,8 +194,7 @@ export function MiningDemo() {
           if (autoMineRef.current) {
             mining.startMining({
               ...newTarget,
-              player: PLAYER,
-              team: newTarget.team,
+              player,
             });
           }
         }
@@ -201,16 +221,16 @@ export function MiningDemo() {
 
   // When identity appears/changes, grab the current target and start mining
   useEffect(() => {
-    if (!identity.identity) {
+    if (!identity || !player || !team) {
       return;
     }
     setAutoMine(true);
     void (async () => {
       const t = await fetchTarget();
       if (!t) return;
-      mining.startMining({ ...t, player: PLAYER, team: TEAM });
+      mining.startMining({ ...t, player, team });
     })();
-  }, [identity.identity, fetchTarget, mining.startMining]);
+  }, [identity, fetchTarget, mining.startMining, player, team]);
 
   const status = useMemo(() => {
     if (isTargetLoading) {
@@ -234,14 +254,21 @@ export function MiningDemo() {
         <strong>Demo workflow</strong>
         <div style={{ marginTop: "0.5rem" }}>
           <div>
-            <strong>Player</strong>: {PLAYER}{" "}
-            <strong style={{ marginLeft: "0.75rem" }}>Team</strong>: {TEAM}
+            <strong>Player</strong>: {player}{" "}
+            <strong style={{ marginLeft: "0.75rem" }}>Team</strong>: {team}
+            <strong style={{ marginLeft: "0.75rem" }}>Identity</strong>:{" "}
+            {identity}
+          </div>
+          <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
+            <button
+              onClick={() => void generateNewIdentity()}
+              disabled={isGeneratingIdentity}
+            >
+              Generate new identity
+            </button>
           </div>
           <div>
             <strong>Status</strong>: {status}
-          </div>
-          <div>
-            <strong>Identity</strong>: {identity.identity}
           </div>
           <div>
             <strong>SSE Connection</strong>:{" "}

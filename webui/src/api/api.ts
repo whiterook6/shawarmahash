@@ -2,12 +2,12 @@ import type {
   ChainStateAPIResponse,
   HealthAPIResponse,
   IdentityAPIResponse,
-  TeamMiningTarget as TeamMiningTargetAPIResponse,
   PlayerScoreByIdentityAPIResponse,
   PlayerWithScoreAPIResponse,
   SubmitBlockAPIRequest,
+  TeamMiningTargetAPIResponse,
   TeamWithScoreAPIResponse,
-} from "./types";
+} from "./api.types";
 
 export const Api = {
   getHealth: async (): Promise<HealthAPIResponse> => {

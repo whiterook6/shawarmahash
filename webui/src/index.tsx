@@ -3,6 +3,7 @@ import "./index.scss";
 import { MiningProvider } from "./mining/mining.provider";
 import { MiningDemo } from "./game/MiningDemo";
 import { BroadcastProvider } from "./broadcast/broadcast.provider";
+import { IdentityProvider } from "./identity/identity.provider";
 
 const minerWorker = new Worker(
   new URL("./mining/mining.worker.ts", import.meta.url),
@@ -18,7 +19,9 @@ function App() {
   return (
     <BroadcastProvider eventSource={eventSource}>
       <MiningProvider minerWorker={minerWorker}>
-        <MiningDemo />
+        <IdentityProvider>
+          <MiningDemo />
+        </IdentityProvider>
       </MiningProvider>
     </BroadcastProvider>
   );

@@ -7,7 +7,7 @@ import type {
   MiningSuccessResponse,
   MiningTarget,
   StartMiningRequest,
-} from "../types";
+} from "./mining.types";
 
 class Miner {
   private scope: DedicatedWorkerGlobalScope;
