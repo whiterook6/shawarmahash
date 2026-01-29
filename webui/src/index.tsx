@@ -11,13 +11,10 @@ const minerWorker = new Worker(
     type: "module",
   },
 );
-const eventSource = new EventSource("/api/events", {
-  withCredentials: true,
-});
 
 function App() {
   return (
-    <BroadcastProvider eventSource={eventSource}>
+    <BroadcastProvider>
       <MiningProvider minerWorker={minerWorker}>
         <IdentityProvider>
           <MiningDemo />

@@ -1,17 +1,16 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { BroadcastCallback, BroadcastMessage } from "./broadcast.types";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { BroadcastContext } from "./broadcast.context";
+import type { BroadcastCallback, BroadcastMessage } from "./broadcast.types";
 
 export const BroadcastProvider = ({
-  eventSource,
   children,
 }: {
-  eventSource: EventSource;
   children: React.ReactNode;
 }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState<Error | undefined>();
   const handlersRef = useRef<Set<BroadcastCallback>>(new Set());
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   const onOpen = useCallback(() => {
     setIsConnected(true);
@@ -35,33 +34,59 @@ export const BroadcastProvider = ({
 
   const onError = useCallback(() => {
     setIsConnected(false);
+    const current = eventSourceRef.current;
 
     // EventSource error event doesn't have a message property
     // Check readyState to determine error type
-    if (eventSource.readyState === EventSource.CLOSED) {
+    if (!current || current.readyState === EventSource.CLOSED) {
       setConnectionError(new Error("Connection closed or failed to connect"));
-    } else if (eventSource.readyState === EventSource.CONNECTING) {
+    } else if (current.readyState === EventSource.CONNECTING) {
       setConnectionError(new Error("Connection error while connecting"));
     } else {
       setConnectionError(new Error("Unknown connection error"));
     }
-  }, [eventSource]);
+  }, []);
 
-  useEffect(() => {
-    // Check initial connection state
-    if (eventSource.readyState === EventSource.OPEN) {
-      setIsConnected(true);
+  const disconnect = useCallback(() => {
+    const current = eventSourceRef.current;
+    if (!current) {
+      return;
     }
 
-    eventSource.addEventListener("open", onOpen);
-    eventSource.addEventListener("message", onMessage);
-    eventSource.addEventListener("error", onError);
-    return () => {
-      eventSource.removeEventListener("open", onOpen);
-      eventSource.removeEventListener("message", onMessage);
-      eventSource.removeEventListener("error", onError);
-    };
-  }, [eventSource, onOpen, onMessage, onError]);
+    current.removeEventListener("open", onOpen);
+    current.removeEventListener("message", onMessage);
+    current.removeEventListener("error", onError);
+    current.close();
+    eventSourceRef.current = null;
+    setIsConnected(false);
+  }, [onOpen, onMessage, onError]);
+
+  const connect = useCallback(
+    (params: { team: string; player: string; identity: string }) => {
+      disconnect();
+      setConnectionError(undefined);
+
+      const query = new URLSearchParams({
+        team: params.team,
+        player: params.player,
+        identity: params.identity,
+      });
+      const next = new EventSource(`/api/events?${query.toString()}`, {
+        withCredentials: true,
+      });
+      eventSourceRef.current = next;
+
+      // Check initial connection state
+      if (next.readyState === EventSource.OPEN) {
+        setIsConnected(true);
+      }
+
+      next.addEventListener("open", onOpen);
+      next.addEventListener("message", onMessage);
+      next.addEventListener("error", onError);
+    },
+    [disconnect, onOpen, onMessage, onError],
+  );
 
   // Subscribe to events (returns unsubscribe function)
   const subscribe = useCallback((handler: BroadcastCallback) => {
@@ -78,8 +103,10 @@ export const BroadcastProvider = ({
       isConnected,
       connectionError,
       subscribe,
+      connect,
+      disconnect,
     }),
-    [isConnected, connectionError, subscribe],
+    [isConnected, connectionError, subscribe, connect, disconnect],
   );
 
   return (

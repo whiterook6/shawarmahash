@@ -21,6 +21,8 @@ export function MiningDemo() {
     useContext(IdentityContext);
   const mining = useContext(MiningContext);
   const broadcast = useContext(BroadcastContext);
+  const { connect: connectBroadcast, disconnect: disconnectBroadcast } =
+    broadcast;
 
   const [target, setTarget] = useState<TeamMiningTarget | null>(null);
   const [isTargetLoading, setIsTargetLoading] = useState(false);
@@ -218,6 +220,17 @@ export function MiningDemo() {
     const unsubscribe = broadcast.subscribe(onMessage);
     return () => unsubscribe();
   }, [broadcast]); // onBlockSubmittedRef is intentionally excluded - we use a ref to avoid re-subscribing
+
+  useEffect(() => {
+    if (!identity || !player || !team) {
+      return;
+    }
+
+    connectBroadcast({ team, player, identity });
+    return () => {
+      disconnectBroadcast();
+    };
+  }, [connectBroadcast, disconnectBroadcast, identity, player, team]);
 
   // When identity appears/changes, grab the current target and start mining
   useEffect(() => {
