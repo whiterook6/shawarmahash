@@ -1,9 +1,14 @@
+import { Identity } from "../identity/identity";
+
 export type Message = {
   type: string;
   payload: unknown;
 };
 
 export type Subscriber = {
+  team: string;
+  player: string;
+  identity: string;
   send: (data: Message) => void;
   close: () => void;
 };
@@ -11,12 +16,22 @@ export type Subscriber = {
 export class Broadcast {
   private subscribers: Set<Subscriber> = new Set<Subscriber>();
 
+  getActivePlayers(): Identity[] {
+    return [...this.subscribers].map((subscriber) => ({
+      identity: subscriber.identity,
+      player: subscriber.player,
+      team: subscriber.team,
+    }));
+  }
+
+  getActiveTeams(): string[] {
+    return [
+      ...new Set([...this.subscribers].map((subscriber) => subscriber.team)),
+    ];
+  }
+
   subscribe(subscriber: Subscriber): () => void {
     this.subscribers.add(subscriber);
-    const subscriberCount = this.subscribers.size;
-    console.log(
-      `[Broadcast] Client connected. Total subscribers: ${subscriberCount}`,
-    );
     return () => this.unsubscribe(subscriber);
   }
 
@@ -27,17 +42,9 @@ export class Broadcast {
       console.error(error);
     }
     this.subscribers.delete(subscriber);
-    const subscriberCount = this.subscribers.size;
-    console.log(
-      `[Broadcast] Client disconnected. Total subscribers: ${subscriberCount}`,
-    );
   }
 
   cast(message: Message): void {
-    const subscriberCount = this.subscribers.size;
-    console.log(
-      `[Broadcast] Sending message type "${message.type}" to ${subscriberCount} client(s)`,
-    );
     this.subscribers.forEach((subscriber) => {
       try {
         subscriber.send(message);
@@ -53,13 +60,13 @@ export class Broadcast {
   }
 
   closeAll(): void {
-    console.log(
-      `[Broadcast] Closing all ${this.subscribers.size} subscriber connection(s)`,
-    );
-    // Create a copy of the set to avoid modification during iteration
-    const subscribersToClose = Array.from(this.subscribers);
-    subscribersToClose.forEach((subscriber) => {
-      this.unsubscribe(subscriber);
+    this.subscribers.forEach((subscriber) => {
+      try {
+        subscriber.close();
+      } catch (error) {
+        console.error("[Broadcast] Error closing subscriber:", error);
+      }
     });
+    this.subscribers.clear();
   }
 }

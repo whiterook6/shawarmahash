@@ -335,4 +335,18 @@ export const schemas = {
       },
     },
   },
+  getEvents: {
+    schema: {
+      querystring: {
+        type: "object",
+        properties: {
+          team: schemaRefs.teamName,
+          player: schemaRefs.playerName,
+          identity: schemaRefs.identity,
+        },
+        required: ["team", "player", "identity"],
+        additionalProperties: false,
+      },
+    },
+  },
 };

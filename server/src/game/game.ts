@@ -106,12 +106,16 @@ export class Game {
   }
 
   getTopTeams(): TeamScore[] {
-    const allTeamScores = this.getAllTeamScores();
+    const allTeamScores = this.getAllTeamScores().filter(
+      (teamScore) => teamScore.score > 0,
+    );
     return allTeamScores.sort((a, b) => b.score - a.score).slice(0, 10);
   }
 
   getTopPlayers(): PlayerScore[] {
-    const allPlayerScore = this.getAllPlayerScores();
+    const allPlayerScore = this.getAllPlayerScores().filter(
+      (playerScore) => playerScore.score > 0,
+    );
     return allPlayerScore.sort((a, b) => b.score - a.score).slice(0, 10);
   }
 

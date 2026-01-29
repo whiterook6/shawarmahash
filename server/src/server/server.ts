@@ -15,15 +15,9 @@ import { IdentityController } from "../identity/identity.controller";
 import { EnvController } from "../env";
 import { schemas } from "./schemas";
 
-export function createServer(
-  game: Game,
-  broadcast: Broadcast,
-  data: Data,
-  httpsOptions?: { key: Buffer; cert: Buffer },
-) {
+export function createServer(game: Game, broadcast: Broadcast, data: Data) {
   const fastify = Fastify({
-    logger: false,
-    ...(httpsOptions && { https: httpsOptions }),
+    logger: true,
   });
 
   fastify.register(helmet, {
@@ -278,65 +272,87 @@ export function createServer(
   );
 
   // GET /api/events: Server-Sent Events endpoint
-  fastify.get("/api/events", async (_: FastifyRequest, reply: FastifyReply) => {
-    reply.hijack();
+  fastify.get(
+    "/api/events",
+    schemas.getEvents,
+    async (
+      request: FastifyRequest<{
+        Querystring: {
+          team: string;
+          player: string;
+          identity: string;
+        };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      const { team, player, identity } = request.query;
+      if (!team || !player || !identity) {
+        return reply
+          .status(400)
+          .send({ error: "Missing required query parameters" });
+      }
+      reply.hijack();
 
-    // Set SSE headers
-    reply.raw.setHeader("Content-Type", "text/event-stream");
-    reply.raw.setHeader("Cache-Control", "no-cache");
-    reply.raw.setHeader("Connection", "keep-alive");
-    reply.raw.setHeader("X-Accel-Buffering", "no");
+      // Set SSE headers
+      reply.raw.setHeader("Content-Type", "text/event-stream");
+      reply.raw.setHeader("Cache-Control", "no-cache");
+      reply.raw.setHeader("Connection", "keep-alive");
+      reply.raw.setHeader("X-Accel-Buffering", "no");
 
-    // Send initial connection message
-    try {
-      reply.raw.write(
-        `data: ${JSON.stringify({ type: "connection", payload: { status: "open" } })}\n\n`,
-      );
-    } catch {
-      // Client may have disconnected immediately
-      return;
-    }
+      // Send initial connection message
+      try {
+        reply.raw.write(
+          `data: ${JSON.stringify({ type: "connection", payload: { status: "open" } })}\n\n`,
+        );
+      } catch {
+        // Client may have disconnected immediately
+        return;
+      }
 
-    let isClosed = false;
-    const unsubscribe = broadcast.subscribe({
-      send: (data: Message) => {
-        if (!isClosed) {
-          try {
-            reply.raw.write(`data: ${JSON.stringify(data)}\n\n`);
-          } catch {
-            // Connection closed or error writing
-            isClosed = true;
-            unsubscribe();
-          }
-        }
-      },
-      close: () => {
-        if (!isClosed) {
-          isClosed = true;
-          try {
-            // End the response and destroy the socket to ensure clean closure
-            reply.raw.end();
-            // Also destroy the socket if it exists to force immediate closure
-            if (reply.raw.socket && !reply.raw.socket.destroyed) {
-              reply.raw.socket.destroy();
+      let isClosed = false;
+      const unsubscribe = broadcast.subscribe({
+        team,
+        player,
+        identity,
+        send: (data: Message) => {
+          if (!isClosed) {
+            try {
+              reply.raw.write(`data: ${JSON.stringify(data)}\n\n`);
+            } catch {
+              // Connection closed or error writing
+              isClosed = true;
+              unsubscribe();
             }
-          } catch {
-            // Ignore errors when closing
           }
-        }
-      },
-    });
+        },
+        close: () => {
+          if (!isClosed) {
+            isClosed = true;
+            try {
+              // End the response and destroy the socket to ensure clean closure
+              reply.raw.end();
+              // Also destroy the socket if it exists to force immediate closure
+              if (reply.raw.socket && !reply.raw.socket.destroyed) {
+                reply.raw.socket.destroy();
+              }
+            } catch {
+              // Ignore errors when closing
+            }
+          }
+        },
+      });
 
-    // Clean up on client disconnect
-    reply.raw.on("close", () => {
-      console.log("[SSE] Client connection closed");
-      unsubscribe();
-    });
-    reply.raw.on("error", (error) => {
-      console.log("[SSE] Client connection error:", error);
-      unsubscribe();
-    });
-  });
+      // Clean up on client disconnect
+      reply.raw.on("close", () => {
+        console.log("[SSE] Client connection closed");
+        unsubscribe();
+      });
+      reply.raw.on("error", (error) => {
+        console.log("[SSE] Client connection error:", error);
+        unsubscribe();
+      });
+    },
+  );
 
   // Serve static files from webui/dist directory (registered last so API routes take precedence)
   // Use WEBUI_DIST_PATH environment variable if set, otherwise use relative path from built output

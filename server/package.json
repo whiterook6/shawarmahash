@@ -21,8 +21,8 @@
   },
   "scripts": {
     "block:mine": "tsx src/scripts/mineBlock.script.ts",
-    "dev:build": "node build/dev-build.mjs",
-    "prod:build": "node build/prod-build.mjs",
+    "dev:build": "tsc --noEmit && node build/dev-build.mjs",
+    "prod:build": "tsc --noEmit && node build/prod-build.mjs",
     "chain:generate": "tsx src/scripts/generateChain.script.ts",
     "chain.stats:get": "tsx src/scripts/chainStats.script.ts",
     "difficulty:calculate": "tsx src/scripts/calculateDifficulties.script.ts",
