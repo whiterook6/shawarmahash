@@ -4,12 +4,24 @@ import { Identity } from "./identity/identity";
 import { PlayerScore, TeamScore } from "./score/score";
 
 export class Announcer {
-  private interval: NodeJS.Timeout;
-  constructor(
-    private readonly broadcast: Broadcast,
-    private readonly game: Game,
-  ) {
-    this.interval = setInterval(this.onInterval.bind(this), 1000);
+  private interval: NodeJS.Timeout | undefined = undefined;
+  private broadcast: Broadcast | undefined = undefined;
+  private game: Game | undefined = undefined;
+
+  setBroadcast(broadcast: Broadcast): void {
+    this.broadcast = broadcast;
+  }
+
+  setGame(game: Game): void {
+    this.game = game;
+  }
+
+  start(): void {
+    if (this.broadcast && this.game) {
+      this.interval = setInterval(this.onInterval.bind(this), 1000);
+    } else {
+      throw new Error("Broadcast and game are required");
+    }
   }
 
   stop(): void {
@@ -17,10 +29,14 @@ export class Announcer {
   }
 
   onInterval(): void {
+    if (!this.broadcast || !this.game) {
+      return;
+    }
+
     const activeTeamScores: TeamScore[] = this.broadcast
       .getActiveTeams()
       .map((team: string) => {
-        const teamScore = this.game.getTeamScore(team);
+        const teamScore = this.game!.getTeamScore(team);
         return {
           team,
           score: teamScore,
@@ -29,7 +45,7 @@ export class Announcer {
     const activePlayerScores: PlayerScore[] = this.broadcast
       .getActivePlayers()
       .map((player: Identity) => {
-        const playerScore = this.game.getPlayerScore(player.identity);
+        const playerScore = this.game!.getPlayerScore(player.identity);
         return {
           player: player.player,
           identity: player.identity,

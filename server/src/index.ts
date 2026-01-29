@@ -18,15 +18,17 @@ const start = async () => {
   // start game and broadcast
   const broadcast = new Broadcast();
   const game = new Game();
-  const announcer = new Announcer(broadcast, game);
+  const announcer = new Announcer();
 
   // dependency injection
   game.setData(data);
   game.setChains(chains);
   game.setBroadcast(broadcast);
+  announcer.setBroadcast(broadcast);
+  announcer.setGame(game);
+  announcer.start();
 
   const fastify = createServer(game, broadcast, data);
-
   const shutdown = async () => {
     announcer.stop();
     console.log("[Shutdown] Starting graceful shutdown...");
