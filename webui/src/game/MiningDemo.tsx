@@ -11,6 +11,7 @@ import { BroadcastContext } from "../broadcast/broadcast.context";
 import type {
   BlockSubmittedMessage,
   BroadcastMessage,
+  ScoresUpdateMessage,
 } from "../broadcast/broadcast.types";
 import { IdentityContext } from "../identity/identity.context";
 import { MiningContext } from "../mining/mining.context";
@@ -30,6 +31,12 @@ export function MiningDemo() {
   const [autoMine, setAutoMine] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [lastScoresUpdate, setLastScoresUpdate] = useState<
+    ScoresUpdateMessage["payload"] | null
+  >(null);
+  const [lastSseMessage, setLastSseMessage] = useState<BroadcastMessage | null>(
+    null,
+  );
   const [lastSubmittedHash, setLastSubmittedHash] = useState<string | null>(
     null,
   );
@@ -210,9 +217,13 @@ export function MiningDemo() {
 
   useEffect(() => {
     const onMessage = (message: BroadcastMessage) => {
+      setLastSseMessage(message);
       switch (message.type) {
         case "block_submitted":
           onBlockSubmittedRef.current(message);
+          break;
+        case "scores-update":
+          setLastScoresUpdate(message.payload);
           break;
       }
     };
@@ -297,6 +308,48 @@ export function MiningDemo() {
             )}
           </div>
         </div>
+      </div>
+
+      <div style={{ marginBottom: "0.75rem" }}>
+        <div>
+          <strong>Announcer scores (SSE)</strong>:
+        </div>
+        <pre
+          style={{
+            marginTop: "0.5rem",
+            background: "#0f172a",
+            color: "#e2e8f0",
+            padding: "0.5rem",
+            borderRadius: "4px",
+            maxHeight: "100px",
+            overflow: "auto",
+            fontSize: "0.75rem",
+          }}
+        >
+          {lastScoresUpdate
+            ? JSON.stringify(lastScoresUpdate, null, 2)
+            : "none"}
+        </pre>
+      </div>
+
+      <div style={{ marginBottom: "0.75rem" }}>
+        <div>
+          <strong>Last SSE message</strong>:
+        </div>
+        <pre
+          style={{
+            marginTop: "0.5rem",
+            background: "#0f172a",
+            color: "#e2e8f0",
+            padding: "0.5rem",
+            borderRadius: "4px",
+            maxHeight: "100px",
+            overflow: "auto",
+            fontSize: "0.75rem",
+          }}
+        >
+          {lastSseMessage ? JSON.stringify(lastSseMessage, null, 2) : "none"}
+        </pre>
       </div>
 
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>

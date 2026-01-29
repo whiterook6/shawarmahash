@@ -17,7 +17,7 @@ import { schemas } from "./schemas";
 
 export function createServer(game: Game, broadcast: Broadcast, data: Data) {
   const fastify = Fastify({
-    logger: true,
+    logger: false,
   });
 
   fastify.register(helmet, {
@@ -291,6 +291,10 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
           .status(400)
           .send({ error: "Missing required query parameters" });
       }
+      const derivedIdentity = IdentityController.generateDerivedIdentityToken({
+        identityToken: identity,
+        secret: EnvController.env.IDENTITY_SECRET,
+      });
       reply.hijack();
 
       // Set SSE headers
@@ -313,7 +317,7 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
       const unsubscribe = broadcast.subscribe({
         team,
         player,
-        identity,
+        identity: derivedIdentity,
         send: (data: Message) => {
           if (!isClosed) {
             try {

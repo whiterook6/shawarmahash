@@ -1,4 +1,8 @@
-import type { ChainStateAPIResponse } from "../api/api.types";
+import type {
+  ChainStateAPIResponse,
+  PlayerWithScoreAPIResponse,
+  TeamWithScoreAPIResponse,
+} from "../api/api.types";
 
 /**
  * Connection message sent when SSE connection is established
@@ -27,12 +31,26 @@ export type BlockSubmittedMessage = {
 };
 
 /**
+ * Scores update message sent periodically by the announcer.
+ */
+export type ScoresUpdateMessage = {
+  type: "scores-update";
+  payload: {
+    activeTeamScores: TeamWithScoreAPIResponse[];
+    activePlayerScores: PlayerWithScoreAPIResponse[];
+    topPlayers: PlayerWithScoreAPIResponse[];
+    topTeams: TeamWithScoreAPIResponse[];
+  };
+};
+
+/**
  * Union type of all possible SSE messages from the server
  */
 export type BroadcastMessage =
   | ConnectionMessage
   | TeamCreatedMessage
-  | BlockSubmittedMessage;
+  | BlockSubmittedMessage
+  | ScoresUpdateMessage;
 
 /**
  * Callback function type for handling broadcast messages
