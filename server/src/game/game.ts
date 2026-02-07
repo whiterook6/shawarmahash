@@ -1,6 +1,6 @@
 import { Mutex, MutexInterface } from "async-mutex";
 import { Block } from "../block/block";
-import { Broadcast } from "../broadcast/broadcast";
+import { Broadcast, TO_TEAM } from "../broadcast/broadcast";
 import { Chain } from "../chain/chain";
 import { Data } from "../data/data";
 import { Difficulty } from "../difficulty/difficulty";
@@ -219,14 +219,19 @@ export class Game {
     }
 
     const chainState = this.getChainState(team);
-    const broadcastType = isGenesisBlock ? "team_created" : "block_submitted";
-    this.broadcast?.cast({
-      type: broadcastType,
-      payload: {
-        team,
-        ...chainState,
-      },
-    });
+    if (this.broadcast) {
+      const broadcastType = isGenesisBlock ? "team_created" : "block_submitted";
+      this.broadcast.cast(
+        {
+          type: broadcastType,
+          payload: {
+            team,
+            ...chainState,
+          },
+        },
+        TO_TEAM(team),
+      );
+    }
     return chainState;
   }
 

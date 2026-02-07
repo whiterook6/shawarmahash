@@ -13,6 +13,13 @@ export type Subscriber = {
   close: () => void;
 };
 
+export const TO_TEAM = (team: string) => (subscriber: Subscriber) =>
+  subscriber.team === team;
+export const TO_PLAYER = (player: string) => (subscriber: Subscriber) =>
+  subscriber.player === player;
+export const TO_IDENTITY = (identity: string) => (subscriber: Subscriber) =>
+  subscriber.identity === identity;
+
 export class Broadcast {
   private subscribers: Set<Subscriber> = new Set<Subscriber>();
 
@@ -44,8 +51,12 @@ export class Broadcast {
     this.subscribers.delete(subscriber);
   }
 
-  cast(message: Message): void {
+  cast(message: Message, filter?: (subscriber: Subscriber) => boolean): void {
     this.subscribers.forEach((subscriber) => {
+      if (filter && !filter(subscriber)) {
+        return;
+      }
+
       try {
         subscriber.send(message);
       } catch (error) {

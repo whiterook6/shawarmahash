@@ -348,11 +348,9 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
 
       // Clean up on client disconnect
       reply.raw.on("close", () => {
-        console.log("[SSE] Client connection closed");
         unsubscribe();
       });
-      reply.raw.on("error", (error) => {
-        console.log("[SSE] Client connection error:", error);
+      reply.raw.on("error", () => {
         unsubscribe();
       });
     },
