@@ -1,0 +1,3 @@
+dev.shawarmahash.ca {
+  reverse_proxy shawarmahash:3000
+}
