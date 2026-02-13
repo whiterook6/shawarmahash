@@ -222,7 +222,7 @@ export function MiningDemo() {
         case "block_submitted":
           onBlockSubmittedRef.current(message);
           break;
-        case "scores-update":
+        case "scores_update":
           setLastScoresUpdate(message.payload);
           break;
       }

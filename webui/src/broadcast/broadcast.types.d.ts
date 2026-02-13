@@ -34,12 +34,25 @@ export type BlockSubmittedMessage = {
  * Scores update message sent periodically by the announcer.
  */
 export type ScoresUpdateMessage = {
-  type: "scores-update";
+  type: "scores_update";
   payload: {
     activeTeamScores: TeamWithScoreAPIResponse[];
     activePlayerScores: PlayerWithScoreAPIResponse[];
     topPlayers: PlayerWithScoreAPIResponse[];
     topTeams: TeamWithScoreAPIResponse[];
+  };
+};
+
+/**
+ * Chat message received: sent when a chat message is received (player, team, identity, message).
+ */
+export type ChatMessageReceivedMessage = {
+  type: "chat_message_received";
+  payload: {
+    player: string;
+    team: string;
+    identity: string;
+    message: string;
   };
 };
 
@@ -50,7 +63,8 @@ export type BroadcastMessage =
   | ConnectionMessage
   | TeamCreatedMessage
   | BlockSubmittedMessage
-  | ScoresUpdateMessage;
+  | ScoresUpdateMessage
+  | ChatMessageReceivedMessage;
 
 /**
  * Callback function type for handling broadcast messages

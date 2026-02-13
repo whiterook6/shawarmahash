@@ -8,6 +8,10 @@ import { NotFoundError, ValidationError } from "../error/errors";
 import { PlayerScore, Score, TeamScore } from "../score/score";
 import { Timestamp } from "../timestamp/timestamp";
 import { Player } from "../player/player";
+import {
+  BlockSubmittedMessage,
+  TeamCreatedMessage,
+} from "../broadcast/broadcast.types";
 
 export type ChainState = {
   recent: Block[];
@@ -220,17 +224,15 @@ export class Game {
 
     const chainState = this.getChainState(team);
     if (this.broadcast) {
-      const broadcastType = isGenesisBlock ? "team_created" : "block_submitted";
-      this.broadcast.cast(
-        {
-          type: broadcastType,
-          payload: {
-            team,
-            ...chainState,
-          },
+      const message: TeamCreatedMessage | BlockSubmittedMessage = {
+        type: isGenesisBlock ? "team_created" : "block_submitted",
+        payload: {
+          team,
+          ...chainState,
         },
-        TO_TEAM(team),
-      );
+      };
+
+      this.broadcast.cast(message, TO_TEAM(team));
     }
     return chainState;
   }

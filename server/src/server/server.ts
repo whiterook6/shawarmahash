@@ -6,7 +6,8 @@ import Fastify, { FastifyReply, FastifyRequest } from "fastify";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { Block } from "../block/block";
-import { Broadcast, Message } from "../broadcast/broadcast";
+import { Broadcast } from "../broadcast/broadcast";
+import { BroadcastMessage } from "../broadcast/broadcast.types";
 import { Data } from "../data/data";
 import { Difficulty } from "../difficulty/difficulty";
 import { errorHandler } from "../error/errors";
@@ -318,7 +319,7 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
         team,
         player,
         identity: derivedIdentity,
-        send: (data: Message) => {
+        send: (data: BroadcastMessage) => {
           if (!isClosed) {
             try {
               reply.raw.write(`data: ${JSON.stringify(data)}\n\n`);
