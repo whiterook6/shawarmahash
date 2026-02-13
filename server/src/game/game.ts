@@ -47,6 +47,18 @@ export class Game {
     this.chains = chains;
   }
 
+  getActiveChainsCount(): number {
+    return this.chains.size;
+  }
+
+  getTotalBlocksCount(): number {
+    let total = 0;
+    for (const chain of this.chains.values()) {
+      total += chain.length;
+    }
+    return total;
+  }
+
   getChainState(team: string): ChainState {
     const chain = this.chains.get(team);
     if (!chain) {
@@ -234,6 +246,10 @@ export class Game {
 
       this.broadcast.cast(message, TO_TEAM(team));
     }
+
+    if (args.data) {
+      await this.parseBlockData(newBlock, args.data);
+    }
     return chainState;
   }
 
@@ -271,23 +287,32 @@ export class Game {
     // TODO: Add callbacks here if needed (e.g., onBlockAppended callback)
   }
 
-  getActiveChainsCount(): number {
-    return this.chains.size;
-  }
-
-  getTotalBlocksCount(): number {
-    let total = 0;
-    for (const chain of this.chains.values()) {
-      total += chain.length;
-    }
-    return total;
-  }
-
   private aggregateChains<T>(fn: (chain: Chain) => T[]): T[] {
     const allResults: T[] = [];
     for (const chain of this.chains.values()) {
       allResults.push(...fn(chain));
     }
     return allResults;
+  }
+
+  private async parseBlockData(
+    block: Block,
+    data: Record<string, unknown>,
+  ): Promise<void> {
+    switch (data.type) {
+      case "chat_message":
+        if (typeof data.message === "string" && this.broadcast) {
+          this.broadcast.cast({
+            type: "chat_message_received",
+            payload: {
+              player: block.player,
+              team: block.team,
+              identity: block.identity,
+              message: data.message,
+            },
+          });
+        }
+        break;
+    }
   }
 }
