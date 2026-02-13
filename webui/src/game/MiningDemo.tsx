@@ -89,6 +89,10 @@ export function MiningDemo() {
           identity: identity,
           nonce: blockData.nonce,
           hash: blockData.hash,
+          data: {
+            type: "chat_message",
+            message: "Hello, world!",
+          },
         });
         setLastSubmittedHash(blockData.hash);
         return true;
@@ -222,7 +226,7 @@ export function MiningDemo() {
         case "block_submitted":
           onBlockSubmittedRef.current(message);
           break;
-        case "scores-update":
+        case "scores_update":
           setLastScoresUpdate(message.payload);
           break;
       }

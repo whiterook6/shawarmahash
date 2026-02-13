@@ -1,13 +1,18 @@
 import { Mutex, MutexInterface } from "async-mutex";
 import { Block } from "../block/block";
 import { Broadcast, TO_TEAM } from "../broadcast/broadcast";
+import {
+  BlockSubmittedMessage,
+  TeamCreatedMessage,
+} from "../broadcast/broadcast.types";
 import { Chain } from "../chain/chain";
+import { Chat } from "../chat/chat";
 import { Data } from "../data/data";
 import { Difficulty } from "../difficulty/difficulty";
 import { NotFoundError, ValidationError } from "../error/errors";
+import { Player } from "../player/player";
 import { PlayerScore, Score, TeamScore } from "../score/score";
 import { Timestamp } from "../timestamp/timestamp";
-import { Player } from "../player/player";
 
 export type ChainState = {
   recent: Block[];
@@ -21,6 +26,7 @@ export class Game {
     MutexInterface
   >();
   private chains: Map<string, Chain> = new Map<string, Chain>();
+  private chat: Chat | undefined = undefined;
   private broadcast: Broadcast | undefined = undefined;
   private data: Data | undefined = undefined;
 
@@ -43,6 +49,22 @@ export class Game {
     this.chains = chains;
   }
 
+  setChat(chat: Chat): void {
+    this.chat = chat;
+  }
+
+  getActiveChainsCount(): number {
+    return this.chains.size;
+  }
+
+  getTotalBlocksCount(): number {
+    let total = 0;
+    for (const chain of this.chains.values()) {
+      total += chain.length;
+    }
+    return total;
+  }
+
   getChainState(team: string): ChainState {
     const chain = this.chains.get(team);
     if (!chain) {
@@ -54,7 +76,16 @@ export class Game {
 
     const difficulty = Difficulty.getDifficultyTargetFromChain(chain);
     return {
-      recent: chain.slice(-5),
+      recent: chain.slice(-5).map((block) => ({
+        hash: block.hash,
+        previousHash: block.previousHash,
+        player: block.player,
+        team: block.team,
+        identity: block.identity,
+        timestamp: block.timestamp,
+        nonce: block.nonce,
+        index: block.index,
+      })),
       difficulty: difficulty,
     };
   }
@@ -220,17 +251,19 @@ export class Game {
 
     const chainState = this.getChainState(team);
     if (this.broadcast) {
-      const broadcastType = isGenesisBlock ? "team_created" : "block_submitted";
-      this.broadcast.cast(
-        {
-          type: broadcastType,
-          payload: {
-            team,
-            ...chainState,
-          },
+      const message: TeamCreatedMessage | BlockSubmittedMessage = {
+        type: isGenesisBlock ? "team_created" : "block_submitted",
+        payload: {
+          team,
+          ...chainState,
         },
-        TO_TEAM(team),
-      );
+      };
+
+      this.broadcast.cast(message, TO_TEAM(team));
+    }
+
+    if (args.data) {
+      await this.parseBlockData(newBlock, args.data);
     }
     return chainState;
   }
@@ -265,20 +298,6 @@ export class Game {
 
     // Persist block to file
     await this.data!.appendBlocks(team, [newBlock]);
-
-    // TODO: Add callbacks here if needed (e.g., onBlockAppended callback)
-  }
-
-  getActiveChainsCount(): number {
-    return this.chains.size;
-  }
-
-  getTotalBlocksCount(): number {
-    let total = 0;
-    for (const chain of this.chains.values()) {
-      total += chain.length;
-    }
-    return total;
   }
 
   private aggregateChains<T>(fn: (chain: Chain) => T[]): T[] {
@@ -287,5 +306,18 @@ export class Game {
       allResults.push(...fn(chain));
     }
     return allResults;
+  }
+
+  private async parseBlockData(
+    block: Block,
+    data: Record<string, unknown>,
+  ): Promise<void> {
+    switch (data.type) {
+      case "chat_message":
+        if (this.chat && typeof data.message === "string") {
+          this.chat.handleChatMessage(data.message, block);
+        }
+        break;
+    }
   }
 }

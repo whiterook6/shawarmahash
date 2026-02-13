@@ -5,6 +5,7 @@ import { Broadcast } from "./broadcast/broadcast";
 import { join } from "path";
 import { EnvController } from "./env";
 import { Announcer } from "./announcer";
+import { Chat } from "./chat/chat";
 
 // Start server
 const start = async () => {
@@ -19,11 +20,14 @@ const start = async () => {
   const broadcast = new Broadcast();
   const game = new Game();
   const announcer = new Announcer();
+  const chat = new Chat();
 
   // dependency injection
   game.setData(data);
   game.setChains(chains);
   game.setBroadcast(broadcast);
+  game.setChat(chat);
+  chat.setBroadcast(broadcast);
   announcer.setBroadcast(broadcast);
   announcer.setGame(game);
   announcer.start();

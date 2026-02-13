@@ -1,4 +1,5 @@
 import { Broadcast } from "./broadcast/broadcast";
+import { ScoresUpdateMessage } from "./broadcast/broadcast.types";
 import { Game } from "./game/game";
 import { Identity } from "./identity/identity";
 import { PlayerScore, TeamScore } from "./score/score";
@@ -31,6 +32,8 @@ export class Announcer {
   onInterval(): void {
     if (!this.broadcast || !this.game) {
       return;
+    } else if (this.broadcast.getSubscriberCount() === 0) {
+      return;
     }
 
     const activeTeamScores: TeamScore[] = this.broadcast
@@ -55,14 +58,15 @@ export class Announcer {
     const topPlayers = this.game.getTopPlayers();
     const topTeams = this.game.getTopTeams();
 
-    this.broadcast.cast({
-      type: "scores-update",
+    const message: ScoresUpdateMessage = {
+      type: "scores_update",
       payload: {
         activeTeamScores,
         activePlayerScores,
         topPlayers,
         topTeams,
       },
-    });
+    };
+    this.broadcast.cast(message);
   }
 }

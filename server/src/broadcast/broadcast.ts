@@ -1,15 +1,11 @@
 import { Identity } from "../identity/identity";
-
-export type Message = {
-  type: string;
-  payload: unknown;
-};
+import { BroadcastMessage } from "./broadcast.types";
 
 export type Subscriber = {
   team: string;
   player: string;
   identity: string;
-  send: (data: Message) => void;
+  send: (data: BroadcastMessage) => void;
   close: () => void;
 };
 
@@ -51,7 +47,10 @@ export class Broadcast {
     this.subscribers.delete(subscriber);
   }
 
-  cast(message: Message, filter?: (subscriber: Subscriber) => boolean): void {
+  cast(
+    message: BroadcastMessage,
+    filter?: (subscriber: Subscriber) => boolean,
+  ): void {
     this.subscribers.forEach((subscriber) => {
       if (filter && !filter(subscriber)) {
         return;
