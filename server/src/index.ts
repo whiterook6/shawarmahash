@@ -6,6 +6,7 @@ import { join } from "path";
 import { EnvController } from "./env";
 import { Announcer } from "./announcer";
 import { Chat } from "./chat/chat";
+import { startHealthcheckPing } from "./healthcheck";
 
 // Start server
 const start = async () => {
@@ -33,7 +34,12 @@ const start = async () => {
   announcer.start();
 
   const fastify = createServer(game, broadcast, data);
+  let stopHealthcheckPing: (() => void) | null = null;
+
   const shutdown = async () => {
+    if (stopHealthcheckPing) {
+      stopHealthcheckPing();
+    }
     announcer.stop();
     console.log("[Shutdown] Starting graceful shutdown...");
     try {
@@ -92,6 +98,11 @@ const start = async () => {
   try {
     await fastify.listen({ port: 3000, host: "0.0.0.0" });
     console.log("🚀 Server running on http://0.0.0.0:3000");
+    if (EnvController.env.HEALTHCHECK_PING_URL) {
+      stopHealthcheckPing = startHealthcheckPing(
+        EnvController.env.HEALTHCHECK_PING_URL,
+      );
+    }
   } catch (err) {
     fastify.log.error(err, "Failed to start Fastify");
     await shutdown();
