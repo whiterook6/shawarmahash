@@ -14,6 +14,7 @@ services:
       - NODE_ENV=production
       - GIT_HASH=${GIT_HASH:-docker-build}
       - IDENTITY_SECRET=${IDENTITY_SECRET:?IDENTITY_SECRET is required}
+      - HEALTHCHECK_PING_URL=${HEALTHCHECK_PING_URL:?HEALTHCHECK_PING_URL is required}
       - WEBUI_DIST_PATH=/app/webui/dist
     volumes:
       # Persist chain data
