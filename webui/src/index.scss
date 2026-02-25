@@ -2,65 +2,6 @@ body {
   margin: 0;
   min-height: 100vh;
   color: #583b25;
-  background: linear-gradient(
-    to bottom,
-    #e5c599 0%,
-    #e5c599 25%,
-    #e0c090 40%,
-    #d4b280 55%,
-    #c5a06f 70%,
-    #b58d5d 82%,
-    #a57a4d 92%,
-    #a57a4d 100%
-  );
+  background-color: #fcab96;
   font-family: "Sour Gummy", system-ui, sans-serif;
-}
-
-.app {
-  padding: 2rem;
-  text-transform: uppercase;
-  width: 800px;
-  margin: 0 auto;
-  color: #583b25;
-
-  h1 {
-    color: #583b25;
-    margin-bottom: 1rem;
-
-    .hash {
-      color: #fff7ed;
-    }
-  }
-
-  button {
-    font-family: "Sour Gummy", system-ui, sans-serif;
-    padding: 0.5rem 1rem;
-    background: #583b25;
-    color: #fff7ed;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-    text-transform: uppercase;
-    transition: all 0.2s;
-
-    &:hover:not(:disabled) {
-      color: #583b25;
-      background: #fff7ed;
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-
-  strong {
-    color: #583b25;
-    font-weight: bold;
-  }
-
-  span {
-    color: #583b25;
-  }
 }

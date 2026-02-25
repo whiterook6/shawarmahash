@@ -15,7 +15,6 @@ class Miner {
   private currentMiningRequest: MiningRequest;
   private updateInterval: number | null;
   private isMiningLoopActive: boolean;
-  private totalHashesSinceInstantiation: number;
 
   constructor(scope: DedicatedWorkerGlobalScope) {
     const SubtleCrypto = Miner.getCryptoSubtle(scope);
@@ -31,7 +30,6 @@ class Miner {
     };
     this.updateInterval = null;
     this.isMiningLoopActive = false;
-    this.totalHashesSinceInstantiation = 0;
   }
 
   clearUpdateInterval() {
@@ -92,12 +90,13 @@ class Miner {
       const elapsed = (Date.now() - startTime) / 1000;
       const hashesPerSecond = Math.ceil(hashesChecked / elapsed);
 
-      // send the progress to the main thread
+      // send the progress to the main thread (hashesChecked is for this target only)
       this.sendProgress({
         nonce: nonce,
         bestHash: bestHash,
         hashesPerSecond: hashesPerSecond,
-        totalHashes: this.totalHashesSinceInstantiation,
+        totalHashes: hashesChecked,
+        totalSeconds: elapsed,
       });
     }, PROGRESS_UPDATE_INTERVAL) as unknown as number;
 
@@ -143,7 +142,6 @@ class Miner {
         }
 
         hashesChecked++;
-        this.totalHashesSinceInstantiation++;
 
         // Check if we found a valid hash
         if (hashString >= current.data.difficulty) {
@@ -218,6 +216,7 @@ class Miner {
     bestHash: string;
     hashesPerSecond: number;
     totalHashes: number;
+    totalSeconds: number;
   }) {
     const message: MiningProgressResponse = {
       type: "mining_progress",
@@ -226,6 +225,7 @@ class Miner {
         bestHash: progress.bestHash,
         hashesPerSecond: progress.hashesPerSecond,
         totalHashes: progress.totalHashes,
+        totalSeconds: progress.totalSeconds,
       },
     };
     this.scope.postMessage(message);

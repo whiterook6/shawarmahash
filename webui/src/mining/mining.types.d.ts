@@ -40,6 +40,7 @@ export type MiningProgressResponse = {
     bestHash: string;
     hashesPerSecond: number;
     totalHashes: number;
+    totalSeconds: number;
   };
 };
 

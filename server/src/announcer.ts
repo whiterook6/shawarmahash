@@ -36,14 +36,22 @@ export class Announcer {
       return;
     }
 
+    const activeTeamNames = this.game.getTeamNames();
     const activeTeamScores: TeamScore[] = this.broadcast
       .getActiveTeams()
       .map((team: string) => {
-        const teamScore = this.game!.getTeamScore(team);
-        return {
-          team,
-          score: teamScore,
-        };
+        if (activeTeamNames.includes(team)) {
+          const teamScore = this.game!.getTeamScore(team);
+          return {
+            team,
+            score: teamScore,
+          };
+        } else {
+          return {
+            team,
+            score: 0,
+          };
+        }
       });
     const activePlayerScores: PlayerScore[] = this.broadcast
       .getActivePlayers()
