@@ -9,13 +9,7 @@ import type {
   TeamMiningTarget,
 } from "./mining.types";
 
-export const MiningProvider = ({
-  minerWorker,
-  children,
-}: {
-  minerWorker: Worker;
-  children: React.ReactNode;
-}) => {
+export const MiningProvider = ({ children }: { children: React.ReactNode }) => {
   const [isMining, setIsMining] = useState(false);
   const [progress, setProgress] = useState<
     MiningProgressResponse["data"] | null
@@ -28,7 +22,12 @@ export const MiningProvider = ({
   >(null);
   const successCallbacksRef = useRef<Set<MiningSuccessCallback>>(new Set());
 
+  const minerRef = useRef<Worker | null>(null);
   useEffect(() => {
+    const worker = new Worker(new URL("./mining.worker.ts", import.meta.url), {
+      type: "module",
+    });
+
     const onMessage = (event: MessageEvent<MiningResponse>) => {
       const response = event.data;
       switch (response.type) {
@@ -60,31 +59,42 @@ export const MiningProvider = ({
       setIsMining(false);
     };
 
-    minerWorker.addEventListener("message", onMessage);
-    minerWorker.addEventListener("error", onError);
+    worker.addEventListener("message", onMessage);
+    worker.addEventListener("error", onError);
+    minerRef.current = worker;
     return () => {
-      minerWorker.removeEventListener("message", onMessage);
-      minerWorker.removeEventListener("error", onError);
+      worker.removeEventListener("message", onMessage);
+      worker.removeEventListener("error", onError);
+      worker.terminate();
+      if (minerRef.current === worker) {
+        minerRef.current = null;
+      }
     };
-  }, [minerWorker]);
+  }, []);
 
-  const startMining = useCallback(
-    (target: TeamMiningTarget) => {
-      minerWorker.postMessage({
-        type: "start_mining",
-        data: target,
-      } as StartMiningRequest);
-      setIsMining(true);
-    },
-    [minerWorker],
-  );
+  const startMining = useCallback((target: TeamMiningTarget) => {
+    if (!minerRef.current) {
+      return;
+    }
+
+    minerRef.current.postMessage({
+      type: "start_mining",
+      data: target,
+    } as StartMiningRequest);
+    setIsMining(true);
+  }, []);
 
   const stopMining = useCallback(() => {
-    minerWorker.postMessage({
+    if (!minerRef.current) {
+      return;
+    }
+
+    minerRef.current.postMessage({
       type: "stop_mining",
     });
     setIsMining(false);
-  }, [minerWorker]);
+    setProgress(null);
+  }, []);
 
   const subscribe = useCallback((callback: MiningSuccessCallback) => {
     successCallbacksRef.current.add(callback);

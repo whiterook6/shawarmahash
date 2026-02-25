@@ -90,6 +90,10 @@ export class Game {
     };
   }
 
+  getTeamNames(): string[] {
+    return Array.from(this.chains.keys());
+  }
+
   getTeamScore(team: string): number {
     const chain = this.chains.get(team);
     if (!chain) {

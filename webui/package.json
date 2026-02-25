@@ -40,6 +40,9 @@
     "vite": "^7.2.4"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "lucide-react": "^0.564.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   }
