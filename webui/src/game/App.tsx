@@ -26,8 +26,11 @@ export const App = () => {
   >(null);
 
   const broadcastContext = useContext(BroadcastContext);
-  const { connect: connectBroadcast, disconnect: disconnectBroadcast } =
-    broadcastContext;
+  const {
+    connect: connectBroadcast,
+    disconnect: disconnectBroadcast,
+    subscribe: subscribeBroadcast,
+  } = broadcastContext;
   const identityContext = useContext(IdentityContext);
   const { identity, team, player, setTeam, setPlayer } = identityContext;
 
@@ -36,7 +39,7 @@ export const App = () => {
       return;
     }
     connectBroadcast({ team, player, identity });
-    const unsubscribe = broadcastContext.subscribe((message) => {
+    const unsubscribe = subscribeBroadcast((message) => {
       if (message.type === "scores_update") {
         setLeaderboard(message.payload);
       }

@@ -13,13 +13,14 @@ import {
   estimateProbability,
   estimateRealProgress,
 } from "../mining/mining.helpers";
+import { Pause, Play } from "lucide-react";
 
 const Div = styled.div`
   background-color: #faede0;
   height: 64px;
   border-radius: 32px;
   padding-left: 16px;
-  padding-right: 16px;
+  padding-right: 24px;
   box-sizing: border-box;
 
   display: inline-flex;
@@ -66,7 +67,7 @@ const ProgressBar = styled.div`
   border-radius: 4px;
   background-color: #295860;
   display: flex;
-  flex-direction: flex-row;
+  flex-direction: row;
   align-items: center;
   justify-content: flex-start;
   transition: width 0.1s ease;
@@ -308,11 +309,12 @@ export const Miner = () => {
 
   return (
     <Div>
-      <Button onClick={mining.isMining ? stop : start}>X</Button>
+      <Button onClick={mining.isMining ? stop : start}>
+        {mining.isMining ? <Pause /> : <Play />}
+      </Button>
       <Progress>
         <ProgressBar style={{ width: `${progressWidth.toFixed(1)}%` }} />
       </Progress>
-      <Button onClick={mining.isMining ? stop : start}>Y</Button>
     </Div>
   );
 };

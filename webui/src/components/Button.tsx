@@ -11,6 +11,7 @@ export const Button = styled.button`
   border-radius: 16px;
   border: none;
   color: white;
+  cursor: pointer;
 `;
 
 export const IconButton = styled.button`
@@ -27,4 +28,5 @@ export const IconButton = styled.button`
   border-radius: 16px;
   border: none;
   color: white;
+  cursor: pointer;
 `;
