@@ -4,6 +4,8 @@ export type ENV = {
   GIT_HASH: string;
   NODE_ENV: "development" | "production";
   IDENTITY_SECRET: string;
+  /** Optional Healthchecks.io (or compatible) ping URL; if set, server pings it every minute */
+  HEALTHCHECK_PING_URL?: string;
 };
 
 export const EnvController = {
@@ -25,6 +27,9 @@ export const EnvController = {
       GIT_HASH: process.env.GIT_HASH!,
       NODE_ENV: process.env.NODE_ENV!,
       IDENTITY_SECRET: process.env.IDENTITY_SECRET!,
+      ...(process.env.HEALTHCHECK_PING_URL && {
+        HEALTHCHECK_PING_URL: process.env.HEALTHCHECK_PING_URL,
+      }),
     };
   },
   printENV: () => {
@@ -35,6 +40,8 @@ export const EnvController = {
           NODE_ENV: EnvController.env.NODE_ENV,
           IDENTITY_SECRET:
             EnvController.env.IDENTITY_SECRET.substring(0, 3) + "...",
+          HEALTHCHECK_PING_URL:
+            EnvController.env.HEALTHCHECK_PING_URL ?? "not configured",
         },
         null,
         2,
