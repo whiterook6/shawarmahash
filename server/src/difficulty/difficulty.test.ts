@@ -23,7 +23,11 @@ describe("Difficulty", () => {
 
   describe("getDifficultyFromHash", () => {
     it("Can get the difficulty from a hash", () => {
-      for (let i = 0; i <= 32; i += 0.05) {
+      for (
+        let i = Difficulty.MIN_DIFFICULTY;
+        i <= Difficulty.MAX_DIFFICULTY;
+        i += 0.05
+      ) {
         const difficultyTarget = Difficulty.buildDifficultyTarget(i);
         const difficulty = Difficulty.getDifficultyFromHash(difficultyTarget);
         const difference = Math.abs(difficulty - i);
