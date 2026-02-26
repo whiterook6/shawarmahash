@@ -20,9 +20,16 @@ export const MiningProvider = ({ children }: { children: React.ReactNode }) => {
   const [lastError, setLastError] = useState<
     MiningErrorResponse["data"] | null
   >(null);
-  const successCallbacksRef = useRef<Set<MiningSuccessCallback>>(new Set());
+  const [nextBlockData, queueNextBlockData] = useState<
+    Record<string, unknown> | undefined
+  >(undefined);
+  const clearNextBlockData = useCallback(() => {
+    queueNextBlockData(undefined);
+  }, [queueNextBlockData]);
 
+  const successCallbacksRef = useRef<Set<MiningSuccessCallback>>(new Set());
   const minerRef = useRef<Worker | null>(null);
+
   useEffect(() => {
     const worker = new Worker(new URL("./mining.worker.ts", import.meta.url), {
       type: "module",
@@ -109,18 +116,26 @@ export const MiningProvider = ({ children }: { children: React.ReactNode }) => {
       progress,
       lastSuccess,
       lastError,
+      nextBlockData,
+
       startMining,
       stopMining,
       subscribe,
+      queueNextBlockData,
+      clearNextBlockData,
     };
   }, [
     isMining,
     progress,
     lastSuccess,
     lastError,
+    nextBlockData,
+
     startMining,
     stopMining,
     subscribe,
+    queueNextBlockData,
+    clearNextBlockData,
   ]);
 
   return (

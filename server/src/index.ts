@@ -34,11 +34,12 @@ const start = async () => {
   game.setBroadcast(broadcast);
   game.setChat(chat);
   chat.setBroadcast(broadcast);
+  chat.setChains(chains);
   announcer.setBroadcast(broadcast);
   announcer.setGame(game);
   announcer.start();
 
-  const fastify = createServer(game, broadcast, database);
+  const fastify = createServer(game, broadcast, database, chat);
   let stopHealthcheckPing: (() => void) | null = null;
 
   const shutdown = async () => {

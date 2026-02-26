@@ -18,7 +18,16 @@ import {
 } from "../components/Layout";
 import { Panel } from "../components/Panel";
 import { Stack } from "../components/Stack";
-import { Medal } from "lucide-react";
+import {
+  Check,
+  Medal,
+  MessageSquare,
+  MessagesSquare,
+  Send,
+  X,
+} from "lucide-react";
+import { useChat } from "../chat/useChat.hook";
+import { MiningContext } from "../mining/mining.context";
 
 export const App = () => {
   const [leaderboard, setLeaderboard] = useState<
@@ -33,6 +42,9 @@ export const App = () => {
   } = broadcastContext;
   const identityContext = useContext(IdentityContext);
   const { identity, team, player, setTeam, setPlayer } = identityContext;
+
+  const miningContext = useContext(MiningContext);
+  const { nextBlockData, queueNextBlockData } = miningContext;
 
   useEffect(() => {
     if (!identity || !team || !player) {
@@ -96,6 +108,21 @@ export const App = () => {
       setPlayer(form.newPlayerName);
     }
   }, [form.newPlayerName, setPlayer]);
+
+  const chatMessages = useChat({ team, player, identity });
+  const [message, setMessage] = useState("");
+  const onChangeMessage = (e: { target: { value: string } }) => {
+    setMessage(e.target.value);
+  };
+  const onSendMessage = useCallback(() => {
+    if (message.length > 0) {
+      queueNextBlockData({
+        type: "chat_message",
+        message,
+      });
+      setMessage("");
+    }
+  }, [message, queueNextBlockData, setMessage]);
 
   return (
     <Layout>
@@ -169,18 +196,53 @@ export const App = () => {
         <h2>Middle Panel</h2>
       </MiddlePanel>
       <RightPanel>
-        <Panel>
-          <h2>Team{team ? `: ${team}` : ""}</h2>
-          <h3>Online Now</h3>
-          <Table>
-            <THead>
-              <TR>
-                <TH>Name</TH>
-                <TH>Score</TH>
-              </TR>
-            </THead>
-          </Table>
-        </Panel>
+        <Stack>
+          <Panel>
+            <h2>Team{team ? `: ${team}` : ""}</h2>
+            <h3>Online Now</h3>
+            <Table>
+              <THead>
+                <TR>
+                  <TH>Name</TH>
+                  <TH>Score</TH>
+                </TR>
+              </THead>
+            </Table>
+          </Panel>
+          <Panel>
+            <h2>
+              <Row>
+                <MessagesSquare />
+                <span>Chat</span>
+              </Row>
+            </h2>
+            {chatMessages.public.map((publicMessage) => {
+              return (
+                <Row key={publicMessage.hashCode}>
+                  <MessageSquare />
+                  <span>{publicMessage.player}</span>
+                  <span>{publicMessage.message}</span>
+                </Row>
+              );
+            })}
+            <Row>
+              <MessageSquare />
+              <Input
+                type="text"
+                value={message}
+                onChange={onChangeMessage}
+                placeholder="Type a message..."
+                disabled={nextBlockData !== undefined}
+              />
+              <IconButton
+                onClick={onSendMessage}
+                disabled={message.length === 0 || nextBlockData !== undefined}
+              >
+                <Send size={16} />
+              </IconButton>
+            </Row>
+          </Panel>
+        </Stack>
       </RightPanel>
       <BottomLeftPanel>
         <Panel>
@@ -193,8 +255,12 @@ export const App = () => {
               onChange={onChangePlayerName}
               maxLength={3}
             />
-            <IconButton onClick={onSavePlayerName}>✔</IconButton>
-            <IconButton onClick={onCancelPlayerName}>✖</IconButton>
+            <IconButton onClick={onSavePlayerName}>
+              <Check size={16} />
+            </IconButton>
+            <IconButton onClick={onCancelPlayerName}>
+              <X size={16} />
+            </IconButton>
           </Row>
         </Panel>
       </BottomLeftPanel>
@@ -212,8 +278,12 @@ export const App = () => {
               onChange={onChangeTeamName}
               maxLength={3}
             />
-            <IconButton onClick={onSaveTeamName}>✔</IconButton>
-            <IconButton onClick={onCancelTeamName}>✖</IconButton>
+            <IconButton onClick={onSaveTeamName}>
+              <Check size={16} />
+            </IconButton>
+            <IconButton onClick={onCancelTeamName}>
+              <X size={16} />
+            </IconButton>
           </Row>
         </Panel>
       </BottomRightPanel>

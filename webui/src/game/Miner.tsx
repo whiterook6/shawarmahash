@@ -124,6 +124,7 @@ export const Miner = () => {
       }
 
       setIsSubmitting(true);
+      console.log(mining.nextBlockData);
 
       try {
         await Api.submitBlock(blockData.team, {
@@ -132,8 +133,10 @@ export const Miner = () => {
           identity: identity,
           nonce: blockData.nonce,
           hash: blockData.hash,
+          data: mining.nextBlockData ?? undefined,
         });
         setLastSubmittedHash(blockData.hash);
+        mining.clearNextBlockData();
         return true;
       } catch {
         return false;
@@ -141,7 +144,7 @@ export const Miner = () => {
         setIsSubmitting(false);
       }
     },
-    [identity, lastSubmittedHash],
+    [identity, lastSubmittedHash, mining.nextBlockData],
   );
 
   const start = useCallback(async () => {
@@ -150,9 +153,14 @@ export const Miner = () => {
     }
 
     setAutoMine(true);
-    const t = target ?? (await fetchTarget());
-    if (!t) return;
-    mining.startMining({ ...t, player, team });
+    if (target) {
+      return mining.startMining({ ...target, player, team });
+    }
+
+    const t = await fetchTarget();
+    if (t) {
+      mining.startMining({ ...t, player, team });
+    }
   }, [fetchTarget, mining, target, player, team]);
 
   const stop = useCallback(() => {

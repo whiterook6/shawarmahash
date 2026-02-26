@@ -1,19 +1,21 @@
 import expect from "expect";
 import { FastifyInstance } from "fastify";
+import { mkdtemp, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test, { after, before, describe } from "node:test";
 import { Broadcast } from "../broadcast/broadcast";
+import { Chat } from "../chat/chat";
 import { DatabaseController } from "../database/database.controller";
 import { EnvController } from "../env";
 import { Game } from "../game/game";
 import { createServer } from "./server";
-import { tmpdir } from "node:os";
-import { mkdtemp, rm } from "node:fs/promises";
 
 describe("Server", () => {
   let game: Game;
   let broadcast: Broadcast;
   let database: DatabaseController;
+  let chat: Chat;
   let server: FastifyInstance;
   let directory: string;
 
@@ -32,7 +34,11 @@ describe("Server", () => {
     await database.runMigrations();
 
     game = new Game();
-    server = createServer(game, broadcast, database);
+    game.setChains(new Map());
+    chat = new Chat();
+    chat.setBroadcast(broadcast);
+    chat.setChains(new Map());
+    server = createServer(game, broadcast, database, chat);
     await server.ready();
   });
 
