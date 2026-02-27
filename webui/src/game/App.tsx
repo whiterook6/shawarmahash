@@ -1,12 +1,10 @@
+import { Check, Medal, X } from "lucide-react";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { BroadcastContext } from "../broadcast/broadcast.context";
-import { IdentityContext } from "../identity/identity.context";
 import type { ScoresUpdateMessage } from "../broadcast/broadcast.types";
-import { Input } from "../components/Input";
+import { Chat } from "../chat/Chat";
 import { IconButton } from "../components/Button";
-import { Row } from "../components/Row";
-import { Table, TBody, TD, TH, THead, TR } from "../components/Table";
-import { Miner } from "./Miner";
+import { Input } from "../components/Input";
 import {
   BottomCenterPanel,
   BottomLeftPanel,
@@ -17,17 +15,11 @@ import {
   RightPanel,
 } from "../components/Layout";
 import { Panel } from "../components/Panel";
+import { Row } from "../components/Row";
 import { Stack } from "../components/Stack";
-import {
-  Check,
-  Medal,
-  MessageSquare,
-  MessagesSquare,
-  Send,
-  X,
-} from "lucide-react";
-import { useChat } from "../chat/useChat.hook";
-import { MiningContext } from "../mining/mining.context";
+import { Table, TBody, TD, TH, THead, TR } from "../components/Table";
+import { IdentityContext } from "../identity/identity.context";
+import { Miner } from "./Miner";
 
 export const App = () => {
   const [leaderboard, setLeaderboard] = useState<
@@ -42,9 +34,6 @@ export const App = () => {
   } = broadcastContext;
   const identityContext = useContext(IdentityContext);
   const { identity, team, player, setTeam, setPlayer } = identityContext;
-
-  const miningContext = useContext(MiningContext);
-  const { nextBlockData, queueNextBlockData } = miningContext;
 
   useEffect(() => {
     if (!identity || !team || !player) {
@@ -108,21 +97,6 @@ export const App = () => {
       setPlayer(form.newPlayerName);
     }
   }, [form.newPlayerName, setPlayer]);
-
-  const chatMessages = useChat({ team, player, identity });
-  const [message, setMessage] = useState("");
-  const onChangeMessage = (e: { target: { value: string } }) => {
-    setMessage(e.target.value);
-  };
-  const onSendMessage = useCallback(() => {
-    if (message.length > 0) {
-      queueNextBlockData({
-        type: "chat_message",
-        message,
-      });
-      setMessage("");
-    }
-  }, [message, queueNextBlockData, setMessage]);
 
   return (
     <Layout>
@@ -209,39 +183,7 @@ export const App = () => {
               </THead>
             </Table>
           </Panel>
-          <Panel>
-            <h2>
-              <Row>
-                <MessagesSquare />
-                <span>Chat</span>
-              </Row>
-            </h2>
-            {chatMessages.public.map((publicMessage) => {
-              return (
-                <Row key={publicMessage.hashCode}>
-                  <MessageSquare />
-                  <span>{publicMessage.player}</span>
-                  <span>{publicMessage.message}</span>
-                </Row>
-              );
-            })}
-            <Row>
-              <MessageSquare />
-              <Input
-                type="text"
-                value={message}
-                onChange={onChangeMessage}
-                placeholder="Type a message..."
-                disabled={nextBlockData !== undefined}
-              />
-              <IconButton
-                onClick={onSendMessage}
-                disabled={message.length === 0 || nextBlockData !== undefined}
-              >
-                <Send size={16} />
-              </IconButton>
-            </Row>
-          </Panel>
+          <Chat />
         </Stack>
       </RightPanel>
       <BottomLeftPanel>

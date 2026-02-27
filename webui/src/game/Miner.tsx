@@ -48,6 +48,7 @@ const Button = styled.button`
   color: white;
 
   border: none;
+  cursor: pointer;
 `;
 
 const Progress = styled.div`
