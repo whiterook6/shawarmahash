@@ -1,7 +1,7 @@
 # Multi-stage Dockerfile for ShawarmaHash
 
 # Stage 1: Build WebUI
-FROM node:20-alpine AS webui-builder
+FROM node:24-alpine AS webui-builder
 WORKDIR /app/webui
 
 # Copy webui package files
@@ -17,7 +17,7 @@ COPY webui/ ./
 RUN yarn build
 
 # Stage 2: Build Server
-FROM node:20-alpine AS server-builder
+FROM node:24-alpine AS server-builder
 WORKDIR /app/server
 
 # Copy server package files
@@ -36,7 +36,7 @@ ENV GIT_HASH=${GIT_HASH}
 RUN yarn prod:build
 
 # Stage 3: Final Runtime Image
-FROM node:20-alpine
+FROM node:24-alpine
 WORKDIR /app
 
 # Install only production dependencies for server
