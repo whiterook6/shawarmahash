@@ -24,9 +24,10 @@ const run = async () => {
 
   // Construct data directory path
   const database = new DatabaseController(
-    join(process.cwd(), "shawarmahash.db"),
+    join(process.cwd(), "data", "database.sqlite"),
   );
   const data = new Data(database);
+  await database.runMigrations();
 
   // Load chain from file
   let chain: Chain;
@@ -38,6 +39,7 @@ const run = async () => {
     );
     process.exit(1);
   }
+  database.close();
 
   // Verify chain
   const verificationError = Chain.verifyChain(chain);

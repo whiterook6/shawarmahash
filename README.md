@@ -19,7 +19,7 @@ This approach allows for:
 
 ### Prerequisites
 
-- Node.js 20+ and Yarn
+- Node.js 22.5.1+ (to support node:sqlite) and Yarn
 - For Docker: Docker and Docker Compose
 
 ### Environment Variables

@@ -203,54 +203,48 @@ export class Game {
   }): Promise<{ recent: Block[]; difficulty: string }> {
     const { team, previousHash, identity } = args;
     const isGenesisBlock = previousHash === Block.GENESIS_PREVIOUS_HASH;
+
+    const chainExists = this.chains.has(team);
     let newBlock: Block;
 
-    const mutex = this.getTeamMutex(team);
-    await mutex.acquire();
-    try {
-      const chainExists = this.chains.has(team);
+    if (isGenesisBlock && chainExists) {
+      throw new ValidationError({
+        team: [
+          `Team ${team} already exists. Cannot submit genesis block to existing chain.`,
+        ],
+      });
+    } else if (isGenesisBlock) {
+      newBlock = {
+        ...args,
+        index: 0,
+        timestamp: Timestamp.now(),
+        identity,
+        data: args.data,
+      };
 
-      if (isGenesisBlock && chainExists) {
+      const error = Chain.verifyGenesisBlock(newBlock);
+      if (error) {
         throw new ValidationError({
-          team: [
-            `Team ${team} already exists. Cannot submit genesis block to existing chain.`,
-          ],
+          team: [`Invalid genesis block: ${error}`],
         });
-      } else if (isGenesisBlock) {
-        newBlock = {
-          ...args,
-          index: 0,
-          timestamp: Timestamp.now(),
-          identity,
-          data: args.data,
-        };
-
-        const error = Chain.verifyGenesisBlock(newBlock);
-        if (error) {
-          throw new ValidationError({
-            team: [`Invalid genesis block: ${error}`],
-          });
-        }
-
-        await this.initializeTeamChain(newBlock);
-      } else if (!chainExists) {
-        throw new ValidationError({
-          team: [`Team ${team} does not exist. Mine a genesis block first.`],
-        });
-      } else {
-        const teamChain = this.chains.get(team)!;
-
-        // Create the new block
-        newBlock = Chain.verifyIncomingBlock(
-          { ...args, data: args.data },
-          teamChain,
-        );
-
-        // Append to chain and persist to data layer
-        await this.appendBlock(newBlock, teamChain);
       }
-    } finally {
-      mutex.release();
+
+      this.initializeTeamChain(newBlock);
+    } else if (!chainExists) {
+      throw new ValidationError({
+        team: [`Team ${team} does not exist. Mine a genesis block first.`],
+      });
+    } else {
+      const teamChain = this.chains.get(team)!;
+
+      // Create the new block
+      newBlock = Chain.verifyIncomingBlock(
+        { ...args, data: args.data },
+        teamChain,
+      );
+
+      // Append to chain and persist to data layer
+      this.appendBlock(newBlock, teamChain);
     }
 
     const chainState = this.getChainState(team);

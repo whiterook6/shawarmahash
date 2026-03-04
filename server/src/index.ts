@@ -18,6 +18,7 @@ const start = async () => {
   const database = new DatabaseController(
     join(process.cwd(), "data", "database.sqlite"),
   );
+  await database.runMigrations();
   const data = new Data(database);
   const chains = data.loadAllChains();
 
@@ -55,6 +56,7 @@ const start = async () => {
     } catch (err) {
       fastify.log.error(err, "Failed to close Fastify");
     }
+    database.close();
     // Add any other cleanup here (e.g., database connections, file handles, etc.)
   };
 

@@ -4,6 +4,7 @@ CREATE TABLE blocks (
   "index" INTEGER NOT NULL,
   player TEXT NOT NULL check(length(player) = 3),
   team TEXT NOT NULL check(length(team) = 3),
+  identity TEXT NOT NULL CHECK(length(identity) = 16),
   timestamp INTEGER NOT NULL,
   nonce INTEGER NOT NULL,
   data TEXT NOT NULL DEFAULT '{}',

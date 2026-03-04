@@ -5,26 +5,42 @@ import { DatabaseController } from "../database/database.controller";
 export class Data {
   constructor(private database: DatabaseController) {}
 
+  private mapBlock(row: Record<string, unknown>): Block {
+    return {
+      hash: row.hash,
+      previousHash: row.previousHash,
+      index: row.index,
+      player: row.player,
+      team: row.team,
+      identity: row.identity,
+      timestamp: row.timestamp,
+      nonce: row.nonce,
+      data: typeof row.data === "string" ? JSON.parse(row.data) : undefined,
+    } as Block;
+  }
+
   loadChain(team: string): Chain {
     const chain = this.database
       .prepare(
-        `SELECT
-      hash,
-      previous_hash as previousHash,
-      "index",
-      player,
-      team,
-      timestamp,
-      nonce,
-      data,
-      created_at as timestamp
-    FROM blocks
-    WHERE team = :team
-    ORDER BY "index" ASC`,
+        `
+SELECT
+  hash,
+  previous_hash as previousHash,
+  "index",
+  player,
+  team,
+  identity,
+  timestamp,
+  nonce,
+  data
+FROM blocks
+WHERE team = :team
+ORDER BY "index" ASC`,
       )
       .all({
         team,
-      }) as unknown[] as Block[];
+      })
+      .map((row) => this.mapBlock(row));
 
     const verificationError = Chain.verifyChain(chain);
     if (verificationError) {
@@ -45,14 +61,15 @@ export class Data {
       "index",
       player,
       team,
+      identity,
       timestamp,
       nonce,
-      data,
-      created_at as timestamp
+      data
     FROM blocks
     ORDER BY "index" ASC`,
       )
-      .all() as unknown[] as Block[];
+      .all()
+      .map((row) => this.mapBlock(row));
 
     const chains = blocks.reduce((acc: Map<string, Chain>, block: Block) => {
       if (!acc.has(block.team)) {
@@ -82,6 +99,7 @@ export class Data {
       "index",
       player,
       team,
+      identity,
       timestamp,
       nonce,
       data
@@ -91,6 +109,7 @@ export class Data {
       :index,
       :player,
       :team,
+      :identity,
       :timestamp,
       :nonce,
       :data
@@ -102,6 +121,7 @@ export class Data {
         index: block.index,
         player: block.player,
         team: block.team,
+        identity: block.identity,
         timestamp: block.timestamp,
         nonce: block.nonce,
         data: JSON.stringify(block.data ?? {}),

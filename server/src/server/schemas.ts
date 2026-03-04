@@ -71,16 +71,7 @@ export const schemas = {
               required: ["rss", "heapTotal", "heapUsed", "external"],
               additionalProperties: false,
             },
-            dataDirectory: {
-              type: "object",
-              properties: {
-                exists: { type: "boolean" },
-                readable: { type: "boolean" },
-                writable: { type: "boolean" },
-              },
-              required: ["exists", "readable", "writable"],
-              additionalProperties: false,
-            },
+            databaseStatus: { type: "boolean" },
             sseClients: { type: "number" },
           },
           required: [
@@ -91,7 +82,7 @@ export const schemas = {
             "activeChains",
             "totalBlocks",
             "memoryUsage",
-            "dataDirectory",
+            "databaseStatus",
             "sseClients",
           ],
           additionalProperties: false,

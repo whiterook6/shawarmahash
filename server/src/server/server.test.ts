@@ -7,12 +7,15 @@ import { DatabaseController } from "../database/database.controller";
 import { EnvController } from "../env";
 import { Game } from "../game/game";
 import { createServer } from "./server";
+import { tmpdir } from "node:os";
+import { mkdtemp, rm } from "node:fs/promises";
 
 describe("Server", () => {
   let game: Game;
   let broadcast: Broadcast;
   let database: DatabaseController;
   let server: FastifyInstance;
+  let directory: string;
 
   before(async () => {
     // Tests don't call EnvController.verifyEnv(), so seed the minimum env needed
@@ -22,12 +25,11 @@ describe("Server", () => {
       NODE_ENV: "development",
       IDENTITY_SECRET: "test-secret",
     };
+    directory = await mkdtemp(join(tmpdir(), "shawarmahash-"));
 
     broadcast = new Broadcast();
-    database = new DatabaseController(
-      join(process.cwd(), "data", "database.sqlite"),
-    );
-    database.runMigrations();
+    database = new DatabaseController(join(directory, "database.sqlite"));
+    await database.runMigrations();
 
     game = new Game();
     server = createServer(game, broadcast, database);
@@ -35,7 +37,11 @@ describe("Server", () => {
   });
 
   after(async () => {
-    await Promise.all([server.close(), database.close()]);
+    await Promise.all([
+      server.close(),
+      database.close(),
+      rm(directory, { recursive: true }),
+    ]);
   });
 
   test("It can get top players", async (context) => {

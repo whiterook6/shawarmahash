@@ -18,7 +18,7 @@ export class DatabaseController {
     this.database = new DatabaseSync(databasePath);
     this.migrationsPath = migrationsPath;
     this.createMigrationsTable();
-
+    this.database.exec("PRAGMA foreign_keys = ON");
     this.SELECT_1 = this.database.prepare("SELECT 1");
     this.SELECT_MIGRATIONS = this.database.prepare(
       "SELECT filename FROM migrations",
