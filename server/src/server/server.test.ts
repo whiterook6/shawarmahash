@@ -37,7 +37,7 @@ describe("Server", () => {
     game.setChains(new Map());
     chat = new Chat();
     chat.setBroadcast(broadcast);
-    chat.setChains(new Map());
+    chat.setDatabase(database);
     server = createServer(game, broadcast, database, chat);
     await server.ready();
   });

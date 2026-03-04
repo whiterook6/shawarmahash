@@ -1,17 +1,18 @@
 import { Block } from "../block/block";
 import { Broadcast, TO_PLAYER, TO_TEAM } from "../broadcast/broadcast";
-import { Chain } from "../chain/chain";
+import { DatabaseController } from "../database/database.controller";
 import { ChatMessage } from "./chat.types";
 
 const PLAYER_REGEX = /^@([A-Z]{3})\b/;
 const TEAM_REGEX = /^#([A-Z]{3})\b/;
+const MESSAGE_MAX_LENGTH = 1024;
 
 export class Chat {
   private broadcast: Broadcast | undefined = undefined;
-  private chains: Map<string, Chain> | undefined = undefined;
+  private database: DatabaseController | undefined = undefined;
 
-  setChains(chains: Map<string, Chain>): void {
-    this.chains = chains;
+  setDatabase(database: DatabaseController): void {
+    this.database = database;
   }
 
   setBroadcast(broadcast: Broadcast): void {
@@ -19,86 +20,100 @@ export class Chat {
   }
 
   getTeamChatMessages(team: string): ChatMessage[] {
-    if (!this.chains) {
+    if (!this.database) {
       return [];
     }
 
-    return Array.from(this.chains.values())
-      .flat()
-      .filter((block) => {
-        if (
-          !block.data ||
-          block.data!.type !== "chat_message" ||
-          typeof block.data!.message !== "string"
-        ) {
-          return false;
-        }
+    const rows = this.database
+      .prepare(
+        `SELECT id, from_player, from_team, from_identity, message
+         FROM messages
+         WHERE to_team = :team
+         ORDER BY created_at DESC
+         LIMIT 25`,
+      )
+      .all({ team }) as {
+      id: string;
+      from_player: string;
+      from_team: string;
+      from_identity: string;
+      message: string;
+    }[];
 
-        const _team = this.isTeamMessage(block.data.message);
-        return _team === team;
-      })
-      .sort((left, right) => {
-        // sort by most recent first
-        return left.timestamp - right.timestamp;
-      })
-      .slice(0, 25)
-      .map(this.convertBlockToChatMessage);
+    return rows.map((row) => ({
+      hashCode: row.id,
+      player: row.from_player,
+      team: row.from_team,
+      identity: row.from_identity,
+      message: row.message,
+    }));
   }
 
   getPublicChatMessages(): ChatMessage[] {
-    if (!this.chains) {
+    if (!this.database) {
       return [];
     }
 
-    return Array.from(this.chains.values())
-      .flat()
-      .filter((block) => {
-        if (
-          !block.data ||
-          block.data!.type !== "chat_message" ||
-          typeof block.data!.message !== "string"
-        ) {
-          return false;
-        }
+    const rows = this.database
+      .prepare(
+        `SELECT id, from_player, from_team, from_identity, message
+         FROM messages
+         WHERE to_team IS NULL AND to_player IS NULL
+         ORDER BY created_at DESC
+         LIMIT 25`,
+      )
+      .all() as {
+      id: string;
+      from_player: string;
+      from_team: string;
+      from_identity: string;
+      message: string;
+    }[];
 
-        return !this.isTeamMessage(block.data.message);
-      })
-      .sort((left, right) => {
-        // sort by most recent first
-        return left.timestamp - right.timestamp;
-      })
-      .slice(0, 25)
-      .map(this.convertBlockToChatMessage);
+    return rows.map((row) => ({
+      hashCode: row.id,
+      player: row.from_player,
+      team: row.from_team,
+      identity: row.from_identity,
+      message: row.message,
+    }));
   }
 
   getPlayerChatMessages(player: string): ChatMessage[] {
-    if (!this.chains) {
+    if (!this.database) {
       return [];
     }
 
-    return Array.from(this.chains.values())
-      .flat()
-      .filter((block) => {
-        if (
-          !block.data ||
-          block.data!.type !== "chat_message" ||
-          typeof block.data!.message !== "string"
-        ) {
-          return false;
-        }
+    const rows = this.database
+      .prepare(
+        `SELECT id, from_player, from_team, from_identity, message
+         FROM messages
+         WHERE to_player = :player
+         ORDER BY created_at DESC
+         LIMIT 25`,
+      )
+      .all({ player }) as {
+      id: string;
+      from_player: string;
+      from_team: string;
+      from_identity: string;
+      message: string;
+    }[];
 
-        const _player = this.isPlayerMessage(block.data.message);
-        return _player === player;
-      })
-      .sort((left, right) => {
-        // sort by most recent first
-        return left.timestamp - right.timestamp;
-      })
-      .slice(0, 25)
-      .map(this.convertBlockToChatMessage);
+    return rows.map((row) => ({
+      hashCode: row.id,
+      player: row.from_player,
+      team: row.from_team,
+      identity: row.from_identity,
+      message: row.message,
+    }));
   }
 
   handleChatMessage(message: string, block: Block): void {
+    if (this.database) {
+      this.insertMessage(block, message);
+    }
+
     if (!this.broadcast) {
       return;
     }
@@ -131,6 +146,47 @@ export class Chat {
       type: "chat_message_received",
       payload: chatMessage,
     });
+  }
+
+  insertMessage(block: Block, message: string): void {
+    if (!this.database) {
+      return;
+    }
+
+    const trimmed = message.trim();
+    if (trimmed.length === 0) {
+      return;
+    }
+
+    const messageToStore =
+      trimmed.length > MESSAGE_MAX_LENGTH
+        ? trimmed.slice(0, MESSAGE_MAX_LENGTH)
+        : trimmed;
+
+    const toTeam = this.isTeamMessage(message) ?? null;
+    const toPlayer = this.isPlayerMessage(message) ?? null;
+
+    this.database
+      .prepare(
+        `INSERT OR IGNORE INTO players (identity, player, team) VALUES (?, ?, ?)`,
+      )
+      .run(block.identity, block.player, block.team);
+
+    this.database
+      .prepare(
+        `INSERT OR IGNORE INTO messages (id, reply_to, from_identity, from_player, from_team, to_team, to_player, message, created_at)
+         VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .run(
+        block.hash,
+        block.identity,
+        block.player,
+        block.team,
+        toTeam,
+        toPlayer,
+        messageToStore,
+        block.timestamp,
+      );
   }
 
   private isTeamMessage(message: string): string | undefined {
