@@ -4,6 +4,7 @@ import { join } from "path";
 import { Data } from "../data/data";
 import { Chain } from "../chain/chain";
 import { Difficulty } from "../difficulty/difficulty";
+import { DatabaseController } from "../database/database.controller";
 
 const run = async () => {
   // Parse command line arguments
@@ -22,12 +23,15 @@ const run = async () => {
   const team = argv.team;
 
   // Construct data directory path
-  const dataDir = join(process.cwd(), "data");
+  const database = new DatabaseController(
+    join(process.cwd(), "shawarmahash.db"),
+  );
+  const data = new Data(database);
 
   // Load chain from file
   let chain: Chain;
   try {
-    chain = await new Data(dataDir).loadChain(team);
+    chain = data.loadChain(team);
   } catch (error) {
     console.error(
       `Error loading chain file: ${error instanceof Error ? error.message : String(error)}`,
