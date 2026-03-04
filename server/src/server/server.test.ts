@@ -1,29 +1,23 @@
-import test, { describe, before, after } from "node:test";
+import expect from "expect";
+import { FastifyInstance } from "fastify";
+import { join } from "node:path";
+import test, { after, before, describe } from "node:test";
+import { Broadcast } from "../broadcast/broadcast";
+import { DatabaseController } from "../database/database.controller";
+import { EnvController } from "../env";
 import { Game } from "../game/game";
 import { createServer } from "./server";
-import { Broadcast } from "../broadcast/broadcast";
-import { Data } from "../data/data";
-import { join } from "node:path";
-import { mkdtemp, mkdir, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import expect from "expect";
-import { EnvController } from "../env";
-import { FastifyInstance } from "fastify";
+import { mkdtemp, rm } from "node:fs/promises";
 
 describe("Server", () => {
-  let tempDir: string;
-  let dataDir: string;
-
   let game: Game;
   let broadcast: Broadcast;
-  let data: Data;
+  let database: DatabaseController;
   let server: FastifyInstance;
+  let directory: string;
 
   before(async () => {
-    tempDir = await mkdtemp(join(tmpdir(), "shawarmahash-")); // unique folder
-    dataDir = join(tempDir, "data");
-    await mkdir(dataDir, { recursive: true });
-
     // Tests don't call EnvController.verifyEnv(), so seed the minimum env needed
     // for routes that use it (cookies, derived identity, etc).
     EnvController.env = {
@@ -31,19 +25,22 @@ describe("Server", () => {
       NODE_ENV: "development",
       IDENTITY_SECRET: "test-secret",
     };
+    directory = await mkdtemp(join(tmpdir(), "shawarmahash-"));
 
-    data = new Data(dataDir);
     broadcast = new Broadcast();
+    database = new DatabaseController(join(directory, "database.sqlite"));
+    await database.runMigrations();
 
     game = new Game();
-    server = createServer(game, broadcast, data);
+    server = createServer(game, broadcast, database);
     await server.ready();
   });
 
   after(async () => {
     await Promise.all([
       server.close(),
-      rm(dataDir, { recursive: true, force: true }),
+      database.close(),
+      rm(directory, { recursive: true }),
     ]);
   });
 

@@ -8,15 +8,19 @@ import { fileURLToPath } from "url";
 import { Block } from "../block/block";
 import { Broadcast } from "../broadcast/broadcast";
 import { BroadcastMessage } from "../broadcast/broadcast.types";
-import { Data } from "../data/data";
+import { DatabaseController } from "../database/database.controller";
 import { Difficulty } from "../difficulty/difficulty";
+import { EnvController } from "../env";
 import { errorHandler } from "../error/errors";
 import { Game } from "../game/game";
 import { IdentityController } from "../identity/identity.controller";
-import { EnvController } from "../env";
 import { schemas } from "./schemas";
 
-export function createServer(game: Game, broadcast: Broadcast, data: Data) {
+export function createServer(
+  game: Game,
+  broadcast: Broadcast,
+  database: DatabaseController,
+) {
   const fastify = Fastify({
     logger: false,
   });
@@ -47,7 +51,7 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
       const memoryUsage = process.memoryUsage();
       const activeChains = game.getActiveChainsCount();
       const totalBlocks = game.getTotalBlocksCount();
-      const dataDirectoryStatus = await data.getDirectoryStatus();
+      const databaseStatus = database.isReady();
       const sseClients = broadcast.getSubscriberCount();
 
       return reply.status(200).send({
@@ -63,7 +67,7 @@ export function createServer(game: Game, broadcast: Broadcast, data: Data) {
           heapUsed: memoryUsage.heapUsed,
           external: memoryUsage.external,
         },
-        dataDirectory: dataDirectoryStatus,
+        databaseStatus,
         sseClients,
       });
     },

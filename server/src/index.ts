@@ -7,6 +7,7 @@ import { EnvController } from "./env";
 import { Announcer } from "./announcer";
 import { Chat } from "./chat/chat";
 import { startHealthcheckPing } from "./healthcheck";
+import { DatabaseController } from "./database/database.controller";
 
 // Start server
 const start = async () => {
@@ -14,8 +15,12 @@ const start = async () => {
   EnvController.printENV();
 
   // Load player chains from data directory
-  const data = new Data(join(process.cwd(), "data"));
-  const chains = await data.loadAllChains();
+  const database = new DatabaseController(
+    join(process.cwd(), "data", "database.sqlite"),
+  );
+  await database.runMigrations();
+  const data = new Data(database);
+  const chains = data.loadAllChains();
 
   // start game and broadcast
   const broadcast = new Broadcast();
@@ -33,7 +38,7 @@ const start = async () => {
   announcer.setGame(game);
   announcer.start();
 
-  const fastify = createServer(game, broadcast, data);
+  const fastify = createServer(game, broadcast, database);
   let stopHealthcheckPing: (() => void) | null = null;
 
   const shutdown = async () => {
@@ -51,6 +56,7 @@ const start = async () => {
     } catch (err) {
       fastify.log.error(err, "Failed to close Fastify");
     }
+    database.close();
     // Add any other cleanup here (e.g., database connections, file handles, etc.)
   };
 

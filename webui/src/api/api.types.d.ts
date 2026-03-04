@@ -13,11 +13,7 @@ export type HealthAPIResponse = {
     heapUsed: number;
     external: number;
   };
-  dataDirectory: {
-    exists: boolean;
-    readable: boolean;
-    writable: boolean;
-  };
+  databaseStatus: boolean;
   sseClients: number;
 };
 
