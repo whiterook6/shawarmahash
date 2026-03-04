@@ -28,6 +28,7 @@
     "difficulty:calculate": "tsx src/scripts/calculateDifficulties.script.ts",
     "format": "prettier --write src",
     "genesis:mine": "tsx src/scripts/mineGenesisBlock.script.ts",
+    "migrate": "tsx src/scripts/migrate.ts",
     "lint": "eslint src --fix",
     "test": "node --import tsx --test",
     "typecheck": "tsc --noEmit"
