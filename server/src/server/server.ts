@@ -12,6 +12,7 @@ import { DatabaseController } from "../database/database.controller";
 import { Difficulty } from "../difficulty/difficulty";
 import { EnvController } from "../env";
 import { errorHandler } from "../error/errors";
+import { Chat } from "../chat/chat";
 import { Game } from "../game/game";
 import { IdentityController } from "../identity/identity.controller";
 import { schemas } from "./schemas";
@@ -20,6 +21,7 @@ export function createServer(
   game: Game,
   broadcast: Broadcast,
   database: DatabaseController,
+  chat: Chat,
 ) {
   const fastify = Fastify({
     logger: false,
@@ -195,6 +197,46 @@ export function createServer(
     ) => {
       const players = game.getTeamPlayers(request.params.team);
       return reply.status(200).send(players);
+    },
+  );
+
+  // GET /api/chat/public: get public chat messages
+  fastify.get(
+    "/api/chat/public",
+    schemas.getPublicChatMessages,
+    (_: FastifyRequest, reply: FastifyReply) => {
+      const messages = chat.getPublicChatMessages();
+      return reply.status(200).send(messages);
+    },
+  );
+
+  // GET /api/chat/teams/:team: get chat messages for a team
+  fastify.get(
+    "/api/chat/teams/:team",
+    schemas.getTeamChatMessages,
+    (
+      request: FastifyRequest<{
+        Params: { team: string };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      const messages = chat.getTeamChatMessages(request.params.team);
+      return reply.status(200).send(messages);
+    },
+  );
+
+  // GET /api/chat/players/:player: get chat messages for a player
+  fastify.get(
+    "/api/chat/players/:player",
+    schemas.getPlayerChatMessages,
+    (
+      request: FastifyRequest<{
+        Params: { player: string };
+      }>,
+      reply: FastifyReply,
+    ) => {
+      const messages = chat.getPlayerChatMessages(request.params.player);
+      return reply.status(200).send(messages);
     },
   );
 

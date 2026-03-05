@@ -33,6 +33,19 @@ const schemaRefs = {
   },
 } as const;
 
+const chatMessageItem = {
+  type: "object",
+  properties: {
+    hashCode: schemaRefs.hashCode,
+    player: schemaRefs.playerName,
+    team: schemaRefs.teamName,
+    identity: schemaRefs.identity,
+    message: { type: "string" },
+  },
+  required: ["hashCode", "player", "team", "identity", "message"],
+  additionalProperties: false,
+} as const;
+
 export const schemas = {
   postIdentity: {
     schema: {
@@ -337,6 +350,55 @@ export const schemas = {
         },
         required: ["team", "player", "identity"],
         additionalProperties: false,
+      },
+    },
+  },
+  getPublicChatMessages: {
+    schema: {
+      response: {
+        200: {
+          type: "array",
+          items: chatMessageItem,
+          additionalItems: false,
+        },
+      },
+    },
+  },
+  getTeamChatMessages: {
+    schema: {
+      Params: {
+        type: "object",
+        properties: {
+          team: schemaRefs.teamName,
+        },
+        required: ["team"],
+        additionalProperties: false,
+      },
+      response: {
+        200: {
+          type: "array",
+          items: chatMessageItem,
+          additionalItems: false,
+        },
+      },
+    },
+  },
+  getPlayerChatMessages: {
+    schema: {
+      Params: {
+        type: "object",
+        properties: {
+          player: schemaRefs.playerName,
+        },
+        required: ["player"],
+        additionalProperties: false,
+      },
+      response: {
+        200: {
+          type: "array",
+          items: chatMessageItem,
+          additionalItems: false,
+        },
       },
     },
   },

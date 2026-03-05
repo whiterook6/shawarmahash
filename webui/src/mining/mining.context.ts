@@ -14,6 +14,8 @@ export interface MiningContext {
   progress: MiningProgressResponse["data"] | null;
   lastSuccess: MiningSuccessResponse["data"] | null;
   lastError: MiningErrorResponse["data"] | null;
+  nextBlockData: Record<string, unknown> | undefined;
+
   startMining: (target: {
     previousHash: string;
     previousTimestamp: number;
@@ -23,6 +25,8 @@ export interface MiningContext {
   }) => void;
   stopMining: () => void;
   subscribe: (callback: MiningSuccessCallback) => () => void;
+  queueNextBlockData: (data: Record<string, unknown>) => void;
+  clearNextBlockData: () => void;
 }
 
 export const MiningContext = createContext<MiningContext>({
@@ -30,9 +34,13 @@ export const MiningContext = createContext<MiningContext>({
   progress: null,
   lastSuccess: null,
   lastError: null,
+  nextBlockData: undefined,
+
   startMining: () => {},
   stopMining: () => {},
   subscribe: () => () => {
     return;
   },
+  queueNextBlockData: () => {},
+  clearNextBlockData: () => {},
 });

@@ -41,6 +41,7 @@ const Button = styled.button`
     0px 4px 8px 3px rgba(80, 163, 155, 0.21),
     inset 0px 4px 10px 3px rgba(250, 240, 228, 0.21);
   border-radius: 16px;
+  position: relative;
 
   display: flex;
   align-items: center;
@@ -48,6 +49,42 @@ const Button = styled.button`
   color: white;
 
   border: none;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+
+  &.mining {
+    background: #f29f6d;
+    box-shadow:
+      0px 4px 8px -2px rgba(242, 159, 109, 0.48),
+      0px 4px 8px 3px rgba(242, 159, 109, 0.21),
+      inset 0px 4px 10px 3px rgba(250, 240, 228, 0.21);
+
+    &::after {
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      content: "";
+      position: absolute;
+      inset: -4px; /* ring thickness */
+      border-radius: 50%;
+      padding: 4px;
+      background: conic-gradient(
+        transparent 0deg,
+        rgba(255, 255, 255, 0.9) 60deg,
+        transparent 120deg
+      );
+      mask: radial-gradient(
+        farthest-side,
+        transparent calc(100% - 4px),
+        white 0
+      );
+      animation: spin 1s ease-in-out infinite;
+    }
+  }
 `;
 
 const Progress = styled.div`
@@ -65,7 +102,7 @@ const Progress = styled.div`
 const ProgressBar = styled.div`
   height: 8px;
   border-radius: 4px;
-  background-color: #295860;
+  background-color: #f29f6d;
   display: flex;
   flex-direction: row;
   align-items: center;
@@ -124,6 +161,7 @@ export const Miner = () => {
       }
 
       setIsSubmitting(true);
+      console.log(mining.nextBlockData);
 
       try {
         await Api.submitBlock(blockData.team, {
@@ -132,8 +170,10 @@ export const Miner = () => {
           identity: identity,
           nonce: blockData.nonce,
           hash: blockData.hash,
+          data: mining.nextBlockData ?? undefined,
         });
         setLastSubmittedHash(blockData.hash);
+        mining.clearNextBlockData();
         return true;
       } catch {
         return false;
@@ -141,7 +181,7 @@ export const Miner = () => {
         setIsSubmitting(false);
       }
     },
-    [identity, lastSubmittedHash],
+    [identity, lastSubmittedHash, mining.nextBlockData],
   );
 
   const start = useCallback(async () => {
@@ -150,9 +190,14 @@ export const Miner = () => {
     }
 
     setAutoMine(true);
-    const t = target ?? (await fetchTarget());
-    if (!t) return;
-    mining.startMining({ ...t, player, team });
+    if (target) {
+      return mining.startMining({ ...target, player, team });
+    }
+
+    const t = await fetchTarget();
+    if (t) {
+      mining.startMining({ ...t, player, team });
+    }
   }, [fetchTarget, mining, target, player, team]);
 
   const stop = useCallback(() => {
@@ -309,11 +354,17 @@ export const Miner = () => {
 
   return (
     <Div>
-      <Button onClick={mining.isMining ? stop : start}>
+      <Button
+        onClick={mining.isMining ? stop : start}
+        className={mining.isMining ? "mining" : ""}
+      >
         {mining.isMining ? <Pause /> : <Play />}
       </Button>
       <Progress>
-        <ProgressBar style={{ width: `${progressWidth.toFixed(1)}%` }} />
+        <ProgressBar
+          style={{ width: `${progressWidth.toFixed(1)}%` }}
+          className={mining.isMining ? "mining" : ""}
+        />
       </Progress>
     </Div>
   );

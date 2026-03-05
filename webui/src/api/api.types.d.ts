@@ -67,3 +67,11 @@ export type Block = {
   message?: string;
   data?: Record<string, unknown>;
 };
+
+export type ChatMessageAPIResponse = {
+  hashCode: string;
+  player: string;
+  team: string;
+  identity: string;
+  message: string;
+};

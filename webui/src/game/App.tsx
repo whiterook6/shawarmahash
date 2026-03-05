@@ -1,12 +1,10 @@
+import { Check, Medal, X } from "lucide-react";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { BroadcastContext } from "../broadcast/broadcast.context";
-import { IdentityContext } from "../identity/identity.context";
 import type { ScoresUpdateMessage } from "../broadcast/broadcast.types";
-import { Input } from "../components/Input";
+import { Chat } from "../chat/Chat";
 import { IconButton } from "../components/Button";
-import { Row } from "../components/Row";
-import { Table, TBody, TD, TH, THead, TR } from "../components/Table";
-import { Miner } from "./Miner";
+import { Input } from "../components/Input";
 import {
   BottomCenterPanel,
   BottomLeftPanel,
@@ -17,8 +15,11 @@ import {
   RightPanel,
 } from "../components/Layout";
 import { Panel } from "../components/Panel";
+import { Row } from "../components/Row";
 import { Stack } from "../components/Stack";
-import { Medal } from "lucide-react";
+import { Table, TBody, TD, TH, THead, TR } from "../components/Table";
+import { IdentityContext } from "../identity/identity.context";
+import { Miner } from "./Miner";
 
 export const App = () => {
   const [leaderboard, setLeaderboard] = useState<
@@ -169,18 +170,21 @@ export const App = () => {
         <h2>Middle Panel</h2>
       </MiddlePanel>
       <RightPanel>
-        <Panel>
-          <h2>Team{team ? `: ${team}` : ""}</h2>
-          <h3>Online Now</h3>
-          <Table>
-            <THead>
-              <TR>
-                <TH>Name</TH>
-                <TH>Score</TH>
-              </TR>
-            </THead>
-          </Table>
-        </Panel>
+        <Stack>
+          <Panel>
+            <h2>Team{team ? `: ${team}` : ""}</h2>
+            <h3>Online Now</h3>
+            <Table>
+              <THead>
+                <TR>
+                  <TH>Name</TH>
+                  <TH>Score</TH>
+                </TR>
+              </THead>
+            </Table>
+          </Panel>
+          <Chat />
+        </Stack>
       </RightPanel>
       <BottomLeftPanel>
         <Panel>
@@ -193,8 +197,12 @@ export const App = () => {
               onChange={onChangePlayerName}
               maxLength={3}
             />
-            <IconButton onClick={onSavePlayerName}>✔</IconButton>
-            <IconButton onClick={onCancelPlayerName}>✖</IconButton>
+            <IconButton onClick={onSavePlayerName}>
+              <Check size={16} />
+            </IconButton>
+            <IconButton onClick={onCancelPlayerName}>
+              <X size={16} />
+            </IconButton>
           </Row>
         </Panel>
       </BottomLeftPanel>
@@ -212,8 +220,12 @@ export const App = () => {
               onChange={onChangeTeamName}
               maxLength={3}
             />
-            <IconButton onClick={onSaveTeamName}>✔</IconButton>
-            <IconButton onClick={onCancelTeamName}>✖</IconButton>
+            <IconButton onClick={onSaveTeamName}>
+              <Check size={16} />
+            </IconButton>
+            <IconButton onClick={onCancelTeamName}>
+              <X size={16} />
+            </IconButton>
           </Row>
         </Panel>
       </BottomRightPanel>

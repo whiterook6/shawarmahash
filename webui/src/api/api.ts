@@ -1,5 +1,6 @@
 import type {
   ChainStateAPIResponse,
+  ChatMessageAPIResponse,
   HealthAPIResponse,
   IdentityAPIResponse,
   PlayerScoreByIdentityAPIResponse,
@@ -52,6 +53,22 @@ export const Api = {
 
   getTeamPlayers: async (team: string): Promise<string[]> => {
     return Api.__get<string[]>(`/api/teams/${team}/players`);
+  },
+
+  getPublicChatMessages: async (): Promise<ChatMessageAPIResponse[]> => {
+    return Api.__get<ChatMessageAPIResponse[]>("/api/chat/public");
+  },
+
+  getTeamChatMessages: async (
+    team: string,
+  ): Promise<ChatMessageAPIResponse[]> => {
+    return Api.__get<ChatMessageAPIResponse[]>(`/api/chat/teams/${team}`);
+  },
+
+  getPlayerChatMessages: async (
+    player: string,
+  ): Promise<ChatMessageAPIResponse[]> => {
+    return Api.__get<ChatMessageAPIResponse[]>(`/api/chat/players/${player}`);
   },
 
   getTeam: async (team: string): Promise<TeamMiningTargetAPIResponse> => {

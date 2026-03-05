@@ -44,11 +44,12 @@ export type ScoresUpdateMessage = {
 };
 
 /**
- * Chat message received: sent when a chat message is received (player, team, identity, message).
+ * Chat message received: sent when a chat message is received (block hash, player, team, identity, message).
  */
 export type ChatMessageReceivedMessage = {
   type: "chat_message_received";
   payload: {
+    hashCode: string;
     player: string;
     team: string;
     identity: string;
