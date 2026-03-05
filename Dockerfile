@@ -46,6 +46,9 @@ RUN yarn install --frozen-lockfile --production
 # Copy built server from builder
 COPY --from=server-builder /app/server/output ./output
 
+# Copy migrations (needed at runtime for database.runMigrations())
+COPY --from=server-builder /app/server/src/database/migrations ./src/database/migrations
+
 # Copy built webui from builder
 COPY --from=webui-builder /app/webui/dist ./webui/dist
 
