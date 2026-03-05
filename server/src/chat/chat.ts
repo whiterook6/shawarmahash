@@ -40,13 +40,15 @@ export class Chat {
       message: string;
     }[];
 
-    return rows.map((row) => ({
-      hashCode: row.id,
-      player: row.from_player,
-      team: row.from_team,
-      identity: row.from_identity,
-      message: row.message,
-    }));
+    return rows
+      .map((row) => ({
+        hashCode: row.id,
+        player: row.from_player,
+        team: row.from_team,
+        identity: row.from_identity,
+        message: row.message,
+      }))
+      .reverse();
   }
 
   getPublicChatMessages(): ChatMessage[] {
@@ -70,13 +72,15 @@ export class Chat {
       message: string;
     }[];
 
-    return rows.map((row) => ({
-      hashCode: row.id,
-      player: row.from_player,
-      team: row.from_team,
-      identity: row.from_identity,
-      message: row.message,
-    }));
+    return rows
+      .map((row) => ({
+        hashCode: row.id,
+        player: row.from_player,
+        team: row.from_team,
+        identity: row.from_identity,
+        message: row.message,
+      }))
+      .reverse();
   }
 
   getPlayerChatMessages(player: string): ChatMessage[] {
@@ -100,13 +104,15 @@ export class Chat {
       message: string;
     }[];
 
-    return rows.map((row) => ({
-      hashCode: row.id,
-      player: row.from_player,
-      team: row.from_team,
-      identity: row.from_identity,
-      message: row.message,
-    }));
+    return rows
+      .map((row) => ({
+        hashCode: row.id,
+        player: row.from_player,
+        team: row.from_team,
+        identity: row.from_identity,
+        message: row.message,
+      }))
+      .reverse();
   }
 
   handleChatMessage(message: string, block: Block): void {
@@ -118,7 +124,7 @@ export class Chat {
       return;
     }
 
-    const chatMessage = this.convertBlockToChatMessage(block);
+    const chatMessage = this.convertBlockToChatMessage(message, block);
 
     const team = this.isTeamMessage(message);
     if (team) {
@@ -205,13 +211,16 @@ export class Chat {
     return undefined;
   }
 
-  private convertBlockToChatMessage(block: Block): ChatMessage {
+  private convertBlockToChatMessage(
+    message: string,
+    block: Block,
+  ): ChatMessage {
     return {
       hashCode: block.hash,
       player: block.player,
       team: block.team,
       identity: block.identity,
-      message: block.data!.message as string,
+      message,
     };
   }
 }

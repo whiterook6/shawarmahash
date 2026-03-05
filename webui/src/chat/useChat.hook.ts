@@ -54,6 +54,9 @@ export const useChat = (props: {
   const teamRef = useRef(props.team);
   const playerRef = useRef(props.player);
 
+  /**
+   * Messages are stored in reading order, most recent last, up to 25 most recent messages.
+   */
   const [messages, setMessages] = useState<ReturnType>({
     public: [],
     team: [],
@@ -71,7 +74,7 @@ export const useChat = (props: {
     }
 
     void Promise.all([
-      Api.getPublicChatMessages(),
+      Api.getPublicChatMessages(), // in reading order, the most recent 25 messages
       Api.getTeamChatMessages(team),
       Api.getPlayerChatMessages(player),
     ]).then(([publicRes, teamRes, playerRes]) => {
