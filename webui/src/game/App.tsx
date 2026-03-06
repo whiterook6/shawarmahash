@@ -55,6 +55,13 @@ export const App = () => {
   const activePlayers = leaderboard?.activePlayerScores ?? [];
   const activeTeams = leaderboard?.activeTeamScores ?? [];
 
+  const NAME_REGEX = /^[A-Z]{3}$/;
+  const sanitizeName = (value: string) =>
+    value
+      .replace(/[^A-Za-z]/g, "")
+      .toUpperCase()
+      .slice(0, 3);
+
   const [form, setForm] = useState<{
     newTeamName: string;
     newPlayerName: string;
@@ -62,9 +69,12 @@ export const App = () => {
     newTeamName: "",
     newPlayerName: "",
   });
+  const isPlayerNameValid = NAME_REGEX.test(form.newPlayerName);
+  const isTeamNameValid = NAME_REGEX.test(form.newTeamName);
+
   const onChangeTeamName = (e: { target: { value: string } }) => {
     setForm((f) => ({
-      newTeamName: e.target.value,
+      newTeamName: sanitizeName(e.target.value),
       newPlayerName: f.newPlayerName,
     }));
   };
@@ -75,15 +85,16 @@ export const App = () => {
     }));
   }, []);
   const onSaveTeamName = useCallback(() => {
-    if (form.newTeamName.length === 3) {
+    if (isTeamNameValid) {
       setTeam(form.newTeamName);
+      setForm((f) => ({ ...f, newTeamName: "" }));
     }
-  }, [form.newTeamName, setTeam]);
+  }, [form.newTeamName, isTeamNameValid, setTeam]);
 
   const onChangePlayerName = (e: { target: { value: string } }) => {
     setForm((f) => ({
       newTeamName: f.newTeamName,
-      newPlayerName: e.target.value,
+      newPlayerName: sanitizeName(e.target.value),
     }));
   };
   const onCancelPlayerName = useCallback(() => {
@@ -93,10 +104,11 @@ export const App = () => {
     }));
   }, []);
   const onSavePlayerName = useCallback(() => {
-    if (form.newPlayerName.length === 3) {
+    if (isPlayerNameValid) {
       setPlayer(form.newPlayerName);
+      setForm((f) => ({ ...f, newPlayerName: "" }));
     }
-  }, [form.newPlayerName, setPlayer]);
+  }, [form.newPlayerName, isPlayerNameValid, setPlayer]);
 
   return (
     <Layout>
@@ -196,8 +208,12 @@ export const App = () => {
               value={form.newPlayerName}
               onChange={onChangePlayerName}
               maxLength={3}
+              pattern="[A-Z]{3}"
             />
-            <IconButton onClick={onSavePlayerName}>
+            <IconButton
+              onClick={onSavePlayerName}
+              disabled={!isPlayerNameValid}
+            >
               <Check size={16} />
             </IconButton>
             <IconButton onClick={onCancelPlayerName}>
@@ -219,8 +235,9 @@ export const App = () => {
               value={form.newTeamName}
               onChange={onChangeTeamName}
               maxLength={3}
+              pattern="[A-Z]{3}"
             />
-            <IconButton onClick={onSaveTeamName}>
+            <IconButton onClick={onSaveTeamName} disabled={!isTeamNameValid}>
               <Check size={16} />
             </IconButton>
             <IconButton onClick={onCancelTeamName}>

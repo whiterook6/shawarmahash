@@ -201,7 +201,8 @@ export class Game {
     nonce: number;
     data?: Record<string, unknown>;
   }): Promise<{ recent: Block[]; difficulty: string }> {
-    const { team, previousHash, identity } = args;
+    const { team, previousHash } = args;
+
     const isGenesisBlock = previousHash === Block.GENESIS_PREVIOUS_HASH;
 
     const chainExists = this.chains.has(team);
@@ -218,7 +219,6 @@ export class Game {
         ...args,
         index: 0,
         timestamp: Timestamp.now(),
-        identity,
         data: args.data,
       };
 

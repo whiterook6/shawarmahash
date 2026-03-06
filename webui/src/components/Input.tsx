@@ -7,4 +7,10 @@ export const Input = styled.input`
   border: none;
   border-radius: 4px;
   color: #583b25;
+  outline: 2px solid transparent;
+  transition: outline 0.2s ease-in-out;
+
+  &:invalid {
+    outline: 2px solid red;
+  }
 `;
