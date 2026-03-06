@@ -322,4 +322,91 @@ describe("Server", () => {
       expect(response.statusCode).toBe(200);
     });
   });
+
+  describe("POST /api/teams/:team/chain - player/team name validation", () => {
+    const validPayload = {
+      previousHash: "ffffffffffffffffffffffffffffffff",
+      player: "AAA",
+      identity: "b989bcb4a39c769d",
+      nonce: 1,
+      hash: "ffff0000000000000000000000000000",
+    };
+
+    test("Rejects body.player with 2 characters", async () => {
+      const response = await server.inject({
+        method: "POST",
+        url: "/api/teams/TST/chain",
+        payload: { ...validPayload, player: "AB" },
+      });
+      expect(response.statusCode).toBe(400);
+      const body = response.json();
+      expect(body).toHaveProperty("validationErrors");
+    });
+
+    test("Rejects body.player with 4 characters", async () => {
+      const response = await server.inject({
+        method: "POST",
+        url: "/api/teams/TST/chain",
+        payload: { ...validPayload, player: "abcd" },
+      });
+      expect(response.statusCode).toBe(400);
+      const body = response.json();
+      expect(body).toHaveProperty("validationErrors");
+    });
+
+    test("Rejects body.player with numbers", async () => {
+      const response = await server.inject({
+        method: "POST",
+        url: "/api/teams/TST/chain",
+        payload: { ...validPayload, player: "a1b" },
+      });
+      expect(response.statusCode).toBe(400);
+      const body = response.json();
+      expect(body).toHaveProperty("validationErrors");
+    });
+
+    test("Rejects body.player that is all digits", async () => {
+      const response = await server.inject({
+        method: "POST",
+        url: "/api/teams/TST/chain",
+        payload: { ...validPayload, player: "123" },
+      });
+      expect(response.statusCode).toBe(400);
+      const body = response.json();
+      expect(body).toHaveProperty("validationErrors");
+    });
+
+    test("Rejects body.player with lowercase letters", async () => {
+      const response = await server.inject({
+        method: "POST",
+        url: "/api/teams/TST/chain",
+        payload: { ...validPayload, player: "abc" },
+      });
+      expect(response.statusCode).toBe(400);
+      const body = response.json();
+      expect(body).toHaveProperty("validationErrors");
+    });
+
+    test("Rejects params.team with 2 characters", async () => {
+      const response = await server.inject({
+        method: "POST",
+        url: "/api/teams/ab/chain",
+        payload: validPayload,
+      });
+      expect(response.statusCode).toBe(400);
+      const body = response.json();
+      expect(body).toHaveProperty("validationErrors");
+    });
+
+    test("Rejects params.team with digits", async () => {
+      const response = await server.inject({
+        method: "POST",
+        url: "/api/teams/123/chain",
+        payload: validPayload,
+      });
+      expect(response.statusCode).toBe(400);
+      const body = response.json();
+      expect(body).toHaveProperty("validationErrors");
+    });
+  });
 });

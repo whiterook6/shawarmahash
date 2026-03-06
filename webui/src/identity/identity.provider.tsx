@@ -12,17 +12,20 @@ export const IdentityProvider = ({
   const [identityPromise, setIdentityPromise] = useState<
     Promise<IdentityAPIResponse> | undefined
   >();
+  const NAME_REGEX = /^[A-Z]{3}$/;
   const [state, setState] = useState<{ team: string; player: string }>({
     team: "TST",
     player: "TIM",
   });
   const setTeam = useCallback((team: string) => {
+    if (!NAME_REGEX.test(team)) return;
     setState((old) => ({
       ...old,
       team,
     }));
   }, []);
   const setPlayer = useCallback((player: string) => {
+    if (!NAME_REGEX.test(player)) return;
     setState((old) => ({
       ...old,
       player,
