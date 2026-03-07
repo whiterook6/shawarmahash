@@ -1,4 +1,5 @@
 import { describe, it } from "node:test";
+import { join } from "node:path";
 import expect from "expect";
 import { Chat } from "./chat";
 import { DatabaseController } from "../database/database.controller";
@@ -6,7 +7,10 @@ import { BlockFaker } from "../block/block.faker";
 
 async function createTestDatabase(): Promise<DatabaseController> {
   const database = new DatabaseController(":memory:");
-  await database.runMigrations();
+  database.createMigrationsTable();
+  await database.runMigrations(
+    join(process.cwd(), "src", "database", "migrations"),
+  );
   return database;
 }
 

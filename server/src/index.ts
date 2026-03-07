@@ -14,11 +14,12 @@ const start = async () => {
   EnvController.verifyEnv();
   EnvController.printENV();
 
-  // Load player chains from data directory
-  const database = new DatabaseController(
-    join(process.cwd(), "data", "database.sqlite"),
-  );
-  await database.runMigrations();
+  const databasePath = EnvController.env.DATABASE_PATH;
+  const migrationsPath = join(process.cwd(), "src", "database", "migrations");
+
+  const database = new DatabaseController(databasePath);
+  database.createMigrationsTable();
+  await database.runMigrations(migrationsPath);
   const data = new Data(database);
   const chains = data.loadAllChains();
 

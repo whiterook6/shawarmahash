@@ -22,16 +22,20 @@ describe("Server", () => {
   before(async () => {
     // Tests don't call EnvController.verifyEnv(), so seed the minimum env needed
     // for routes that use it (cookies, derived identity, etc).
+    directory = await mkdtemp(join(tmpdir(), "shawarmahash-"));
     EnvController.env = {
       GIT_HASH: "test-githash",
       NODE_ENV: "development",
       IDENTITY_SECRET: "test-secret",
+      DATABASE_PATH: join(directory, "database.sqlite"),
     };
-    directory = await mkdtemp(join(tmpdir(), "shawarmahash-"));
 
     broadcast = new Broadcast();
-    database = new DatabaseController(join(directory, "database.sqlite"));
-    await database.runMigrations();
+    database = new DatabaseController(EnvController.env.DATABASE_PATH);
+    database.createMigrationsTable();
+    await database.runMigrations(
+      join(process.cwd(), "src", "database", "migrations"),
+    );
 
     game = new Game();
     game.setChains(new Map());
