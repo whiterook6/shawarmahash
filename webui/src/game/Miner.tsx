@@ -151,7 +151,7 @@ export const Miner = () => {
       player: string;
       nonce: number;
     }) => {
-      if (!identity) {
+      if (!identity || !player || !team) {
         return false;
       }
 
@@ -161,10 +161,9 @@ export const Miner = () => {
       }
 
       setIsSubmitting(true);
-      console.log(mining.nextBlockData);
 
       try {
-        await Api.submitBlock(blockData.team, {
+        const response = await Api.submitBlock(blockData.team, {
           previousHash: blockData.previousHash,
           player: blockData.player,
           identity: identity,
@@ -174,14 +173,38 @@ export const Miner = () => {
         });
         setLastSubmittedHash(blockData.hash);
         mining.clearNextBlockData();
+        // Derive new target from submit response so we can resume mining without refetching
+        if (response.recent.length > 0) {
+          const lastBlock = response.recent[response.recent.length - 1];
+          setTarget({
+            team: response.team,
+            previousHash: lastBlock.hash,
+            previousTimestamp: lastBlock.timestamp,
+            difficulty: response.difficulty,
+          });
+        }
         return true;
       } catch {
+        // On failed submit, refetch target and resume mining with fresh target
+        const t = await fetchTarget();
+        if (t) {
+          mining.startMining({ ...t, player, team });
+        }
         return false;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [identity, lastSubmittedHash, mining.nextBlockData],
+    [
+      identity,
+      lastSubmittedHash,
+      mining.nextBlockData,
+      mining.clearNextBlockData,
+      mining.startMining,
+      fetchTarget,
+      player,
+      team,
+    ],
   );
 
   const start = useCallback(async () => {
@@ -219,7 +242,8 @@ export const Miner = () => {
   // Track the last block we restarted mining for to prevent loops
   const lastRestartedHashRef = useRef<string | null>(null);
 
-  // After a block is successfully submitted, restart mining if autoMine is enabled
+  // After a block is successfully submitted, resume mining immediately with the new target
+  // (target was already set from submit response — no refetch)
   useEffect(() => {
     if (!lastSubmittedHash) {
       return;
@@ -239,25 +263,20 @@ export const Miner = () => {
       return;
     }
 
-    if (!player || !team) {
+    if (!player || !team || !target) {
       return;
     }
 
     lastRestartedHashRef.current = lastSubmittedHash;
-    void (async () => {
-      const t = await fetchTarget();
-      if (!t) {
-        return;
-      }
-      mining.startMining({ ...t, player, team });
-    })();
+    mining.startMining({ ...target, player, team });
   }, [
     autoMine,
-    fetchTarget,
     mining.startMining,
+    mining.lastSuccess,
     lastSubmittedHash,
     player,
     team,
+    target,
   ]);
 
   // Listen for broadcast block submissions to update target
