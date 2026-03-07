@@ -250,7 +250,7 @@ export class Game {
     const chainState = this.getChainState(team);
     if (this.broadcast) {
       const message: TeamCreatedMessage | BlockSubmittedMessage = {
-        type: isGenesisBlock ? "team_created" : "block_submitted",
+        type: isGenesisBlock ? "teamCreated" : "blockSubmitted",
         payload: {
           team,
           ...chainState,

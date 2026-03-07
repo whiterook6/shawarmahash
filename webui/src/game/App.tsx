@@ -41,8 +41,10 @@ export const App = () => {
     }
     connectBroadcast({ team, player, identity });
     const unsubscribe = subscribeBroadcast((message) => {
-      if (message.type === "scores_update") {
-        setLeaderboard(message.payload);
+      switch (message.type) {
+        case "scoresUpdate":
+          setLeaderboard(message.payload);
+          break;
       }
     });
     return () => {

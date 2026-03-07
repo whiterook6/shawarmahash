@@ -1,5 +1,6 @@
 import { Block } from "../block/block";
 import { Broadcast, TO_PLAYER, TO_TEAM } from "../broadcast/broadcast";
+import { ChatMessageReceivedMessage } from "../broadcast/broadcast.types";
 import { DatabaseController } from "../database/database.controller";
 import { ChatMessage } from "./chat.types";
 
@@ -125,33 +126,22 @@ export class Chat {
     }
 
     const chatMessage = this.convertBlockToChatMessage(message, block);
+    const messageBroadcast: ChatMessageReceivedMessage = {
+      type: "chatMessageReceived",
+      payload: chatMessage,
+    };
 
     const team = this.isTeamMessage(message);
     if (team) {
-      return this.broadcast.cast(
-        {
-          type: "chat_message_received",
-          payload: chatMessage,
-        },
-        TO_TEAM(team),
-      );
+      return this.broadcast.cast(messageBroadcast, TO_TEAM(team));
     }
 
     const player = this.isPlayerMessage(message);
     if (player) {
-      return this.broadcast.cast(
-        {
-          type: "chat_message_received",
-          payload: chatMessage,
-        },
-        TO_PLAYER(player),
-      );
+      return this.broadcast.cast(messageBroadcast, TO_PLAYER(player));
     }
 
-    return this.broadcast.cast({
-      type: "chat_message_received",
-      payload: chatMessage,
-    });
+    return this.broadcast.cast(messageBroadcast);
   }
 
   insertMessage(block: Block, message: string): void {

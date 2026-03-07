@@ -91,7 +91,7 @@ export const useChat = (props: {
   // Subscribe to broadcast and append new chat messages
   useEffect(() => {
     const unsubscribe = subscribe((message) => {
-      if (message.type !== "chat_message_received") return;
+      if (message.type !== "chatMessageReceived") return;
 
       const payload = message.payload;
       const bucket = getBucketFromMessage(payload.message);

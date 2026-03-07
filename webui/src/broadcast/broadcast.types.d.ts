@@ -18,7 +18,7 @@ export type ConnectionMessage = {
  * Team created message sent when a genesis block is submitted (new team chain created)
  */
 export type TeamCreatedMessage = {
-  type: "team_created";
+  type: "teamCreated";
   payload: ChainStateAPIResponse;
 };
 
@@ -26,7 +26,7 @@ export type TeamCreatedMessage = {
  * Block submitted message sent when a regular block is submitted to an existing chain
  */
 export type BlockSubmittedMessage = {
-  type: "block_submitted";
+  type: "blockSubmitted";
   payload: ChainStateAPIResponse;
 };
 
@@ -34,7 +34,7 @@ export type BlockSubmittedMessage = {
  * Scores update message sent periodically by the announcer.
  */
 export type ScoresUpdateMessage = {
-  type: "scores_update";
+  type: "scoresUpdate";
   payload: {
     activeTeamScores: TeamWithScoreAPIResponse[];
     activePlayerScores: PlayerWithScoreAPIResponse[];
@@ -47,7 +47,7 @@ export type ScoresUpdateMessage = {
  * Chat message received: sent when a chat message is received (block hash, player, team, identity, message).
  */
 export type ChatMessageReceivedMessage = {
-  type: "chat_message_received";
+  type: "chatMessageReceived";
   payload: {
     hashCode: string;
     player: string;

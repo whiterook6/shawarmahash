@@ -67,7 +67,7 @@ export class Announcer {
     const topTeams = this.game.getTopTeams();
 
     const message: ScoresUpdateMessage = {
-      type: "scores_update",
+      type: "scoresUpdate",
       payload: {
         activeTeamScores,
         activePlayerScores,

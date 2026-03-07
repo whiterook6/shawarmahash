@@ -11,7 +11,7 @@ export type ConnectionMessage = {
 
 /** SSE message: team created (genesis block submitted) */
 export type TeamCreatedMessage = {
-  type: "team_created";
+  type: "teamCreated";
   payload: {
     team: string;
     recent: Block[];
@@ -21,7 +21,7 @@ export type TeamCreatedMessage = {
 
 /** SSE message: block submitted to existing chain */
 export type BlockSubmittedMessage = {
-  type: "block_submitted";
+  type: "blockSubmitted";
   payload: {
     team: string;
     recent: Block[];
@@ -31,7 +31,7 @@ export type BlockSubmittedMessage = {
 
 /** SSE message: scores update */
 export type ScoresUpdateMessage = {
-  type: "scores_update";
+  type: "scoresUpdate";
   payload: {
     activeTeamScores: TeamScore[];
     activePlayerScores: PlayerScore[];
@@ -42,7 +42,7 @@ export type ScoresUpdateMessage = {
 
 /** SSE message: chat message received */
 export type ChatMessageReceivedMessage = {
-  type: "chat_message_received";
+  type: "chatMessageReceived";
   payload: {
     player: string;
     team: string;
