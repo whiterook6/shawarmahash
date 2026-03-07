@@ -1,7 +1,10 @@
 import { Check, Medal, X } from "lucide-react";
 import { useCallback, useContext, useEffect, useState } from "react";
 import { BroadcastContext } from "../broadcast/broadcast.context";
-import type { ScoresUpdateMessage } from "../broadcast/broadcast.types";
+import type {
+  ActivePlayersMessage,
+  ScoresUpdateMessage,
+} from "../broadcast/broadcast.types";
 import { Chat } from "../chat/Chat";
 import { IconButton } from "../components/Button";
 import { Input } from "../components/Input";
@@ -25,6 +28,9 @@ export const App = () => {
   const [leaderboard, setLeaderboard] = useState<
     ScoresUpdateMessage["payload"] | null
   >(null);
+  const [activePlayers, setActivePlayers] = useState<
+    ActivePlayersMessage["payload"] | null
+  >(null);
 
   const broadcastContext = useContext(BroadcastContext);
   const {
@@ -34,6 +40,9 @@ export const App = () => {
   } = broadcastContext;
   const identityContext = useContext(IdentityContext);
   const { identity, team, player, setTeam, setPlayer } = identityContext;
+
+  const teamLiveNow =
+    activePlayers?.filter((player) => player.team === team) ?? [];
 
   useEffect(() => {
     if (!identity || !team || !player) {
@@ -45,6 +54,9 @@ export const App = () => {
         case "scoresUpdate":
           setLeaderboard(message.payload);
           break;
+        case "activePlayers":
+          setActivePlayers(message.payload);
+          break;
       }
     });
     return () => {
@@ -54,7 +66,7 @@ export const App = () => {
   }, [identity, team, player, connectBroadcast, disconnectBroadcast]);
 
   const topPlayers = leaderboard?.topPlayers?.slice(0, 5) ?? [];
-  const activePlayers = leaderboard?.activePlayerScores ?? [];
+  const activePlayerScores = leaderboard?.activePlayerScores ?? [];
   const activeTeams = leaderboard?.activeTeamScores ?? [];
 
   const NAME_REGEX = /^[A-Z]{3}$/;
@@ -132,7 +144,7 @@ export const App = () => {
               </THead>
               <TBody>
                 {topPlayers.map((player) => (
-                  <TR key={player.identity}>
+                  <TR key={`${player.identity}-${player.player}`}>
                     <TD>{player.player}</TD>
                     <TD>{player.score}</TD>
                   </TR>
@@ -150,8 +162,8 @@ export const App = () => {
                 </TR>
               </THead>
               <TBody>
-                {activePlayers.map((player) => (
-                  <TR key={player.identity}>
+                {activePlayerScores.map((player) => (
+                  <TR key={`${player.identity}-${player.player}`}>
                     <TD>{player.player}</TD>
                     <TD>{player.score}</TD>
                   </TR>
@@ -190,10 +202,12 @@ export const App = () => {
             <h3>Online Now</h3>
             <Table>
               <THead>
-                <TR>
-                  <TH>Name</TH>
-                  <TH>Score</TH>
-                </TR>
+                {teamLiveNow.map((player) => (
+                  <TR key={`${player.identity}-${player.player}`}>
+                    <TD>{player.player}</TD>
+                    <TD>{player.score}</TD>
+                  </TR>
+                ))}
               </THead>
             </Table>
           </Panel>

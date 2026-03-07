@@ -51,10 +51,22 @@ export type ChatMessageReceivedMessage = {
   };
 };
 
+/** SSE message: active players list (subscribers with scores) */
+export type ActivePlayersMessage = {
+  type: "activePlayers";
+  payload: Array<{
+    player: string;
+    team: string;
+    identity: string;
+    score: number;
+  }>;
+};
+
 /** Union of all SSE messages sent from server to UI */
 export type BroadcastMessage =
   | ConnectionMessage
   | TeamCreatedMessage
   | BlockSubmittedMessage
   | ScoresUpdateMessage
-  | ChatMessageReceivedMessage;
+  | ChatMessageReceivedMessage
+  | ActivePlayersMessage;

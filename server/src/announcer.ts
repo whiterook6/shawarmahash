@@ -1,5 +1,8 @@
 import { Broadcast } from "./broadcast/broadcast";
-import { ScoresUpdateMessage } from "./broadcast/broadcast.types";
+import {
+  ActivePlayersMessage,
+  ScoresUpdateMessage,
+} from "./broadcast/broadcast.types";
 import { Game } from "./game/game";
 import { Identity } from "./identity/identity";
 import { PlayerScore, TeamScore } from "./score/score";
@@ -66,7 +69,7 @@ export class Announcer {
     const topPlayers = this.game.getTopPlayers();
     const topTeams = this.game.getTopTeams();
 
-    const message: ScoresUpdateMessage = {
+    const scoresMessage: ScoresUpdateMessage = {
       type: "scoresUpdate",
       payload: {
         activeTeamScores,
@@ -75,6 +78,18 @@ export class Announcer {
         topTeams,
       },
     };
-    this.broadcast.cast(message);
+    this.broadcast.cast(scoresMessage);
+
+    const activePlayersPayload = this.broadcast.getActivePlayers().map((p) => ({
+      player: p.player,
+      team: p.team,
+      identity: p.identity,
+      score: this.game!.getPlayerScore(p.identity),
+    }));
+    const activePlayersMessage: ActivePlayersMessage = {
+      type: "activePlayers",
+      payload: activePlayersPayload,
+    };
+    this.broadcast.cast(activePlayersMessage);
   }
 }

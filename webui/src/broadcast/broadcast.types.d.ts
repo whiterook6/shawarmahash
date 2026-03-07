@@ -58,6 +58,19 @@ export type ChatMessageReceivedMessage = {
 };
 
 /**
+ * Active players list sent periodically (subscribers with scores).
+ */
+export type ActivePlayersMessage = {
+  type: "activePlayers";
+  payload: Array<{
+    player: string;
+    team: string;
+    identity: string;
+    score: number;
+  }>;
+};
+
+/**
  * Union type of all possible SSE messages from the server
  */
 export type BroadcastMessage =
@@ -65,7 +78,8 @@ export type BroadcastMessage =
   | TeamCreatedMessage
   | BlockSubmittedMessage
   | ScoresUpdateMessage
-  | ChatMessageReceivedMessage;
+  | ChatMessageReceivedMessage
+  | ActivePlayersMessage;
 
 /**
  * Callback function type for handling broadcast messages
