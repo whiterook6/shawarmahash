@@ -303,7 +303,7 @@ export const Miner = () => {
   useEffect(() => {
     const onMessage = (message: BroadcastMessage) => {
       switch (message.type) {
-        case "block_submitted":
+        case "blockSubmitted":
           onBlockSubmittedRef.current(message);
           break;
       }
