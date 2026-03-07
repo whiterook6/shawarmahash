@@ -4,28 +4,18 @@ import { DatabaseSync, StatementSync } from "node:sqlite";
 
 export class DatabaseController {
   private database: DatabaseSync;
-  private migrationsPath: string;
 
   private SELECT_1: StatementSync;
-  private SELECT_MIGRATIONS: StatementSync;
-  private INSERT_MIGRATION: StatementSync;
+  /** Prepared after createMigrationsTable() is called. */
+  private SELECT_MIGRATIONS!: StatementSync;
+  /** Prepared after createMigrationsTable() is called. */
+  private INSERT_MIGRATION!: StatementSync;
   private isInTransaction: boolean = false;
 
-  constructor(
-    databasePath: string,
-    migrationsPath = join(process.cwd(), "src", "database", "migrations"),
-  ) {
+  constructor(databasePath: string) {
     this.database = new DatabaseSync(databasePath);
-    this.migrationsPath = migrationsPath;
-    this.createMigrationsTable();
     this.database.exec("PRAGMA foreign_keys = ON");
     this.SELECT_1 = this.database.prepare("SELECT 1");
-    this.SELECT_MIGRATIONS = this.database.prepare(
-      "SELECT filename FROM migrations",
-    );
-    this.INSERT_MIGRATION = this.database.prepare(
-      "INSERT INTO migrations (filename, applied_at) VALUES (?, unixepoch())",
-    );
   }
 
   transaction(fn: () => void): void {
@@ -63,6 +53,12 @@ export class DatabaseController {
       filename TEXT NOT NULL PRIMARY KEY,
       applied_at INTEGER NOT NULL DEFAULT (unixepoch())
     )`);
+    this.SELECT_MIGRATIONS = this.database.prepare(
+      "SELECT filename FROM migrations",
+    );
+    this.INSERT_MIGRATION = this.database.prepare(
+      "INSERT INTO migrations (filename, applied_at) VALUES (?, unixepoch())",
+    );
   }
 
   getExistingMigrations(): string[] {
@@ -70,37 +66,37 @@ export class DatabaseController {
     return rows.map((r) => r.filename).sort();
   }
 
-  async getAllMigrationsInDirectory(): Promise<string[]> {
-    const entries = await readdir(this.migrationsPath, { withFileTypes: true });
+  async getAllMigrationsInDirectory(migrationsPath: string): Promise<string[]> {
+    const entries = await readdir(migrationsPath, { withFileTypes: true });
     return entries
       .filter((e) => e.isFile() && e.name.endsWith(".sql"))
       .map((e) => e.name)
       .sort();
   }
 
-  async getPendingMigrations(): Promise<string[]> {
+  async getPendingMigrations(migrationsPath: string): Promise<string[]> {
     const existing = this.getExistingMigrations();
     const existingSet = new Set(existing);
-    const all = await this.getAllMigrationsInDirectory();
+    const all = await this.getAllMigrationsInDirectory(migrationsPath);
     return all.filter((f) => !existingSet.has(f));
   }
 
-  async getMigrationStatus(): Promise<{
+  async getMigrationStatus(migrationsPath: string): Promise<{
     applied: string[];
     pending: string[];
   }> {
     const applied = this.getExistingMigrations();
-    const all = await this.getAllMigrationsInDirectory();
+    const all = await this.getAllMigrationsInDirectory(migrationsPath);
     const existingSet = new Set(applied);
     const pending = all.filter((f) => !existingSet.has(f));
     return { applied, pending };
   }
 
-  async runMigrations(): Promise<void> {
-    const pending = await this.getPendingMigrations();
+  async runMigrations(migrationsPath: string): Promise<void> {
+    const pending = await this.getPendingMigrations(migrationsPath);
 
     for (const filename of pending) {
-      const filePath = join(this.migrationsPath, filename);
+      const filePath = join(migrationsPath, filename);
       const sql = await readFile(filePath, "utf-8");
 
       this.transaction(() => {

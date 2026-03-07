@@ -16,6 +16,7 @@ services:
       - IDENTITY_SECRET=${IDENTITY_SECRET:?IDENTITY_SECRET is required}
       - HEALTHCHECK_PING_URL=${HEALTHCHECK_PING_URL:?HEALTHCHECK_PING_URL is required}
       - WEBUI_DIST_PATH=/app/webui/dist
+      - DATABASE_PATH=/app/data/database.sqlite
     volumes:
       # Persist chain data
       - shawarmahash-data:/app/data

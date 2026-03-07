@@ -25,10 +25,12 @@ const run = async () => {
   const dryRun = argv.dry;
 
   const migrationsPath = join(process.cwd(), "src", "database", "migrations");
-  const controller = new DatabaseController(databasePath, migrationsPath);
+  const controller = new DatabaseController(databasePath);
+  controller.createMigrationsTable();
 
   try {
-    const { applied, pending } = await controller.getMigrationStatus();
+    const { applied, pending } =
+      await controller.getMigrationStatus(migrationsPath);
 
     console.log("Applied migrations:");
     if (applied.length === 0) {
@@ -55,7 +57,7 @@ const run = async () => {
 
     if (pending.length > 0) {
       console.log("\nRunning pending migrations...");
-      await controller.runMigrations();
+      await controller.runMigrations(migrationsPath);
       console.log(`Done. Applied ${pending.length} migration(s).`);
     }
   } finally {

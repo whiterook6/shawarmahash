@@ -1,9 +1,17 @@
 import dotenv from "dotenv";
+import { isAbsolute, join } from "node:path";
+
+/** Resolves a database path (absolute or relative to process.cwd()) to an absolute path. */
+export function resolveDatabasePath(raw: string): string {
+  return isAbsolute(raw) ? raw : join(process.cwd(), raw);
+}
 
 export type ENV = {
   GIT_HASH: string;
   NODE_ENV: "development" | "production";
   IDENTITY_SECRET: string;
+  /** Path to the SQLite database file (absolute). Required. */
+  DATABASE_PATH: string;
   /** Optional Healthchecks.io (or compatible) ping URL; if set, server pings it every minute */
   HEALTHCHECK_PING_URL?: string;
 };
@@ -12,7 +20,12 @@ export const EnvController = {
   env: {} as ENV,
   verifyEnv: () => {
     dotenv.config();
-    for (const key of ["GIT_HASH", "NODE_ENV", "IDENTITY_SECRET"]) {
+    for (const key of [
+      "GIT_HASH",
+      "NODE_ENV",
+      "IDENTITY_SECRET",
+      "DATABASE_PATH",
+    ]) {
       if (!process.env[key]) {
         throw new Error(`${key} is not set`);
       }
@@ -23,10 +36,14 @@ export const EnvController = {
     ) {
       throw new Error(`NODE_ENV must be either development or production`);
     }
+    const rawDbPath = process.env.DATABASE_PATH!;
+    const databasePath = resolveDatabasePath(rawDbPath);
+
     EnvController.env = {
       GIT_HASH: process.env.GIT_HASH!,
       NODE_ENV: process.env.NODE_ENV!,
       IDENTITY_SECRET: process.env.IDENTITY_SECRET!,
+      DATABASE_PATH: databasePath,
       ...(process.env.HEALTHCHECK_PING_URL && {
         HEALTHCHECK_PING_URL: process.env.HEALTHCHECK_PING_URL,
       }),
@@ -40,6 +57,7 @@ export const EnvController = {
           NODE_ENV: EnvController.env.NODE_ENV,
           IDENTITY_SECRET:
             EnvController.env.IDENTITY_SECRET.substring(0, 3) + "...",
+          DATABASE_PATH: EnvController.env.DATABASE_PATH,
           HEALTHCHECK_PING_URL:
             EnvController.env.HEALTHCHECK_PING_URL ?? "not configured",
         },

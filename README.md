@@ -30,6 +30,21 @@ The server requires the following environment variables (set in `server/.env` or
 - `IDENTITY_SECRET`: Secret key for identity token generation (required)
 - `GIT_HASH`: Git commit hash (optional, defaults to "not set")
 - `WEBUI_DIST_PATH`: Path to webui dist directory (optional, only needed for custom deployments)
+- `DATABASE_PATH`: Path to the SQLite database file (required). See [Database file location](#database-file-location) below.
+
+#### Database file location
+
+The server stores chain and game data in a single SQLite file. You must set `DATABASE_PATH`:
+
+- **Relative path** (e.g. `./data/database.sqlite` or `data/database.sqlite`): Resolved relative to the process working directory. When you run `node output/index.js` from the `server/` directory, use e.g. `./data/database.sqlite` so the file is created at `server/data/database.sqlite`.
+- **Absolute path** (e.g. `/app/data/database.sqlite`): Used as-is; used in Docker so the file lives on the mounted volume.
+
+**Local development** (from `server/`): set in `server/.env` for example:
+```bash
+DATABASE_PATH=./data/database.sqlite
+```
+
+**Docker**: `docker-compose.yml` sets `DATABASE_PATH=/app/data/database.sqlite` so the database is stored in the `shawarmahash-data` volume. Do not change this unless you adjust the volume mount as well.
 
 ### Development Mode
 
