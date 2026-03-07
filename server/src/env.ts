@@ -1,6 +1,10 @@
 import dotenv from "dotenv";
-import { isAbsolute } from "node:path";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
+
+/** Resolves a database path (absolute or relative to process.cwd()) to an absolute path. */
+export function resolveDatabasePath(raw: string): string {
+  return isAbsolute(raw) ? raw : join(process.cwd(), raw);
+}
 
 export type ENV = {
   GIT_HASH: string;
@@ -33,9 +37,7 @@ export const EnvController = {
       throw new Error(`NODE_ENV must be either development or production`);
     }
     const rawDbPath = process.env.DATABASE_PATH!;
-    const databasePath = isAbsolute(rawDbPath)
-      ? rawDbPath
-      : join(process.cwd(), rawDbPath);
+    const databasePath = resolveDatabasePath(rawDbPath);
 
     EnvController.env = {
       GIT_HASH: process.env.GIT_HASH!,

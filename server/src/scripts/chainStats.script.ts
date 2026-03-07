@@ -1,21 +1,17 @@
 import dotenv from "dotenv";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { join, isAbsolute } from "path";
-
-dotenv.config();
+import { join } from "path";
 import { Data } from "../data/data";
 import { Chain } from "../chain/chain";
 import { Difficulty } from "../difficulty/difficulty";
 import { DatabaseController } from "../database/database.controller";
-
-function getDatabasePath(): string {
-  const raw = process.env.DATABASE_PATH ?? "data/database.sqlite";
-  return isAbsolute(raw) ? raw : join(process.cwd(), raw);
-}
+import { EnvController } from "../env";
 
 const run = async () => {
-  // Parse command line arguments
+  dotenv.config();
+  EnvController.verifyEnv();
+
   const argv = await yargs(hideBin(process.argv))
     .scriptName("chainStats")
     .usage("$0 [options]")
@@ -29,8 +25,7 @@ const run = async () => {
     .parse();
 
   const team = argv.team;
-
-  const databasePath = getDatabasePath();
+  const databasePath = EnvController.env.DATABASE_PATH;
   const migrationsPath = join(process.cwd(), "src", "database", "migrations");
   const database = new DatabaseController(databasePath);
   database.createMigrationsTable();
