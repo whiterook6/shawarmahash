@@ -182,6 +182,12 @@ export const Miner = () => {
             previousTimestamp: lastBlock.timestamp,
             difficulty: response.difficulty,
           });
+        } else {
+          // Server returned empty recent; fall back to refetch so restart effect has a valid target
+          const t = await fetchTarget();
+          if (t) {
+            setTarget(t);
+          }
         }
         return true;
       } catch {
