@@ -24,11 +24,27 @@ async function withRateLimitRetry(
   if (response.status !== RATE_LIMIT_STATUS) {
     return response;
   }
+
+  // parse the Retry-After header
   const retryAfter = response.headers.get("Retry-After");
-  const ms = retryAfter
-    ? Math.max(0, parseInt(retryAfter, 10) * 1000) || DEFAULT_RETRY_AFTER_MS
-    : DEFAULT_RETRY_AFTER_MS;
-  await new Promise((resolve) => setTimeout(resolve, ms));
+  let delayMS = DEFAULT_RETRY_AFTER_MS;
+  if (retryAfter !== null) {
+    // First, try numeric seconds form
+    const seconds = Number(retryAfter);
+    if (Number.isFinite(seconds) && seconds >= 0) {
+      delayMS = seconds * 1000;
+    } else {
+      // Fallback: try HTTP-date form
+      const dateMs = Date.parse(retryAfter);
+      if (!Number.isNaN(dateMs)) {
+        delayMS = Math.max(0, dateMs - Date.now());
+      }
+    }
+  }
+
+  if (delayMS > 0) {
+    await new Promise((resolve) => setTimeout(resolve, delayMS));
+  }
   return doRequest();
 }
 
