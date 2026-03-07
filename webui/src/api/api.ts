@@ -10,6 +10,28 @@ import type {
   TeamWithScoreAPIResponse,
 } from "./api.types";
 
+const RATE_LIMIT_STATUS = 429;
+const DEFAULT_RETRY_AFTER_MS = 1000;
+
+/**
+ * Runs the request; if the response is 429 (rate limit), waits per Retry-After
+ * (or default) and retries once. Other errors are not retried.
+ */
+async function withRateLimitRetry(
+  doRequest: () => Promise<Response>,
+): Promise<Response> {
+  const response = await doRequest();
+  if (response.status !== RATE_LIMIT_STATUS) {
+    return response;
+  }
+  const retryAfter = response.headers.get("Retry-After");
+  const ms = retryAfter
+    ? Math.max(0, parseInt(retryAfter, 10) * 1000) || DEFAULT_RETRY_AFTER_MS
+    : DEFAULT_RETRY_AFTER_MS;
+  await new Promise((resolve) => setTimeout(resolve, ms));
+  return doRequest();
+}
+
 export const Api = {
   getHealth: async (): Promise<HealthAPIResponse> => {
     return Api.__get<HealthAPIResponse>("/api/health");
@@ -83,7 +105,9 @@ export const Api = {
   },
 
   __get: async <T>(url: string): Promise<T> => {
-    const response = await fetch(url, { credentials: "include" });
+    const response = await withRateLimitRetry(() =>
+      fetch(url, { credentials: "include" }),
+    );
     if (!response.ok) {
       const error = await Api.__readError(response);
       throw new Error(`Failed to get ${url}: ${error}`);
@@ -98,12 +122,14 @@ export const Api = {
       headers["Content-Type"] = "application/json";
     }
 
-    const response = await fetch(url, {
-      method: "POST",
-      credentials: "include",
-      headers,
-      body: requestBody,
-    });
+    const response = await withRateLimitRetry(() =>
+      fetch(url, {
+        method: "POST",
+        credentials: "include",
+        headers,
+        body: requestBody,
+      }),
+    );
 
     if (!response.ok) {
       const error = await Api.__readError(response);
