@@ -39,7 +39,7 @@ const start = async () => {
   announcer.setGame(game);
   announcer.start();
 
-  const fastify = createServer(game, broadcast, database, chat);
+  const fastify = await createServer(game, broadcast, database, chat);
   let stopHealthcheckPing: (() => void) | null = null;
 
   const shutdown = async () => {

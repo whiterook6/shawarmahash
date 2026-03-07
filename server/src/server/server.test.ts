@@ -38,7 +38,7 @@ describe("Server", () => {
     chat = new Chat();
     chat.setBroadcast(broadcast);
     chat.setDatabase(database);
-    server = createServer(game, broadcast, database, chat);
+    server = await createServer(game, broadcast, database, chat);
     await server.ready();
   });
 

@@ -17,7 +17,7 @@ import { Game } from "../game/game";
 import { IdentityController } from "../identity/identity.controller";
 import { schemas } from "./schemas";
 
-export function createServer(
+export async function createServer(
   game: Game,
   broadcast: Broadcast,
   database: DatabaseController,
@@ -39,7 +39,7 @@ export function createServer(
     timeWindow: "1m",
   });
 
-  fastify.register(cookie);
+  await fastify.register(cookie);
 
   fastify.setErrorHandler(errorHandler);
 

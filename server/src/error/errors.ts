@@ -56,6 +56,10 @@ function isFastifyValidationError(error: Error): error is FastifyError & {
   );
 }
 
+function isRateLimitError(error: Error): error is FastifyError {
+  return (error as FastifyError).statusCode === 429;
+}
+
 export const errorHandler = (
   error: Error,
   _: FastifyRequest,
@@ -85,7 +89,18 @@ export const errorHandler = (
         {},
       ),
     });
-  } else {
+  }
+
+  // Handle rate limit errors
+  // headers are already set for me
+  else if (isRateLimitError(error)) {
+    return reply.status(429).send({
+      error: "Rate limit exceeded",
+    });
+  }
+
+  // Handle all other errors
+  else {
     console.error(error);
     return reply.status(500).send({
       error: "Internal server error",
