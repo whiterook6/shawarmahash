@@ -1,5 +1,12 @@
 import { Chain } from "../chain/chain";
 
+export type IdentityScore = {
+  player: string;
+  team: string;
+  identity: string;
+  score: number;
+};
+
 export type PlayerScore = {
   player: string;
   identity: string;

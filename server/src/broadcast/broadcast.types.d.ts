@@ -1,5 +1,5 @@
 import type { Block } from "../block/block";
-import type { PlayerScore, TeamScore } from "../score/score";
+import type { IdentityScore, PlayerScore, TeamScore } from "../score/score";
 
 /** SSE message: connection established */
 export type ConnectionMessage = {
@@ -54,12 +54,7 @@ export type ChatMessageReceivedMessage = {
 /** SSE message: active players list (subscribers with scores) */
 export type ActivePlayersMessage = {
   type: "activePlayers";
-  payload: Array<{
-    player: string;
-    team: string;
-    identity: string;
-    score: number;
-  }>;
+  payload: Array<IdentityScore>;
 };
 
 /** Union of all SSE messages sent from server to UI */

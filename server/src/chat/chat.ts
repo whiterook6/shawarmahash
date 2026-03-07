@@ -1,8 +1,8 @@
 import { Block } from "../block/block";
 import { Broadcast, TO_PLAYER, TO_TEAM } from "../broadcast/broadcast";
-import { ChatMessageReceivedMessage } from "../broadcast/broadcast.types";
+import type { ChatMessageReceivedMessage } from "../broadcast/broadcast.types";
 import { DatabaseController } from "../database/database.controller";
-import { ChatMessage } from "./chat.types";
+import type { ChatMessage } from "./chat.types";
 
 const PLAYER_REGEX = /^@([A-Z]{3})\b/;
 const TEAM_REGEX = /^#([A-Z]{3})\b/;

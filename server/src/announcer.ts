@@ -5,7 +5,7 @@ import {
 } from "./broadcast/broadcast.types";
 import { Game } from "./game/game";
 import { Identity } from "./identity/identity";
-import { PlayerScore, TeamScore } from "./score/score";
+import { IdentityScore, TeamScore } from "./score/score";
 
 export class Announcer {
   private interval: NodeJS.Timeout | undefined = undefined;
@@ -56,13 +56,14 @@ export class Announcer {
           };
         }
       });
-    const activePlayerScores: PlayerScore[] = this.broadcast
+    const activePlayerScoresWithTeam: IdentityScore[] = this.broadcast
       .getActivePlayers()
       .map((player: Identity) => {
         const playerScore = this.game!.getPlayerScore(player.identity);
         return {
           player: player.player,
           identity: player.identity,
+          team: player.team,
           score: playerScore,
         };
       });
@@ -73,22 +74,20 @@ export class Announcer {
       type: "scoresUpdate",
       payload: {
         activeTeamScores,
-        activePlayerScores,
+        activePlayerScores: activePlayerScoresWithTeam.map((p) => ({
+          player: p.player,
+          identity: p.identity,
+          score: p.score,
+        })),
         topPlayers,
         topTeams,
       },
     };
     this.broadcast.cast(scoresMessage);
 
-    const activePlayersPayload = this.broadcast.getActivePlayers().map((p) => ({
-      player: p.player,
-      team: p.team,
-      identity: p.identity,
-      score: this.game!.getPlayerScore(p.identity),
-    }));
     const activePlayersMessage: ActivePlayersMessage = {
       type: "activePlayers",
-      payload: activePlayersPayload,
+      payload: activePlayerScoresWithTeam,
     };
     this.broadcast.cast(activePlayersMessage);
   }

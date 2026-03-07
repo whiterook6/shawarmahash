@@ -202,13 +202,19 @@ export const App = () => {
             <h3>Online Now</h3>
             <Table>
               <THead>
+                <TR>
+                  <TH>Name</TH>
+                  <TH>Score</TH>
+                </TR>
+              </THead>
+              <TBody>
                 {teamLiveNow.map((player) => (
                   <TR key={`${player.identity}-${player.player}`}>
                     <TD>{player.player}</TD>
                     <TD>{player.score}</TD>
                   </TR>
                 ))}
-              </THead>
+              </TBody>
             </Table>
           </Panel>
           <Chat />
