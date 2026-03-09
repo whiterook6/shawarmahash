@@ -19,7 +19,9 @@ export type ConnectionMessage = {
  */
 export type TeamCreatedMessage = {
   type: "teamCreated";
-  payload: ChainStateAPIResponse;
+  payload: {
+    team: string;
+  };
 };
 
 /**
@@ -58,6 +60,18 @@ export type ChatMessageReceivedMessage = {
 };
 
 /**
+ * New player joined: sent when a block is created for a never-before-seen identity.
+ */
+export type PlayerJoinedMessage = {
+  type: "playerJoined";
+  payload: {
+    player: string;
+    team: string;
+    identity: string;
+  };
+};
+
+/**
  * Active players list sent periodically (subscribers with scores).
  */
 export type ActivePlayersMessage = {
@@ -79,6 +93,7 @@ export type BroadcastMessage =
   | BlockSubmittedMessage
   | ScoresUpdateMessage
   | ChatMessageReceivedMessage
+  | PlayerJoinedMessage
   | ActivePlayersMessage;
 
 /**
