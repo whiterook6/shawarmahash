@@ -51,6 +51,16 @@ export type ChatMessageReceivedMessage = {
   };
 };
 
+/** SSE message: new player joined (first block for a new identity) */
+export type PlayerJoinedMessage = {
+  type: "playerJoined";
+  payload: {
+    player: string;
+    team: string;
+    identity: string;
+  };
+};
+
 /** SSE message: active players list (subscribers with scores) */
 export type ActivePlayersMessage = {
   type: "activePlayers";
@@ -64,4 +74,5 @@ export type BroadcastMessage =
   | BlockSubmittedMessage
   | ScoresUpdateMessage
   | ChatMessageReceivedMessage
+  | PlayerJoinedMessage
   | ActivePlayersMessage;

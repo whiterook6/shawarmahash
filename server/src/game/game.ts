@@ -3,6 +3,7 @@ import { Block } from "../block/block";
 import { Broadcast, TO_TEAM } from "../broadcast/broadcast";
 import {
   BlockSubmittedMessage,
+  PlayerJoinedMessage,
   TeamCreatedMessage,
 } from "../broadcast/broadcast.types";
 import { Chain } from "../chain/chain";
@@ -201,11 +202,12 @@ export class Game {
     nonce: number;
     data?: Record<string, unknown>;
   }): Promise<{ recent: Block[]; difficulty: string }> {
-    const { team, previousHash } = args;
+    const { team, previousHash, identity, player } = args;
 
     const isGenesisBlock = previousHash === Block.GENESIS_PREVIOUS_HASH;
 
     const chainExists = this.chains.has(team);
+    const isNewPlayer = this.isNewIdentity(identity);
     let newBlock: Block;
 
     if (isGenesisBlock && chainExists) {
@@ -249,7 +251,7 @@ export class Game {
 
     const chainState = this.getChainState(team);
     if (this.broadcast) {
-      const message: TeamCreatedMessage | BlockSubmittedMessage = {
+      const chainMessage: TeamCreatedMessage | BlockSubmittedMessage = {
         type: isGenesisBlock ? "teamCreated" : "blockSubmitted",
         payload: {
           team,
@@ -257,7 +259,19 @@ export class Game {
         },
       };
 
-      this.broadcast.cast(message, TO_TEAM(team));
+      this.broadcast.cast(chainMessage, TO_TEAM(team));
+
+      if (isNewPlayer) {
+        const playerJoined: PlayerJoinedMessage = {
+          type: "playerJoined",
+          payload: {
+            player,
+            team,
+            identity,
+          },
+        };
+        this.broadcast.cast(playerJoined);
+      }
     }
 
     if (args.data) {
@@ -299,6 +313,16 @@ export class Game {
       allResults.push(...fn(chain));
     }
     return allResults;
+  }
+
+  private isNewIdentity(identity: string): boolean {
+    for (const chain of this.chains.values()) {
+      const hasIdentity = chain.some((block) => block.identity === identity);
+      if (hasIdentity) {
+        return false;
+      }
+    }
+    return true;
   }
 
   private async parseBlockData(

@@ -3,7 +3,9 @@ import { useCallback, useContext, useEffect, useState } from "react";
 import { BroadcastContext } from "../broadcast/broadcast.context";
 import type {
   ActivePlayersMessage,
+  PlayerJoinedMessage,
   ScoresUpdateMessage,
+  TeamCreatedMessage,
 } from "../broadcast/broadcast.types";
 import { Chat } from "../chat/Chat";
 import { IconButton } from "../components/Button";
@@ -51,6 +53,20 @@ export const App = () => {
     connectBroadcast({ team, player, identity });
     const unsubscribe = subscribeBroadcast((message) => {
       switch (message.type) {
+        case "playerJoined": {
+          const playerJoined = message as PlayerJoinedMessage;
+          // Temporary: surface new player announcements in the console
+          // so we can wire UI toasts/indicators later.
+          console.log("New player joined via SSE:", playerJoined);
+          break;
+        }
+        case "teamCreated": {
+          const teamCreated = message as TeamCreatedMessage;
+          // Temporary: surface new team announcements in the console
+          // so we can wire UI toasts/indicators later.
+          console.log("New team created via SSE:", teamCreated);
+          break;
+        }
         case "scoresUpdate":
           setLeaderboard(message.payload);
           break;
