@@ -14,8 +14,6 @@ export type TeamCreatedMessage = {
   type: "teamCreated";
   payload: {
     team: string;
-    recent: Block[];
-    difficulty: string;
   };
 };
 

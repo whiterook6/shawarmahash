@@ -19,7 +19,9 @@ export type ConnectionMessage = {
  */
 export type TeamCreatedMessage = {
   type: "teamCreated";
-  payload: ChainStateAPIResponse;
+  payload: {
+    team: string;
+  };
 };
 
 /**
