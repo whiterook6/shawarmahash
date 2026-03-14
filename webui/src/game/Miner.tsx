@@ -82,7 +82,7 @@ const Button = styled.button`
         transparent calc(100% - 4px),
         white 0
       );
-      animation: spin 1s ease-in-out infinite;
+      animation: spin 1s linear infinite;
     }
   }
 `;
